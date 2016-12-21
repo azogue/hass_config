@@ -1,0 +1,14 @@
+alias: Test de Pushbullet
+sequence:
+- alias: Pushbullet notify
+  service: notify.pushbullet
+  data:
+    title: 'HASS Push test 1'
+    message: 'Test de notificaciones'
+    target: !secret pb_target
+- alias: Pushbullet notify device
+  service: notify.pushbullet
+  data:
+    title: 'HASS Push test 2'
+    message: 'Test de notificaciones - channel raspberries'
+    target: channel/raspberries
