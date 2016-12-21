@@ -1,0 +1,22 @@
+# Alarma despertador ON/OFF
+alarm_clock_status:
+  initial: on
+
+testing_alarm:
+  initial: off
+
+# General Intrude/Incident Alarm
+switch_master_alarm:
+  initial: off
+state_master_alarm:
+  initial: off
+
+# Lights control
+switch_motion_lights:
+  initial: on
+
+# enerPI Alarm (excesive current)
+switch_control_enerpi_max_power:
+  initial: on
+state_enerpi_alarm_max_power:
+  initial: off

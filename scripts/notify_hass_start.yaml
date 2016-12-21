@@ -1,0 +1,28 @@
+alias: Notify HASS start
+sequence:
+  - service: notify.ios
+    data:
+      title: "Home-assistant started"
+      message: "Hass is now ready for you"
+      data:
+        push:
+          badge: 0
+          sound: "US-EN-Morgan-Freeman-Boss-Is-Arriving.wav"
+          category: "ALARM" # Needs to match the top level identifier you used in the ios configuration
+#            sound: "US-EN-Morgan-Freeman-Welcome-Home.wav"
+#          action_data: # Anything passed in action_data will get echoed back to Home Assistant.
+#            entity_id: light.cuenco
+#            my_custom_data: "lalala"
+#  - service: notify.gmail
+#    data:
+#      title: 'HASS has started'
+#      message: 'Test de notificaciones vía email'
+#  - service: notify.pushbullet
+#    data:
+#      title: 'Hello!'
+#      target: !secret pb_target
+#      message: 'Hass start!'
+
+#  - delay:
+#      # time interval for alarm sound and light flashing
+#      seconds: 10

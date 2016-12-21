@@ -1,0 +1,16 @@
+# Testing scenes...
+- name: Cuenco red
+  entities:
+    light.cuenco:
+      state: on
+      transition: 1
+      brightness: 100
+      rgb_color: [255, 0, 0]
+
+- name: Cuenco blue
+  entities:
+    light.cuenco:
+      state: on
+      transition: 1
+      brightness: 100
+      rgb_color: [0, 0, 255]

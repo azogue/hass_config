@@ -1,0 +1,137 @@
+# RPI hardware-present sensors:
+- platform: onewire
+  names:
+    28-800000015326: T_Salón
+  scan_interval: 30
+
+- platform: dht
+  sensor: DHT22
+  pin: 22
+  name: Salón
+  scan_interval: 30
+  monitored_conditions:
+    - temperature
+    - humidity
+
+# Weather sensors:
+- platform: openweathermap
+  api_key: !secret openweathermap_api_key
+  forecast: 1
+  name: Villena
+  monitored_conditions:
+    - weather
+    - temperature
+    - wind_speed
+    - humidity
+    - pressure
+    - clouds
+    - rain
+
+- platform: yr
+  name: Wheather type
+
+# Host & network sensors:
+- platform: systemmonitor
+  name: RPI Host
+  resources:
+    - type: disk_use_percent
+      arg: /home
+    - type: memory_free
+    - type: processor_use
+    - type: last_boot
+
+- platform: speedtest
+  minute:
+    - 5
+    - 35
+  monitored_conditions:
+    - ping
+    - download
+    - upload
+
+# Time sensors:
+#- platform: time_date
+##  name: España
+#  display_options:
+#    - 'time'
+
+- platform: template
+  sensors:
+    alarm_clock_hour:
+      value_template: '{{ states("input_slider.alarm_clock_hour") | round(0) }}'
+    alarm_clock_minute:
+      value_template: '{{ states("input_slider.alarm_clock_minute") | round(0) }}'
+    alarm_clock_time:
+      value_template: '{{ states("sensor.alarm_clock_hour") }}:{% if states("sensor.alarm_clock_minute")|length == 1 %}0{% endif %}{{ states("sensor.alarm_clock_minute") }}'
+
+#- platform: template
+#  sensors:
+#    since_last_boot_templated:
+#      value_template: >-
+#        {%- set slb = states.sensor.since_last_boot.state.split(' ') -%}
+#        {%- set count = slb | length -%}
+#        {%- set hms = slb[count - 1] -%}
+#        {%- set hms_trimmed = hms.split('.')[0] -%}
+#        {%- set hms_split = hms_trimmed.split(':') -%}
+#        {%- set hours = hms_split[0] | int -%}
+#        {%- set minutes = hms_split[1] | int -%}
+#        {%- set seconds = hms_split[2] | int -%}
+#        {%- if count == 3 -%}
+#          {{ slb[0] ~ ' ' ~ slb[1] ~ ' ' }}
+#        {%- endif -%}
+#        {%- if hours > 0 -%}
+#          {{ hours }} h
+#        {%- endif -%}
+#        {%- if minutes > 0 -%}
+#          {%- if hours > 0 -%}
+#            {{ ', ' }}
+#          {%- endif -%}
+#          {{ minutes }} min
+#        {%- endif -%}
+#        {%- if seconds > 0 -%}
+#          {%- if hours > 0 or minutes > 0 -%}
+#            {{ ', ' }}
+#          {%- endif -%}
+#          {{ seconds }} s
+#        {%- endif -%}
+
+- platform: command_line
+  name: badlogin
+  command: "grep -c invalidpassword /home/homeassistant/.homeassistant/home-assistant.log"
+
+# enerPI sensors:
+- platform: enerpi
+  name: enerPI
+  host: 192.168.1.44
+  scan_interval: 5
+  data_refresh: 5
+  pngtiles_refresh: 600
+  monitored_variables:
+    - power
+    - ldr
+
+- platform: enerpi
+  name: enerPI 2x
+  host: 192.168.1.52
+  scan_interval: 5
+  data_refresh: 5
+  pngtiles_refresh: 600
+  monitored_variables:
+    - power_1
+    - power_2
+    - ldr
+
+# Stats sensors:
+- platform: statistics
+  entity_id: sensor.enerpi_power
+  name: Power stats
+  sampling_size: 24
+
+- platform: statistics
+  entity_id: sensor.t_salon
+  name: Temp stats
+  sampling_size: 10
+
+- platform: statistics
+  entity_id: binary_sensor.pir_salon
+  name: Mov nº

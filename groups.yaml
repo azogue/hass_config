@@ -1,0 +1,217 @@
+Tiempo en Villena:
+  - sensor.villena_weather
+  - sensor.villena_temperature
+  - sensor.villena_wind_speed
+  - sensor.villena_humidity
+  - sensor.villena_pressure
+  - sensor.villena_condition
+  - sensor.villena_cloud_coverage
+  - sensor.villena_rain
+  - sensor.villena_forecast
+  - sensor.yr_symbol
+#  - sun
+
+Host RPI 3:
+  - sensor.cpu_use
+  - sensor.ram_free
+  - sensor.last_boot
+  - sensor.disk_use_home
+  - sensor.badlogin
+#  - sensor.since_last_boot
+#  - sensor.since_last_boot_templated
+
+Sensing:
+  - sensor.main_power
+  - sensor.consumo_cocina
+  - sensor.t_salon
+  - sensor.salon_temperature
+  - sensor.salon_humidity
+  - binary_sensor.pir_salon
+
+Red e Internet:
+  - sensor.speedtest_ping
+  - sensor.speedtest_download
+  - sensor.speedtest_upload
+  - device_tracker.router_interfibra
+  - device_tracker.bridge_hue
+  - device_tracker.nas
+  - device_tracker.airport_extreme
+  - device_tracker.wifi_ext
+  - device_tracker.airport
+  - device_tracker.imac
+  - device_tracker.mbp
+  - switch.wol_nas
+
+Family:
+  - device_tracker.iphone
+  - device_tracker.iphone_5s
+
+Cacharros:
+  - sensor.iphone_battery_level
+  - sensor.iphone_battery_state
+  - device_tracker.ipad_carmen
+  - device_tracker.ipad_carmen_bt
+  - device_tracker.rpi_wifi
+  - device_tracker.rpi2hat
+  - device_tracker.rpi2_wifi
+  - device_tracker.rpi3w
+  - device_tracker.rpi3osmc
+
+Links:
+  - weblink.enerpi
+  - weblink.enerpi_2x
+  - weblink.pyoutlets
+  - weblink.nas
+  - weblink.router_interfibra
+  - weblink.wifi_extender_ap
+  - weblink.rpi_caldera
+  - weblink.rpi_3_osmc_salon
+  - weblink.rpi_2_sensehat_estudio
+  - weblink.kodi_web_interface
+
+Cámaras:
+  - camera.picamera_salon
+#  - camera.escam_qf001_comedor
+#  - camera.picamera_noir_bedroom
+
+Luces Salón:
+  - light.ventilador
+  - light.bola_grande
+  - light.bola_pequena
+  - light.pie_tv
+  - light.pie_sofa
+  - light.cuenco
+  - light.lamparita
+
+Master luces del salón:
+  - input_slider.light_main_slider_salon
+  - input_slider.light_temp_slider_salon
+  - automation.brillo_salon_sync
+  - switch.toggle_kodi_ambilight
+
+Luces Dormitorio:
+  - light.aura_habitacion
+  - light.hue_habitacion
+
+Enchufes:
+  - switch.cocina
+  - switch.calefactor
+  - switch.tele
+  - switch.sofa
+  - switch.caldera
+
+MPlayer:
+  - media_player.kodi
+
+Despertador:
+  - input_boolean.alarm_clock_status
+  - input_slider.alarm_clock_hour
+  - input_slider.alarm_clock_minute
+  - sensor.alarm_clock_time
+  - script.despertador_la_cafetera
+  - input_boolean.testing_alarm
+
+Escenas:
+  - scene.cuenco_red
+  - scene.cuenco_blue
+  - scene.salon_normal
+  - scene.salon_dim
+
+Scripts:
+  - script.test_notify
+  - script.test_notify_pb
+  - script.notify_hass_start
+  - script.flash_cuenco
+
+enerPI:
+  - sensor.enerpi_power
+  - sensor.enerpi_ldr
+  - camera.enerpi_power
+  - camera.enerpi_ldr
+
+enerPI 2x:
+  - sensor.enerpi_2x_power_1
+  - sensor.enerpi_2x_power_2
+  - sensor.enerpi_2x_ldr
+  - camera.enerpi_2x_power_1
+  - camera.enerpi_2x_power_2
+  - camera.enerpi_2x_ldr
+
+enerPI Max Power Control:
+  - input_boolean.switch_control_enerpi_max_power
+  - input_slider.enerpi_max_power
+  - input_slider.enerpi_max_power_reset
+  - input_boolean.state_enerpi_alarm_max_power
+
+Hass control:
+  - input_boolean.switch_master_alarm
+  - input_boolean.state_master_alarm
+  - input_boolean.switch_motion_lights
+  - input_slider.light_duration_after_motion
+  - script.restart_hass
+
+Status:
+  name: Home Status
+  icon: mdi:castle
+  view: yes
+  entities:
+    - group.family
+    - group.sensing
+    - group.tiempo_en_villena
+    - group.camaras
+    - group.links
+
+Control:
+  name: Home Control
+  icon: mdi:auto-fix
+  view: yes
+  entities:
+    - group.master_luces_del_salon
+    - group.luces_salon
+    - group.luces_dormitorio
+    - group.enchufes
+    - group.mplayer
+    - group.despertador
+
+Home Network:
+  name: Red local del hogar
+  view: yes
+  icon: mdi:sitemap
+  entities:
+    - group.family
+    - group.host_rpi_3
+    - group.red_e_internet
+    - group.cacharros
+    - group.links
+
+enerpi_view:
+  name: enerPI
+  icon: mdi:flash
+  view: yes
+  entities:
+    - group.enerpi
+    - group.enerpi_2x
+    - group.enerpi_max_power_control
+
+Master conf:
+  name: Master configuration
+  icon: mdi:infinity
+  view: yes
+  entities:
+    - group.hass_control
+    - group.enerpi_max_power_control
+
+DEBUG:
+  name: Debugging
+  view: yes
+  entities:
+    - group.automation_config
+    - group.escenas
+    - group.scripts
+
+# TODO default_view eliminando cards
+#default_view:
+#    view: yes
+#    entities:
+#      - group.awesome_people
+#      - group.climate

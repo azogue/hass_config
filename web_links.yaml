@@ -1,0 +1,21 @@
+entities:
+  - name: enerPI
+    url: http://192.168.1.44/enerpi/
+  - name: enerPI 2x
+    url: http://192.168.1.52/enerpi/
+  - name: PyOutlets
+    url: http://192.168.1.13/outlets
+  - name: Router Interfibra
+    url: http://192.168.1.1
+  - name: Wifi Extender AP
+    url: http://192.168.1.11
+  - name: NAS
+    url: https://192.168.1.40:5001/index.cgi
+  - name: RPI Caldera
+    url: http://192.168.1.47/enerweb/
+  - name: RPI 2 SenseHat Estudio
+    url: http://192.168.1.46/enerweb/
+  - name: RPI 3 OSMC Salón
+    url: http://192.168.1.56/enerweb/
+  - name: Kodi web interface
+    url: http://192.168.1.56:8080/

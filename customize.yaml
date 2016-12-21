@@ -1,0 +1,297 @@
+####################################################################################
+#                                KODI                                              #
+####################################################################################
+media_player.kodi:
+  icon: mdi:kodi
+  friendly_name: Kodi OSMC
+  homebridge_hidden: true
+
+####################################################################################
+#                                INPUTS                                            #
+####################################################################################
+# Despertador
+input_boolean.alarm_clock_status:
+  homebridge_hidden: false
+  friendly_name: Despertador
+  icon: mdi:toggle-switch
+input_slider.alarm_clock_hour:
+  friendly_name: Hora
+  icon: mdi:timetable
+input_slider.alarm_clock_minute:
+  friendly_name: Minuto
+  icon: mdi:timetable
+sensor.alarm_clock_time:
+  homebridge_hidden: true
+  friendly_name: Hora de despertarse
+  icon: mdi:alarm
+
+input_boolean.testing_alarm:
+  homebridge_hidden: true
+  icon: mdi:toggle-switch
+
+input_boolean.switch_master_alarm:
+  friendly_name: Interruptor de alarma
+#  homebridge_hidden: true
+  icon: mdi:toggle-switch
+input_boolean.state_master_alarm:
+  friendly_name: ALARMA GENERAL
+  homebridge_hidden: true
+  icon: mdi:alert-octagon
+
+input_boolean.switch_motion_lights:
+  friendly_name: Luz con movimiento en Salón
+  icon: mdi:white-balance-incandescent
+  homebridge_hidden: true
+input_slider.light_duration_after_motion:
+  friendly_name: Duración luz (s)
+  icon: mdi:timer-sand
+  homebridge_hidden: true
+
+input_slider.light_main_slider_salon:
+  friendly_name: Brillo
+  icon: mdi:brightness-7
+input_slider.light_temp_slider_salon:
+  friendly_name: Temperatura de color
+  icon: mdi:temperature-kelvin
+automation.brillo_salon_sync:
+  icon: mdi:brightness-auto
+  homebridge_hidden: true
+  friendly_name: Sync brillo bola grande
+
+input_boolean.switch_control_enerpi_max_power:
+  friendly_name: enerPI - control de potencia
+  icon: mdi:toggle-switch
+  homebridge_hidden: true
+input_boolean.state_enerpi_alarm_max_power:
+  friendly_name: Alarma por potencia excesiva
+  icon: mdi:alert
+  homebridge_hidden: true
+input_slider.enerpi_max_power:
+  friendly_name: Max Power (kW)
+  icon: mdi:flash-red-eye
+#  homebridge_hidden: true
+input_slider.enerpi_max_power_reset:
+  friendly_name: Reset level (kW)
+  icon: mdi:flash-off
+  homebridge_hidden: true
+
+####################################################################################
+#                                LIGHTS                                            #
+####################################################################################
+#light.aura_habitacion:
+#  homebridge_hidden: true
+#light.bola_grande:
+#  homebridge_hidden: true
+#light.bola_pequena:
+#  homebridge_hidden: true
+#light.cuenco:
+#  homebridge_hidden: true
+#light.hue_habitacion:
+#  homebridge_hidden: true
+#light.lamparita:
+#  homebridge_hidden: true
+#light.pie_sofa:
+#  homebridge_hidden: true
+#light.pie_tv:
+#  homebridge_hidden: true
+#light.ventilador:
+#  homebridge_hidden: true
+
+####################################################################################
+#                                SWITCHES                                          #
+####################################################################################
+switch.wol_nas:
+  friendly_name: WakeOnLan NAS
+  homebridge_hidden: true
+
+switch.cocina:
+  icon: mdi:lightbulb
+  friendly_name: LED Cocina
+  homebridge_hidden: true
+#  homebridge_name: Cocina
+switch.calefactor:
+  icon: mdi:power-plug
+  friendly_name: Calefactor Baño
+  homebridge_hidden: true
+#  homebridge_name: Calefactor
+switch.tele:
+  icon: mdi:power-plug
+  friendly_name: Enchufe TV
+  homebridge_hidden: true
+switch.sofa:
+  icon: mdi:lamp
+  friendly_name: Enchufe Sofá
+  homebridge_hidden: true
+switch.caldera:
+  icon: mdi:radiator
+  friendly_name: Caldera de gas
+  homebridge_hidden: true
+#  homebridge_name: Caldera
+#  assumed_state: true
+
+switch.toggle_kodi_ambilight:
+  icon: mdi:monitor-multiple
+  homebridge_name: Kodi Ambilight
+
+
+####################################################################################
+#                                SENSORS                                           #
+####################################################################################
+# enerPI sensors:
+sensor.enerpi_power:
+  icon: mdi:flash
+  friendly_name: Main power
+camera.enerpi_power:
+  friendly_name: Main power (24h)
+sensor.enerpi_ldr:
+  icon: mdi:lightbulb
+  friendly_name: Hall illuminance
+camera.enerpi_ldr:
+  friendly_name: Hall illuminance (24h)
+
+sensor.enerpi_2x_power_1:
+  icon: mdi:flash
+  friendly_name: Main power RPI2
+camera.enerpi_2x_power_1:
+  friendly_name: Main power RPI2 (24h)
+sensor.enerpi_2x_power_2:
+  icon: mdi:power-plug
+  friendly_name: Kitchen appliances
+camera.enerpi_2x_power_2:
+  friendly_name: Kitchen appliances (24h)
+sensor.enerpi_2x_ldr:
+  icon: mdi:lightbulb-outline
+  friendly_name: Hall illuminance 2
+camera.enerpi_2x_ldr:
+  friendly_name: Hall illuminance 2 (24h)
+
+sensor.speedtest_ping:
+  icon: mdi:speedometer
+  friendly_name: Ping
+sensor.speedtest_download:
+  icon: mdi:download
+  friendly_name: Download
+sensor.speedtest_upload:
+  icon: mdi:upload
+  friendly_name: Upload
+
+sensor.T_salon:
+  friendly_name: Temp. salón
+  homebridge_name: Temperatura (2)
+sensor.salon_temperature:
+  friendly_name: Temp. salón (1)
+  homebridge_name: Temperatura (dht)
+sensor.salon_humidity:
+  friendly_name: Humedad salón
+  homebridge_name: Humedad interior
+  icon: mdi:water-percent
+
+sensor.villena_temperature:
+  friendly_name: Temperatura exterior
+sensor.villena_wind_speed:
+  friendly_name: Velocidad del viento
+  icon: mdi:weather-windy
+sensor.villena_humidity:
+  friendly_name: Humedad exterior
+  icon: mdi:water-percent
+sensor.villena_pressure:
+  friendly_name: Presión
+  icon: mdi:weather-windy-variant
+sensor.villena_condition:
+  friendly_name: Condición general
+sensor.villena_cloud_coverage:
+  friendly_name: Nubes
+  icon: mdi:weather-cloudy
+sensor.villena_rain:
+  friendly_name: LLuvia
+  icon: mdi:weather-rainy
+sensor.villena_forecast:
+  friendly_name: Previsión
+
+sensor.alarm_clock_status:
+  homebridge_hidden: true
+sensor.alarm_clock_hour:
+  hidden: true
+  homebridge_hidden: true
+sensor.alarm_clock_minute:
+  hidden: true
+  homebridge_hidden: true
+
+####################################################################################
+#                                WEB LINKS                                         #
+####################################################################################
+weblink.router_interfibra:
+  icon: mdi:router-wireless
+weblink.wifi_extender_ap:
+  icon: mdi:wifi
+weblink.pyoutlets:
+  icon: mdi:power-plug
+weblink.enerpi:
+  icon: mdi:flash
+weblink.enerpi_2x:
+  icon: mdi:flash
+#  entity_picture: /static/images/enerpi.png
+weblink.nas:
+  icon: mdi:library-music
+#  entity_picture: /static/images/nas_ds213j.png
+weblink.rpi_caldera:
+  icon: mdi:raspberrypi
+weblink.rpi_3_osmc_salon:
+  icon: mdi:raspberrypi
+weblink.rpi_2_sensehat_estudio:
+  icon: mdi:raspberrypi
+weblink.kodi_web_interface:
+  icon: mdi:kodi
+#  entity_picture: /static/images/kodi_logo.png
+
+####################################################################################
+#                                SCENES                                            #
+####################################################################################
+scene.salon_normal:
+  homebridge_hidden: true
+scene.salon_dim:
+  homebridge_hidden: true
+scene.cuenco_blue:
+  homebridge_hidden: true
+
+####################################################################################
+#                                DEVICES TRACKING                                  #
+####################################################################################
+device_tracker.router_interfibra:
+  icon: mdi:router-wireless
+device_tracker.wifi_ext:
+  icon: mdi:wifi
+device_tracker.airport_extreme:
+  icon: mdi:wifi
+device_tracker.airport:
+  icon: mdi:airplay
+device_tracker.nas:
+  icon: mdi:desktop-tower
+device_tracker.bridge_hue:
+  icon: mdi:white-balance-incandescent
+device_tracker.iphone:
+  icon: mdi:cellphone-iphone
+device_tracker.iphone_5s:
+  icon: mdi:cellphone-iphone
+device_tracker.ipad_carmen:
+  icon: mdi:tablet-ipad
+device_tracker.imac:
+  icon: mdi:desktop-mac
+device_tracker.imac_wifi:
+  icon: mdi:desktop-mac
+device_tracker.mbp:
+  icon: mdi:laptop-mac
+device_tracker.rpi_wifi:
+  icon: mdi:raspberrypi
+device_tracker.rpi3w:
+  icon: mdi:raspberrypi
+device_tracker.rpi2hat:
+  icon: mdi:raspberrypi
+device_tracker.rpi2_wifi:
+  icon: mdi:raspberrypi
+device_tracker.rpi3osmc:
+  icon: mdi:kodi
+device_tracker.rpi3osmcw:
+  icon: mdi:raspberrypi
+device_tracker.impresora_brother:
+  icon: mdi:printer

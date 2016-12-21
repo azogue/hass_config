@@ -1,0 +1,28 @@
+*.pyc
+.DS_Store
+.idea
+*.egg
+*.egg-info
+dist
+build
+eggs
+sdist
+develop-eggs
+
+# Private resources
+pictures
+custom_images/eugenio*
+custom_images/mari_carmen*
+
+# Private config data
+secrets.yaml
+known_devices.yaml
+phue.conf
+ios.conf
+
+# HASS current data
+deps
+.HA_VERSION
+.uuid
+*.db
+*.log

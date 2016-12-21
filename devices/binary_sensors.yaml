@@ -1,0 +1,8 @@
+- platform: rpi_gpio
+  name: Movimiento Salón
+  sensor_class: motion
+  ports:
+    18: PIR Salón
+  bouncetime: 300
+  pull_mode: "UP"
+#  invert_logic: true
