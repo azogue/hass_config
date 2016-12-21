@@ -1,4 +1,4 @@
-# Home Assistant Custom Component supporting [enerPI sensors](https://github.com/azogue/enerpi) running enerpi + enerpiweb in some local host.
+# Home Assistant Custom Component supporting [enerPI sensors](https://github.com/azogue/enerpi) running *enerpi* + *enerpiweb* in some local host.
 
 Derived from the general REST sensor (https://home-assistant.io/components/sensor.rest/), it connects via GET requests to the local working enerpi web server and populates new hass sensors, which are updated through a single request.
 
@@ -32,9 +32,9 @@ The setup does a few things:
               - ldr
               - ref
 ```
-Only the `host` variable is required. To establish the scanning frequency for getting enerpi state, use the variables `data_refresh` & `pngtiles_refresh`, in seconds. `data_refresh` has to be higher or equal than HA `scan_interval` to function properly, because the trigger for request data is inside the HA update function.
+Only the `host` variable is required. To establish the scanning frequency for getting the enerpi state, use the variables `data_refresh` & `pngtiles_refresh`, in seconds. `data_refresh` has to be higher or equal than HA `scan_interval` to function properly, because the trigger for requesting data is inside the HA update function.
 
-* For the tiles representation as local_file cameras:
+* For the tiles representation as `local_file cameras:
 ```
         camera:
           - platform: local_file
@@ -49,9 +49,9 @@ Only the `host` variable is required. To establish the scanning frequency for ge
             name: enerpi_rpi3_ldr
             file_path: /path/to/homeassistant/config/custom_components/sensor/enerpi_rpi3_ldr_tile_24h.png
 ```
-  (you can access this info in the HASS log, when enerpi loads)
+  (you can access this info in the HASS log, when the enerpi component loads)
 
-* For customize friendly names and icons, in customize.yaml or where applicable:
+* For customize friendly names and icons, in `customize.yaml or where applicable:
 ```
         sensor.enerpi_rpi3_power_1:
           icon: mdi:flash
@@ -68,8 +68,7 @@ Only the `host` variable is required. To establish the scanning frequency for ge
           friendly_name: Hall illuminance evolution
 ```
 
-* For automating an alert when main power goes over a custom limit and when it downs to a save level again:
-  This is done with 2 input_slider's (for customizing the upper & lower limit of main power) and 2 input_booleans, one for toggle on/off this control, and the other for saving the `enerpi alarm state`. You can define your desired *hysteresis* setting the minimum delay for activate or deactivate the alarm state.
+* For automating an alert when main power goes over a custom limit and when it downs to a safe level again. This is done with 2 `input_slider`'s (for dynamic customization of the upper & lower limit for the main power variable to control) and 2 `input_booleans`, one for toggle on/off this control, and the other for saving the `enerpi alarm state`. You can define your desired *hysteresis* setting the minimum delay for activating or deactivating the alarm state.
 ```
         input_boolean:
           - switch_control_enerpi_max_power:

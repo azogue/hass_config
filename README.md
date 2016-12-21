@@ -2,7 +2,7 @@
 My personal [Home Assistant](https://home-assistant.io) configuration. Used for automate my home devices:
  - 9 Hue lights in two rooms
  - 5 Etekcity RF outlets
- - 2 custom electrical current probes ([enerPI](https://github.com/azogue/enerpi) pet project)
+ - 2 custom electrical current probes ([enerPI](https://github.com/azogue/enerpi) pet project), which are working in HA as `custom_components` ([code](https://github.com/azogue/hass_config/tree/master/custom_components/sensor))
  - Multiple RPI's (1x RPI rev B, 2x RPI_2, 3x RPI_3) running KODI, multiple sensors and more nerd stuff
  - ...
 
@@ -29,18 +29,3 @@ Some info about what's here:
  * **KODI**: Control the KODI instance which is running 24/7 in another dedicated RPI 3,
  connected to the TV+HomeCinema kit, and making as AirPlay receiver
 
-## Useful commands to control **Home Assistant**:
-
- - Starting HASS:
-
-	sudo systemctl start home-assistant@homeassistant
-
- - HASS LOG:
-
-    sudo tail -n 100 /home/homeassistant/.homeassistant/home-assistant.log
-
- - Stopping HASS:
-
-    sudo systemctl stop home-assistant@homeassistant
-
-(Append `ssh pi@192.168.1.13` before to make a remote request)
