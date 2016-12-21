@@ -1,0 +1,28 @@
+alias: "La Cafetera en Salón"
+sequence:
+  - service: switch.turn_on
+    data:
+      entity_id: switch.tele
+  - service: light.turn_on
+    data:
+      entity_id:
+        - light.bola_grande
+        - light.bola_pequena
+        - light.cuenco
+        - light.pie_sofa
+        - light.pie_tv
+      profile: energize
+      transition: 10
+      brightness: 254
+  - service: shell_command.run_lacafetera
+  - delay:
+      seconds: 5
+  - service: notify.ios
+    data:
+      title: "Comienza el día en positivo!"
+      message: "La Cafetera ya ha empezado..."
+      data:
+        push:
+          badge: 0
+          sound: "US-EN-Morgan-Freeman-Good-Morning.wav"
+          category: "ALARM" # Needs to match the top level identifier you used in the ios configuration
