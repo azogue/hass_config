@@ -1,0 +1,24 @@
+# Startup notifications & new version notify
+- alias: Startup Notification
+  trigger:
+    platform: event
+    event_type: homeassistant_start
+  action:
+    service: script.turn_on
+    entity_id: script.notify_hass_start
+
+- alias: Update notifications
+  trigger:
+    - platform: state
+      entity_id: updater.updater
+  action:
+  - service: notify.pushbullet
+    data:
+      title: 'New Home Assistant Release'
+      target: !secret pb_target
+      message: "Home Assistant  {{ states.updater.updater.state }}  is now available."
+  - service: notify.ios
+    data:
+      title: 'New Home Assistant Release'
+      target: !secret myemail
+      message: "Home Assistant  {{ states.updater.updater.state }}  is now available."
