@@ -1,0 +1,35 @@
+alias: Test Notify
+sequence:
+  - alias: Pushbullet notify
+    service: notify.pushbullet
+    data:
+      title: 'HASS Push test'
+      message: 'Test de notificaciones'
+
+  - alias: Email notify
+    service: notify.gmail
+    data:
+      title: 'HASS Push test'
+      message: 'Test de notificaciones'
+
+  - alias: iOS notify
+    service: notify.ios
+    data:
+      message: "Something happened at home!"
+      data:
+        push:
+          badge: 5
+          sound: "US-EN-Morgan-Freeman-Vacate-The-Premises.wav"
+          category: "ALARM" # Needs to match the top level identifier you used in the ios configuration
+        action_data: # Anything passed in action_data will get echoed back to Home Assistant.
+          entity_id: light.cuenco
+          my_custom_data: "lalala"
+
+  - alias: Kodi push
+    service: notify.kodi
+    data:
+      title: "Home Assistant"
+      message: "Message to KODI from Home Assistant!"
+      data:
+        displaytime: 10000
+        icon: "warning"
