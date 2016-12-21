@@ -1,0 +1,26 @@
+.DS_Store
+deps/
+pictures/
+__pycache__
+.ipynb_checkpoints
+**/db_migrate_repo/
+**/db_migrate_repo_mysql/
+.idea
+build
+dist
+.git
+.gitignore
+*.ipynb
+.uuid
+.HA_VERSION
+.*
+
+*.conf
+**/*.db
+**/*.sketch
+**/*.txt
+**/*.log
+**/*.zip
+**/*.h5
+**/*.csv
+**/*Copia en conflicto*
