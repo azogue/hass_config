@@ -1,0 +1,152 @@
+homeassistant:
+  name: Piso
+  latitude: !secret latitude
+  longitude: !secret longitude
+  unit_system: metric
+  elevation: !secret elevation
+  time_zone: Europe/Madrid
+  customize: !include customize.yaml
+
+http:
+  api_password: !secret hass_pw
+  ip_ban_enabled: True
+  login_attempts_threshold: 5
+# TODO SSL certs
+#  ssl_certificate: '/etc/letsencrypt/live/HAname.duckdns.org/fullchain.pem'
+#  ssl_key: '/etc/letsencrypt/live/HAname.duckdns.org/privkey.pem'
+
+####################################################
+#                                                  #
+#                     Includes                     #
+#                                                  #
+####################################################
+binary_sensor: !include devices/binary_sensors.yaml
+camera: !include devices/cameras.yaml
+device_tracker: !include devices/device_trackers.yaml
+group: !include groups.yaml
+input_boolean: !include inputs/input_booleans.yaml
+input_slider: !include inputs/input_sliders.yaml
+light: !include devices/lights.yaml
+media_player: !include devices/media_players.yaml
+notify: !include notify.yaml
+sensor: !include devices/sensors.yaml
+switch: !include devices/switches.yaml
+weblink: !include web_links.yaml
+
+automation: !include_dir_merge_list automation/
+script: !include_dir_named scripts/
+scene: !include_dir_merge_list scenes/
+
+#alarm_control_panel: !include alarm_control_panel.yaml
+#input_select: !include input_select.yaml
+
+#shell_command: !include shell_commands.yaml
+shell_command:
+  run_lacafetera: '/home/homeassistant/.homeassistant/kodi_start_last_lacafetera.sh'
+
+####################################################
+#                                                  #
+#                     Enables                      #
+#                                                  #
+####################################################
+browser:
+conversation:
+discovery:
+frontend:
+sun:
+updater:
+
+logger:
+  default: info
+  logs:
+    homeassistant.core: warn
+    homeassistant.bootstrap: error
+    requests.packages.urllib3.connectionpool: warn
+    homeassistant.components.netdisco: error
+    homeassistant.components.device_tracker: warn
+    homeassistant.components.media_player: warn
+    homeassistant.components.switch: warn
+    homeassistant.components.sensor: warn
+    homeassistant.components.sensor.command_line: warn
+    homeassistant.components.http: warn
+    custom_components.enerpi: warn
+
+# Enables support for tracking state changes over time.
+history:
+  include:
+    domains:
+      - sun
+      - device_tracker
+      - binary_sensor
+      - switch
+      - light
+    entities:
+      - sensor.villena_temperature
+      - sensor.villena_humidity
+      - sensor.salon_humidity
+      - sensor.salon_temperature
+      - sensor.t_salon
+      - sensor.temp_stats_mean
+      - sensor.yr
+#      - camera
+#      - scene
+#      - group
+#      - sensor
+#      - custom_component.sensor
+#    entities:
+#      - sensor.cpu_use
+#      - sensor.ram_free
+#      - sensor.enerpi_power
+#      - sensor.enerpi_ldr
+#      - sensor.enerpi_2x_power_1
+#      - sensor.enerpi_2x_power_2
+#      - sensor.enerpi_2x_ldr
+#      - sensor.power_stats_mean
+#      - sensor.villena_temperature
+#      - sensor.villena_humidity
+#      - sensor.rpi_host
+#      - sensor.salon_humidity
+#      - sensor.salon_temperature
+#      - sensor.temp_stats_mean
+#      - sensor.t_salon
+
+# View all events in a logbook
+logbook:
+  include:
+    domains:
+      - switch
+      - media_player
+      - sun
+      - binary_sensor
+#      - device_tracker
+
+recorder:
+  purge_days: !secret recorder_purge_days
+  db_url: !secret recorder_db_url
+
+# TODO refinar y hacer funcionar las etiquetas de respuesta
+# iOS App
+ios:
+  push_categories: # Defines actionable notifications. Categories are groups of actions. You specify the category in the notification.
+    - name: Alarm
+      identifier: 'ALARM' # Must be unique and ALL CAPS
+      actions:
+        - identifier: 'SOUND_ALARM' # Must be unique and ALL CAPS
+          title: 'Sound Alarm' # Needs to be short!
+          activationMode: 'background' # or background. The mode in which to run the app when the action is performed.
+          authenticationRequired: yes # A Boolean value indicating whether the user must unlock the device before the action is performed.
+          destructive: yes # A Boolean value indicating whether the action is destructive.  When the value of this property is true, the system displays the corresponding button differently to indicate that the action is destructive.
+          behavior: 'default' # or TextInput. When TextInput the system provides a way for the user to enter a text response to be included with the notification.
+          context: 'default' # or Minimal. Default = In this context, the full UI is displayed for the notification’s alert. You may specify up to four custom actions in this context. Minimal = In this context, a minimal UI is displayed for the notification’s alert. You may specify up to two custom actions in this context.
+        - identifier: 'SILENCE_ALARM' # Must be unique and ALL CAPS
+          title: 'Silence Alarm' # Needs to be short!
+          activationMode: 'background' # or background. The mode in which to run the app when the action is performed.
+          authenticationRequired: yes # A Boolean value indicating whether the user must unlock the device before the action is performed.
+          destructive: no # A Boolean value indicating whether the action is destructive.  When the value of this property is true, the system displays the corresponding button differently to indicate that the action is destructive.
+          behavior: 'TextInput' # Default or TextInput. When TextInput the system provides a way for the user to enter a text response to be included with the notification.
+          context: 'default' # or Minimal. Default = In this context, the full UI is displayed for the notification’s alert. You may specify up to four custom actions in this context. Minimal = In this context, a minimal UI is displayed for the notification’s alert. You may specify up to two custom actions in this context.
+          textInputButtonTitle: 'Silencio!' # Only for iOS 10 when behavior is TextInput.
+          textInputPlaceholder: '...' # Only for iOS 10 when behavior is TextInput.
+          parameters: # iOS 9 only. Use this dictionary to specify any behavior-specific data for the action. For example, if you set behavior to TextInput you can use the UIUserNotificationTextInputActionButtonTitleKey key, which lets you customize the title of the button displayed by the text input interface.
+            UIUserNotificationTextInputActionButtonTitleKey: "Silencio!"
+

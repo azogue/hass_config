@@ -1,0 +1,41 @@
+# WOL
+- platform: wake_on_lan
+  mac_address: !secret mac_nas
+  name: "WOL NAS"
+  host: "192.168.1.40"
+
+# Etekcity outlets
+- platform: rpi_rf
+  gpio: 17
+  name: Etekcity outlets
+  switches:
+    cocina:
+      pulselength: 185
+      code_on: 4527411
+      code_off: 4527420
+    caldera:
+      pulselength: 185
+      code_on: 4527555
+      code_off: 4527564
+    tele:
+      pulselength: 185
+      code_on: 4527875
+      code_off: 4527884
+    sofa:
+      pulselength: 185
+      code_on: 4529411
+      code_off: 4529420
+    calefactor:
+      pulselength: 185
+      code_on: 4535555
+      code_off: 4535564
+
+- platform: command_line
+  scan_interval: 180
+  switches:
+    toggle_kodi_ambilight:
+      command_on: '/home/homeassistant/.homeassistant/switch_kodi_hyperion.sh 1'
+      command_off: '/home/homeassistant/.homeassistant/switch_kodi_hyperion.sh 0'
+      command_state: '/home/homeassistant/.homeassistant/switch_kodi_hyperion.sh'
+      friendly_name: KODI Ambilight
+      value_template: '{{ value_json == 1 }}'
