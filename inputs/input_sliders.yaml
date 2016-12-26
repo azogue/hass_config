@@ -1,6 +1,6 @@
 # Sliders para setting de alarma despertador
 alarm_clock_hour:
-  initial: 7
+  initial: 8
   min: 0
   max: 23
   step: 1
