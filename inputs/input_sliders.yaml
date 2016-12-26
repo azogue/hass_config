@@ -12,7 +12,7 @@ alarm_clock_minute:
 
 # Lights ON on motion
 light_duration_after_motion:
-  initial: 5
+  initial: 15
   min: 5
   max: 300
   step: 5
