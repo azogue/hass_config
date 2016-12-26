@@ -4,10 +4,13 @@
 #    - 192.168.1.13
   home_interval: 30
 # If new discovered devices are tracked by default (default: yes)
-  track_new_devices: yes
+  track_new_devices: no
   # Seconds between each scan for new devices (default: 12)
   interval_seconds: 60
   # Seconds to wait till marking someone as not home after not being seen
   # (default: 180)
   consider_home: 600
+
 - platform: bluetooth_tracker
+  home_interval: 30
+  track_new_devices: no
