@@ -6,7 +6,6 @@
     - service: light.turn_on
       data:
         entity_id:
-          - light.ventilador
           - light.bola_grande
           - light.bola_pequena
           - light.cuenco
@@ -27,18 +26,18 @@
       data_template:
         brightness: '{{ states( "input_slider.light_main_slider_salon" )|round( 0 ) }}'
 
-- alias: Brillo Salón Sync
-  trigger:
-    - platform: state
-      entity_id: light.bola_grande
-      to: "on"
-  action:
-    - service: automation.turn_off
-      entity_id: automation.brillo_salon
-    - service: input_slider.select_value
-      data:
-        entity_id: input_slider.light_main_slider_salon
-      data_template:
-        value: '{{ trigger.to_state.attributes.brightness|int }}'
-    - service: automation.turn_on
-      entity_id: automation.brillo_salon
+#- alias: Brillo Salón Sync
+#  trigger:
+#    - platform: state
+#      entity_id: light.bola_grande
+#      to: "on"
+#  action:
+#    - service: automation.turn_off
+#      entity_id: automation.brillo_salon
+#    - service: input_slider.select_value
+#      data:
+#        entity_id: input_slider.light_main_slider_salon
+#      data_template:
+#        value: '{{ trigger.to_state.attributes.brightness|int }}'
+#    - service: automation.turn_on
+#      entity_id: automation.brillo_salon

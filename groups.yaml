@@ -74,6 +74,9 @@ Cámaras:
 #  - camera.escam_qf001_comedor
 #  - camera.picamera_noir_bedroom
 
+Luces Estudio:
+  - light.flexo
+
 Luces Salón:
   - light.ventilador
   - light.bola_grande
@@ -86,8 +89,7 @@ Luces Salón:
 Master luces del salón:
   - input_slider.light_main_slider_salon
   - input_slider.light_temp_slider_salon
-  - automation.brillo_salon_sync
-  - switch.toggle_kodi_ambilight
+#  - automation.brillo_salon_sync
 
 Luces Dormitorio:
   - light.aura_habitacion
@@ -100,22 +102,19 @@ Enchufes:
   - switch.sofa
   - switch.caldera
 
-MPlayer:
-  - media_player.kodi
+Kodi:
+  - switch.kodi_tv_salon
+  - switch.toggle_kodi_ambilight
 
 Despertador:
   - input_boolean.alarm_clock_status
   - input_slider.alarm_clock_hour
   - input_slider.alarm_clock_minute
   - sensor.alarm_clock_time
-  - script.despertador_la_cafetera
-  - input_boolean.testing_alarm
 
 Escenas:
   - scene.cuenco_red
   - scene.cuenco_blue
-  - scene.salon_normal
-  - scene.salon_dim
 
 Scripts:
   - script.test_notify
@@ -133,7 +132,7 @@ enerPI 2x:
   - sensor.enerpi_2x_power_1
   - sensor.enerpi_2x_power_2
   - sensor.enerpi_2x_ldr
-  - camera.enerpi_2x_power_1
+#  - camera.enerpi_2x_power_1
   - camera.enerpi_2x_power_2
   - camera.enerpi_2x_ldr
 
@@ -141,14 +140,16 @@ enerPI Max Power Control:
   - input_boolean.switch_control_enerpi_max_power
   - input_slider.enerpi_max_power
   - input_slider.enerpi_max_power_reset
-  - input_boolean.state_enerpi_alarm_max_power
+#  - input_boolean.state_enerpi_alarm_max_power
 
 Hass control:
-  - input_boolean.switch_master_alarm
-  - input_boolean.state_master_alarm
   - input_boolean.switch_motion_lights
   - input_slider.light_duration_after_motion
   - script.restart_hass
+
+Alarma:
+  - input_boolean.switch_master_alarm
+  - input_boolean.state_master_alarm
 
 Status:
   name: Home Status
@@ -169,8 +170,10 @@ Control:
     - group.master_luces_del_salon
     - group.luces_salon
     - group.luces_dormitorio
+    - group.luces_estudio
     - group.enchufes
-    - group.mplayer
+    - media_player.kodi
+    - group.kodi
     - group.despertador
 
 Home Network:
@@ -198,8 +201,9 @@ Master conf:
   icon: mdi:infinity
   view: yes
   entities:
+    - group.alarma
     - group.hass_control
-    - group.enerpi_max_power_control
+#    - group.enerpi_max_power_control
 
 DEBUG:
   name: Debugging
@@ -208,6 +212,7 @@ DEBUG:
     - group.automation_config
     - group.escenas
     - group.scripts
+    - switch.rpi_led
 
 # TODO default_view eliminando cards
 #default_view:

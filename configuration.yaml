@@ -150,3 +150,17 @@ ios:
           parameters: # iOS 9 only. Use this dictionary to specify any behavior-specific data for the action. For example, if you set behavior to TextInput you can use the UIUserNotificationTextInputActionButtonTitleKey key, which lets you customize the title of the button displayed by the text input interface.
             UIUserNotificationTextInputActionButtonTitleKey: "Silencio!"
 
+panel_iframe:
+  enerpi:
+    title: 'enerPI'
+#    url: 'http://192.168.1.44/enerpi/api/monitor'
+    url: 'http://192.168.1.44/enerpi/'
+    icon: mdi:flash
+  enerpi_2x:
+    title: 'enerPI 2x'
+    icon: mdi:power-plug
+    url: 'http://192.168.1.52/enerpi/'
+  kodi:
+    title: 'Kodi'
+    url: 'http://192.168.1.56:8080/'
+    icon: mdi:kodi

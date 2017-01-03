@@ -39,3 +39,14 @@
       command_state: '/home/homeassistant/.homeassistant/switch_kodi_hyperion.sh'
       friendly_name: KODI Ambilight
       value_template: '{{ value_json == 1 }}'
+
+#- platform: rpi_gpio
+#  ports:
+#    13: RPI LED
+
+- platform: cecswitch
+  name: kodi_tv_salon
+  host: "192.168.1.56"
+  port: 8080
+  username: "osmc"
+  password: "osmc"

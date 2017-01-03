@@ -1,7 +1,8 @@
 # RPI hardware-present sensors:
 - platform: onewire
   names:
-    28-800000015326: T_Salón
+#    28-800000015326: T_Salón
+    28-8000000152ed: T_Salón
   scan_interval: 30
 
 - platform: dht
@@ -127,10 +128,10 @@
   name: Power stats
   sampling_size: 24
 
-- platform: statistics
-  entity_id: sensor.t_salon
-  name: Temp stats
-  sampling_size: 10
+#- platform: statistics
+#  entity_id: sensor.t_salon
+#  name: Temp stats
+#  sampling_size: 10
 
 - platform: statistics
   entity_id: binary_sensor.pir_salon

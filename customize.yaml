@@ -30,11 +30,11 @@ input_boolean.testing_alarm:
   icon: mdi:toggle-switch
 
 input_boolean.switch_master_alarm:
-  friendly_name: Interruptor de alarma
-#  homebridge_hidden: true
+  friendly_name: Alarma general
+  homebridge_name: Alarma general
   icon: mdi:toggle-switch
 input_boolean.state_master_alarm:
-  friendly_name: ALARMA GENERAL
+  friendly_name: Estado de alarma general
   homebridge_hidden: true
   icon: mdi:alert-octagon
 
@@ -69,7 +69,7 @@ input_boolean.state_enerpi_alarm_max_power:
 input_slider.enerpi_max_power:
   friendly_name: Max Power (kW)
   icon: mdi:flash-red-eye
-#  homebridge_hidden: true
+  homebridge_hidden: true
 input_slider.enerpi_max_power_reset:
   friendly_name: Reset level (kW)
   icon: mdi:flash-off
@@ -104,16 +104,15 @@ switch.wol_nas:
   friendly_name: WakeOnLan NAS
   homebridge_hidden: true
 
+# These are the Etekcity switches, which are appended on homebridge, so here are 'hidden'
 switch.cocina:
   icon: mdi:lightbulb
   friendly_name: LED Cocina
   homebridge_hidden: true
-#  homebridge_name: Cocina
 switch.calefactor:
   icon: mdi:power-plug
   friendly_name: Calefactor Baño
   homebridge_hidden: true
-#  homebridge_name: Calefactor
 switch.tele:
   icon: mdi:power-plug
   friendly_name: Enchufe TV
@@ -126,12 +125,15 @@ switch.caldera:
   icon: mdi:radiator
   friendly_name: Caldera de gas
   homebridge_hidden: true
-#  homebridge_name: Caldera
-#  assumed_state: true
 
 switch.toggle_kodi_ambilight:
   icon: mdi:monitor-multiple
   homebridge_name: Kodi Ambilight
+
+switch.kodi_tv_salon:
+  friendly_name: Tele
+  homebridge_name: Tele
+  assumed_state: true
 
 
 ####################################################################################

@@ -219,6 +219,7 @@ import asyncio
 import cairosvg
 import datetime as dt
 import logging
+from lxml.etree import XMLSyntaxError
 import os
 import re
 import requests
@@ -321,17 +322,22 @@ def _png_tile_export(svg_content_bytes, filename, filepathbase, dpi=300):
     local_svg = png_file[:-3] + 'svg'
     with open(local_svg, 'wb') as f:
         f.write(svg_content_bytes)
-    # noinspection PyUnresolvedReferences
-    cairosvg.svg2png(url=local_svg, write_to=png_file, dpi=dpi)
-    return png_file
+    try:
+        # noinspection PyUnresolvedReferences
+        cairosvg.svg2png(url=local_svg, write_to=png_file, dpi=dpi)
+        return True, png_file
+    except XMLSyntaxError as e:
+        _LOGGER.error('PNG_TILE ({}) -> Export error: {}'.format(filename, e))
+        return False, e
 
 
 def _generate_local_png_tile(enerpi_name, host, port, prefix, sensor, filepathbase, dpi=300):
     svg_content, sensor_name, filename = _get_remote_tile_svg_and_transform(enerpi_name, host, port, prefix, sensor)
     _LOGGER.debug('LOCAL_PNG for {} --> {} => {}'.format(sensor_name, filename, svg_content[:300]))
-    png_file = _png_tile_export(svg_content.encode(), filename, filepathbase, dpi)
-    mask_lf_cam = '  - platform: local_file\n    name: {}\n    file_path: {}'
-    return png_file, mask_lf_cam.format('{}_{}'.format(enerpi_name, sensor_name).lower(), png_file)
+    ok_export, png_file = _png_tile_export(svg_content.encode(), filename, filepathbase, dpi)
+    if ok_export:
+        mask_lf_cam = '  - platform: local_file\n    name: {}\n    file_path: {}'
+        return png_file, mask_lf_cam.format('{}_{}'.format(enerpi_name, sensor_name).lower(), png_file)
 
 
 ##########################################

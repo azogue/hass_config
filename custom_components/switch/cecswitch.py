@@ -148,7 +148,7 @@ class CECSwitch(SwitchDevice):
         self._run_kodi_cec("activate")
         self._state = True
         self.update_ha_state()
-        _LOGGER.info('SWITCH STATE GOES ON')
+        _LOGGER.info('SWITCH TURN ON')
 
     def turn_off(self):
         """Turn the switch off."""
@@ -178,7 +178,7 @@ class CECSwitch(SwitchDevice):
             # self._run_kodi_cec("standby")
         self._state = False
         self.update_ha_state()
-        _LOGGER.info('SWITCH STATE GOES OFF')
+        _LOGGER.info('SWITCH TURN OFF')
 
     def update(self):
         """Check if device is on and update the state."""
