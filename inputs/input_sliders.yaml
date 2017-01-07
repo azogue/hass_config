@@ -12,9 +12,9 @@ alarm_clock_minute:
 
 # Lights ON on motion
 light_duration_after_motion:
-  initial: 15
+  initial: 10
   min: 5
-  max: 300
+  max: 60
   step: 5
 
 # Master Sliders Salón (brillo y Tª color)
