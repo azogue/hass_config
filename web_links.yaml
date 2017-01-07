@@ -1,4 +1,6 @@
 entities:
+  - name: Slave HASS
+    url: http://192.168.1.46:8123/
   - name: enerPI
     url: http://192.168.1.44/enerpi/
   - name: enerPI 2x
