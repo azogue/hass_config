@@ -2,9 +2,6 @@
 alarm_clock_status:
   initial: on
 
-testing_alarm:
-  initial: off
-
 # General Intrude/Incident Alarm
 switch_master_alarm:
   initial: off
@@ -18,5 +15,3 @@ switch_motion_lights:
 # enerPI Alarm (excesive current)
 switch_control_enerpi_max_power:
   initial: on
-state_enerpi_alarm_max_power:
-  initial: off
