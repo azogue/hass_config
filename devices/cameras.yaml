@@ -1,3 +1,6 @@
+################
+# LOCAL CAMERA
+################
 # RPI Camera
 - platform: rpi_camera
   name: PiCamera Salón
@@ -10,45 +13,34 @@
 #  vertical_flip: 0
   file_path: /home/homeassistant/picamera/image.jpg
 
-# enerPI local_file "cameras":
-- platform: local_file
-  name: enerpi_power
-  file_path: /home/homeassistant/.homeassistant/custom_components/sensor/enerpi_power_tile_24h.png
+####################
+# MOTIONEYE CAMERAS
+####################
+# RPI Camera in Slave HASS
+#- platform: generic
+#  name: PiCamera Estudio
+#  still_image_url: !secret picamera_slave_hass
+#- platform: mjpeg
+#  name: PiCamera Estudio
+#  mjpeg_url: http://192.168.1.46:8082
+- platform: generic
+  name: PiCamera Estudio
+  still_image_url: http://192.168.1.46:8765/picture/2/current/
 
-- platform: local_file
-  name: enerpi_ldr
-  file_path: /home/homeassistant/.homeassistant/custom_components/sensor/enerpi_ldr_tile_24h.png
+# ESCAM QF001 cheap chinese camera (as still images - generic, or mjpeg stream)
+- platform: generic
+  name: ESCAM QF001
+  still_image_url: http://192.168.1.46:8765/picture/1/current/
+#- platform: mjpeg
+#  name: ESCAM QF001
+#  mjpeg_url: http://192.168.1.46:8081
 
-#- platform: local_file
-#  name: enerpi_2x_power_1
-#  file_path: /home/homeassistant/.homeassistant/custom_components/sensor/enerpi_2x_power_1_tile_24h.png
-
-- platform: local_file
-  name: enerpi_2x_power_2
-  file_path: /home/homeassistant/.homeassistant/custom_components/sensor/enerpi_2x_power_2_tile_24h.png
-
-- platform: local_file
-  name: enerpi_2x_ldr
-  file_path: /home/homeassistant/.homeassistant/custom_components/sensor/enerpi_2x_ldr_tile_24h.png
-
+################
+# OTHER CAMERAS
+################
 # GMaps family location:
 - platform: generic
   name: Where are we?
   still_image_url: https://maps.googleapis.com/maps/api/staticmap?center={% if states.device_tracker.iphone.attributes.latitude %}{{ states.device_tracker.iphone.attributes.latitude }},{{ states.device_tracker.iphone.attributes.longitude }}{% else %}{{ states.zone.home.attributes.latitude }},{{ states.zone.home.attributes.longitude }}{% endif %}&zoom=13&size=500x500&scale=2&maptype=roadmap&markers=color:{% if states.device_tracker.iphone.attributes.latitude %}green{% else %}red{% endif %}%7Clabel:E%7C{% if states.device_tracker.iphone.attributes.latitude %}{{ states.device_tracker.iphone.attributes.latitude }},{{ states.device_tracker.iphone.attributes.longitude }}{% else %}{{ states.zone.home.attributes.latitude }},{{ states.zone.home.attributes.longitude }}{% endif %}&markers=color:{% if states.device_tracker.iphone_5s.attributes.latitude %}blue{% else %}red{% endif %}%7Clabel:C%7C{% if states.device_tracker.iphone_5s.attributes.latitude %}{{ states.device_tracker.iphone_5s.attributes.latitude }},{{ states.device_tracker.iphone_5s.attributes.longitude }}{% else %}{{ states.zone.home.attributes.latitude }},{{ states.zone.home.attributes.longitude }}{% endif %}
   limit_refetch_to_url_change: true
 
-#- platform: mjpeg
-#  mjpeg_url: http://192.168.1.52:8081
-#  name: PiCamera NOIR Bedroom
-#- platform: generic
-#  still_image_url: http://192.168.1.52/cams/picture/1/current/?_username=admin&_signature=5b0f4996467062c7ad25ec092350b55de2fca306
-#  name: PiCamera NOIR Bedroom
-#- platform: generic
-#  still_image_url: http://rpi3.local/cams/picture/1/current/?_username=admin&_signature=5b0f4996467062c7ad25ec092350b55de2fca306
-#  name: PiCamera Pasillo
-#
-#- platform: generic
-#  still_image_url: http://rpi3.local/cams/picture/2/current/?_username=admin&_signature=526c34460d8695515223ce0b3d19da26ee93dfca
-#  name: ESCAM QF001 Comedor
-
-# rtsp://192.168.1.10:554/user=admin&password=enoch&channel=1&stream=0.sdp?
