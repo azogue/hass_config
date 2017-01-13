@@ -1,4 +1,5 @@
 Tiempo en Villena:
+  - sun.sun
   - sensor.villena_weather
   - sensor.villena_temperature
   - sensor.villena_wind_speed
@@ -9,9 +10,8 @@ Tiempo en Villena:
   - sensor.villena_rain
   - sensor.villena_forecast
   - sensor.yr_symbol
-#  - sun
 
-Host RPI 3:
+Host RPi3:
   - sensor.cpu_use
   - sensor.ram_free
   - sensor.last_boot
@@ -20,13 +20,45 @@ Host RPI 3:
 #  - sensor.since_last_boot
 #  - sensor.since_last_boot_templated
 
-Sensing:
+Host RPi2Hat:
+  - sensor.cpu_use_rpi2h
+  - sensor.ram_free_rpi2h
+  - sensor.last_boot_rpi2h
+  - sensor.disk_use__rpi2h
+
+Salón:
   - sensor.main_power
   - sensor.consumo_cocina
   - sensor.t_salon
   - sensor.salon_temperature
   - sensor.salon_humidity
   - binary_sensor.pir_salon
+  - binary_sensor.motioncam_salon
+
+Estudio RPi2h:
+  name: Estudio
+  entities:
+    - sensor.temperatura_estudio_rpi2h
+    - sensor.dht22_temperature_rpi2h
+    - sensor.dht22_humidity_rpi2h
+    - sensor.temperature_rpi2h
+    - sensor.humidity_rpi2h
+    - sensor.pressure_rpi2h
+    - binary_sensor.pir_estudio_rpi2h
+    - binary_sensor.motioncam_estudio
+
+Caldera:
+  - binary_sensor.heating
+  - sensor.calefaccion
+  - sensor.galeria_impulsion_calefaccion
+  - sensor.galeria_retorno_calefaccion
+  - sensor.galeria_acs
+  - switch.caldera
+
+Galería:
+  - sensor.galeria_dht22_temperature
+  - sensor.galeria_dht22_humidity
+  - sensor.galeria_rpi2_rpi_cpu_temp
 
 Red e Internet:
   - sensor.speedtest_ping
@@ -58,6 +90,10 @@ Cacharros:
   - device_tracker.rpi3osmc
 
 Links:
+  - weblink.slave_hass
+  - weblink.motioneye
+  - weblink.kodi_web_interface
+  - weblink.tv_headend
   - weblink.enerpi
   - weblink.enerpi_2x
   - weblink.pyoutlets
@@ -67,18 +103,16 @@ Links:
   - weblink.rpi_caldera
   - weblink.rpi_3_osmc_salon
   - weblink.rpi_2_sensehat_estudio
-  - weblink.kodi_web_interface
 
 Cámaras:
   - camera.picamera_salon
-#  - camera.escam_qf001_comedor
-#  - camera.picamera_noir_bedroom
+  - camera.picamera_estudio
+  - camera.escam_qf001
 
 Luces Estudio:
   - light.flexo
 
 Luces Salón:
-  - light.ventilador
   - light.bola_grande
   - light.bola_pequena
   - light.pie_tv
@@ -98,8 +132,8 @@ Luces Dormitorio:
 Enchufes:
   - switch.cocina
   - switch.calefactor
-  - switch.tele
-  - switch.sofa
+  - switch.camara
+  - switch.altavoz
   - switch.caldera
 
 Kodi:
@@ -107,14 +141,15 @@ Kodi:
   - switch.toggle_kodi_ambilight
 
 Despertador:
-  - input_boolean.alarm_clock_status
+  - switch.alarm_clock_status
+#  - input_boolean.alarm_clock_status
   - input_slider.alarm_clock_hour
   - input_slider.alarm_clock_minute
   - sensor.alarm_clock_time
 
-Escenas:
-  - scene.cuenco_red
-  - scene.cuenco_blue
+#Escenas:
+#  - scene.cuenco_red
+#  - scene.cuenco_blue
 
 Scripts:
   - script.test_notify
@@ -123,44 +158,50 @@ Scripts:
   - script.flash_cuenco
 
 enerPI:
+  - sensor.enerpi
   - sensor.enerpi_power
   - sensor.enerpi_ldr
-  - camera.enerpi_power
-  - camera.enerpi_ldr
+  - camera.enerpi_tile_power
+  - camera.enerpi_tile_ldr
 
 enerPI 2x:
+  - sensor.enerpi_2x
   - sensor.enerpi_2x_power_1
   - sensor.enerpi_2x_power_2
   - sensor.enerpi_2x_ldr
-#  - camera.enerpi_2x_power_1
-  - camera.enerpi_2x_power_2
-  - camera.enerpi_2x_ldr
+  - camera.enerpi_2x_tile_power_1
+  - camera.enerpi_2x_tile_power_2
+  - camera.enerpi_2x_tile_ldr
 
 enerPI Max Power Control:
   - input_boolean.switch_control_enerpi_max_power
   - input_slider.enerpi_max_power
   - input_slider.enerpi_max_power_reset
-#  - input_boolean.state_enerpi_alarm_max_power
 
 Hass control:
   - input_boolean.switch_motion_lights
+#  - switch.switch_motion_lights
   - input_slider.light_duration_after_motion
   - script.restart_hass
+  - script.restart_homebridge
+  - switch.motioncam_estudio
+  - switch.motioncam_escam
 
 Alarma:
-  - input_boolean.switch_master_alarm
-  - input_boolean.state_master_alarm
+  - switch.switch_master_alarm
 
 Status:
   name: Home Status
   icon: mdi:castle
   view: yes
   entities:
-    - group.family
-    - group.sensing
-    - group.tiempo_en_villena
+    - group.salon
+    - group.estudio_rpi2h
+    - group.galeria
+    - group.caldera
     - group.camaras
-    - group.links
+    - group.family
+    - group.tiempo_en_villena
 
 Control:
   name: Home Control
@@ -181,17 +222,19 @@ Home Network:
   view: yes
   icon: mdi:sitemap
   entities:
-    - group.family
-    - group.host_rpi_3
-    - group.red_e_internet
-    - group.cacharros
     - group.links
+    - group.host_rpi3
+    - group.host_rpi2hat
+    - group.family
+    - group.cacharros
+    - group.red_e_internet
 
 enerpi_view:
   name: enerPI
   icon: mdi:flash
   view: yes
   entities:
+    - sensor.enerpi
     - group.enerpi
     - group.enerpi_2x
     - group.enerpi_max_power_control
@@ -203,7 +246,12 @@ Master conf:
   entities:
     - group.alarma
     - group.hass_control
-#    - group.enerpi_max_power_control
+    - group.camaras
+    - binary_sensor.heating
+    - binary_sensor.motioncam_salon
+    - binary_sensor.pir_salon
+    - binary_sensor.motioncam_estudio
+    - binary_sensor.pir_estudio_rpi2h
 
 DEBUG:
   name: Debugging
@@ -212,7 +260,6 @@ DEBUG:
     - group.automation_config
     - group.escenas
     - group.scripts
-    - switch.rpi_led
 
 # TODO default_view eliminando cards
 #default_view:
