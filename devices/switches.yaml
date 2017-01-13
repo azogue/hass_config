@@ -17,11 +17,11 @@
       pulselength: 185
       code_on: 4527555
       code_off: 4527564
-    tele:
+    camara:
       pulselength: 185
       code_on: 4527875
       code_off: 4527884
-    sofa:
+    altavoz:
       pulselength: 185
       code_on: 4529411
       code_off: 4529420
@@ -31,7 +31,7 @@
       code_off: 4535564
 
 - platform: command_line
-  scan_interval: 180
+  scan_interval: 120
   switches:
     toggle_kodi_ambilight:
       command_on: '/home/homeassistant/.homeassistant/switch_kodi_hyperion.sh 1'
@@ -39,6 +39,42 @@
       command_state: '/home/homeassistant/.homeassistant/switch_kodi_hyperion.sh'
       friendly_name: KODI Ambilight
       value_template: '{{ value_json == 1 }}'
+    motioncam_escam:
+      command_on: '/home/homeassistant/.homeassistant/switch_camera_motion_detection.sh 192.168.1.46 1 start'
+      command_off: '/home/homeassistant/.homeassistant/switch_camera_motion_detection.sh 192.168.1.46 1 pause'
+      command_state: '/home/homeassistant/.homeassistant/switch_camera_motion_detection.sh 192.168.1.46 1 status'
+      friendly_name: MotionDetect Salón
+      value_template: '{{ value_json == 1 }}'
+    motioncam_estudio:
+      command_on: '/home/homeassistant/.homeassistant/switch_camera_motion_detection.sh 192.168.1.46 2 start'
+      command_off: '/home/homeassistant/.homeassistant/switch_camera_motion_detection.sh 192.168.1.46 2 pause'
+      command_state: '/home/homeassistant/.homeassistant/switch_camera_motion_detection.sh 192.168.1.46 2 status'
+      friendly_name: MotionDetect Estudio
+      value_template: '{{ value_json == 1 }}'
+
+# Input_boolean's to switches because homebridge doesn't update the initial state of IBs, so IB are ignored and Ss added
+- platform: template
+  switches:
+    alarm_clock_status:
+      friendly_name: Despertador LaCafetera
+#      value_template: "{{ is_state('input_boolean.alarm_clock_status', 'on') }}"
+      value_template: "{{ states.input_boolean.alarm_clock_status.state == 'on' }}"
+      turn_on:
+        service: input_boolean.turn_on
+        entity_id: input_boolean.alarm_clock_status
+      turn_off:
+        service: input_boolean.turn_off
+        entity_id: input_boolean.alarm_clock_status
+    switch_master_alarm:
+      friendly_name: Alarma general
+#      value_template: "{{ is_state('input_boolean.switch_master_alarm', 'on') }}"
+      value_template: "{{ states.input_boolean.switch_master_alarm.state == 'on' }}"
+      turn_on:
+        service: input_boolean.turn_on
+        entity_id: input_boolean.switch_master_alarm
+      turn_off:
+        service: input_boolean.turn_off
+        entity_id: input_boolean.switch_master_alarm
 
 #- platform: rpi_gpio
 #  ports:
