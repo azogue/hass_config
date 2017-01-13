@@ -1,6 +1,8 @@
 entities:
   - name: Slave HASS
     url: http://192.168.1.46:8123/
+  - name: MotionEye
+    url: http://192.168.1.46:8765/
   - name: enerPI
     url: http://192.168.1.44/enerpi/
   - name: enerPI 2x
@@ -19,5 +21,7 @@ entities:
     url: http://192.168.1.46/enerweb/
   - name: RPI 3 OSMC Salón
     url: http://192.168.1.56/enerweb/
+  - name: TV Headend
+    url: http://192.168.1.56:9981/
   - name: Kodi web interface
     url: http://192.168.1.56:8080/
