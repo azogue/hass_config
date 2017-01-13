@@ -1,0 +1,164 @@
+homeassistant:
+  name: RPI2
+  latitude: !secret latitude
+  longitude: !secret longitude
+  unit_system: metric
+  elevation: !secret elevation
+  time_zone: Europe/Madrid
+  customize: !include customize.yaml
+
+logger:
+  default: warn
+  logs:
+    homeassistant.loader: info
+    requests: error
+    homeassistant.components.http: warn
+    homeassistant.components.binary_sensor: info
+    custom_components.sensor.mysensehat: info
+    custom_components.sensor.myonewire: info
+
+http:
+  api_password: !secret hass_pw
+  ip_ban_enabled: True
+  login_attempts_threshold: 5
+
+browser:
+frontend:
+history:
+  exclude:
+    domains:
+     - scripts
+     - automation
+     - weblink
+     - updater
+     - group
+     - camera
+    entities:
+     - sensor.last_boot
+     - sensor.disk_use_
+
+logbook:
+updater:
+recorder:
+  purge_days: !secret recorder_purge_days
+  db_url: !secret recorder_db_url
+
+#switch:
+#- platform: rpi_gpio
+#  ports:
+#    16: Red
+#    20: Green
+#    21: Blue
+
+binary_sensor:
+- platform: rpi_gpio
+  name: sensores de movimiento
+  sensor_class: motion
+  ports:
+    27: PIR Estudio
+  bouncetime: 50
+  pull_mode: "UP"
+
+input_boolean:
+  switch_matrix_display:
+    initial: on
+
+sensor:
+  - platform: myonewire
+    names:
+      28-800000015326: Temperatura Estudio
+    scan_interval: 20
+    maximum: 50
+    minimum: 5
+
+  - platform: dht
+    sensor: DHT22
+    pin: 22
+    name: dht22
+    scan_interval: 20
+    monitored_conditions:
+      - temperature
+      - humidity
+
+  - platform: mysensehat
+    scan_interval: 20
+    round: 2
+    display_options:
+      - temperature
+      - humidity
+      - pressure
+
+  - platform: systemmonitor
+    resources:
+      - type: disk_use_percent
+        arg: /
+      - type: memory_free
+      - type: processor_use
+      - type: last_boot
+
+# RPI Camera
+#camera:
+#  - platform: rpi_camera
+#    name: PiCamera Estudio
+#    image_width: 1024
+#    image_height: 768
+#    image_quality: 70
+#    image_rotation: 180
+#    timelapse: 1000
+#    horizontal_flip: 1
+#    vertical_flip: 0
+#    file_path: /home/homeassistant/picamera/image.jpg
+
+weblink:
+  entities:
+    - name: Master Hass
+      url: http://192.168.1.13:8123/
+    - name: MotionEye
+      url: http://127.0.0.1:8765/
+    - name: enerPI
+      url: http://192.168.1.44/enerpi/
+
+group:
+  RPi 2 SenseHat monitor:
+    - sensor.disk_use_
+    - sensor.cpu_use
+    - sensor.ram_free
+    - sensor.last_boot
+
+  SenseHat:
+    - input_boolean.switch_matrix_display
+
+  Links:
+    - weblink.master_hass
+    - weblink.motioneye
+    - weblink.enerpi
+
+  Estudio:
+    - sensor.temperatura_estudio
+    - sensor.dht22_temperature
+    - sensor.dht22_humidity
+#    - sensor.dht11_temperature
+#    - sensor.dht11_humidity
+    - sensor.temperature
+    - sensor.humidity
+    - sensor.pressure
+    - binary_sensor.pir_estudio
+
+  Home Network:
+    name: Red local del hogar
+    icon: mdi:sitemap
+    view: yes
+    entities:
+      - group.rpi_2_sensehat_monitor
+      - group.sensehat
+#      - group.rgbled
+      - group.links
+
+  Status:
+    name: Home Status
+    icon: mdi:castle
+    view: yes
+    entities:
+      - group.estudio
+      - group.galeria
+      - group.caldera
