@@ -9,7 +9,7 @@
   interval_seconds: 60
   # Seconds to wait till marking someone as not home after not being seen
   # (default: 180)
-  consider_home: 600
+  consider_home: 300
 
 - platform: bluetooth_tracker
   home_interval: 30
