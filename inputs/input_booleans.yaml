@@ -5,8 +5,6 @@ alarm_clock_status:
 # General Intrude/Incident Alarm
 switch_master_alarm:
   initial: off
-state_master_alarm:
-  initial: off
 
 # Lights control
 switch_motion_lights:
