@@ -31,15 +31,15 @@ light_temp_slider_salon:
   max: 100
   step: 1
 
-# enerPI alarm config
-enerpi_max_power:
-  initial: 4.0
-  min: 1.0
-  max: 6.0
-  step: 0.25
-
-enerpi_max_power_reset:
-  initial: 2.0
-  min: 1.0
-  max: 6.0
-  step: 0.25
+## enerPI alarm config
+#enerpi_max_power:
+#  initial: 4.0
+#  min: 1.0
+#  max: 6.0
+#  step: 0.25
+#
+#enerpi_max_power_reset:
+#  initial: 2.0
+#  min: 1.0
+#  max: 6.0
+#  step: 0.25
