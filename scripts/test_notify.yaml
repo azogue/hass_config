@@ -16,6 +16,7 @@ sequence:
     service: notify.ios
     data:
       message: "Something happened at home!"
+      target: !secret ios_target
       data:
         push:
           badge: 5
