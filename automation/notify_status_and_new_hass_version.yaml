@@ -4,7 +4,11 @@
     platform: event
     event_type: homeassistant_start
   action:
-    service: script.turn_on
+  - service: switch.turn_on
+    entity_id: switch.camara
+  - service: switch.turn_on
+    entity_id: switch.caldera
+  - service: script.turn_on
     entity_id: script.notify_hass_start
 
 - alias: Update notifications
