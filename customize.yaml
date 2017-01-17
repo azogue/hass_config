@@ -11,12 +11,19 @@ media_player.kodi:
 ####################################################################################
 # Despertador
 input_boolean.alarm_clock_status:
-  homebridge_hidden: false
-  friendly_name: Despertador
+  hidden: true
+switch.alarm_clock_status:
+  homebridge_name: Despertador LaCafetera
   icon: mdi:toggle-switch
 input_slider.alarm_clock_hour:
   friendly_name: Hora
   icon: mdi:timetable
+sensor.alarm_clock_hour:
+  hidden: true
+  homebridge_hidden: true
+sensor.alarm_clock_minute:
+  hidden: true
+  homebridge_hidden: true
 input_slider.alarm_clock_minute:
   friendly_name: Minuto
   icon: mdi:timetable
@@ -25,17 +32,10 @@ sensor.alarm_clock_time:
   friendly_name: Hora de despertarse
   icon: mdi:alarm
 
-input_boolean.testing_alarm:
-  homebridge_hidden: true
-  icon: mdi:toggle-switch
-
 input_boolean.switch_master_alarm:
-  friendly_name: Alarma general
+  hidden: true
+switch.switch_master_alarm:
   homebridge_name: Alarma general
-  icon: mdi:toggle-switch
-input_boolean.state_master_alarm:
-  friendly_name: Estado de alarma general
-  homebridge_hidden: true
   icon: mdi:alert-octagon
 
 input_boolean.switch_motion_lights:
@@ -61,10 +61,6 @@ automation.brillo_salon_sync:
 input_boolean.switch_control_enerpi_max_power:
   friendly_name: enerPI - control de potencia
   icon: mdi:toggle-switch
-  homebridge_hidden: true
-input_boolean.state_enerpi_alarm_max_power:
-  friendly_name: Alarma por potencia excesiva
-  icon: mdi:alert
   homebridge_hidden: true
 input_slider.enerpi_max_power:
   friendly_name: Max Power (kW)
@@ -94,7 +90,7 @@ input_slider.enerpi_max_power_reset:
 #  homebridge_hidden: true
 #light.pie_tv:
 #  homebridge_hidden: true
-#light.ventilador:
+#light.flexo:
 #  homebridge_hidden: true
 
 ####################################################################################
@@ -104,27 +100,27 @@ switch.wol_nas:
   friendly_name: WakeOnLan NAS
   homebridge_hidden: true
 
-# These are the Etekcity switches, which are appended on homebridge, so here are 'hidden'
+# These are the Etekcity switches, also appended on homebridge
 switch.cocina:
   icon: mdi:lightbulb
   friendly_name: LED Cocina
-  homebridge_hidden: true
+  homebridge_name: Cocina
 switch.calefactor:
   icon: mdi:power-plug
   friendly_name: Calefactor Baño
-  homebridge_hidden: true
-switch.tele:
-  icon: mdi:power-plug
-  friendly_name: Enchufe TV
-  homebridge_hidden: true
-switch.sofa:
-  icon: mdi:lamp
-  friendly_name: Enchufe Sofá
-  homebridge_hidden: true
+  homebridge_name: Calefactor
+switch.camara:
+  icon: mdi:video
+  friendly_name: Enchufe de videocámara
+  homebridge_name: Cámara Video
+switch.altavoz:
+  icon: mdi:speaker
+  friendly_name: Enchufe Altavoz
+  homebridge_name: Altavoz
 switch.caldera:
   icon: mdi:radiator
   friendly_name: Caldera de gas
-  homebridge_hidden: true
+  homebridge_name: Caldera
 
 switch.toggle_kodi_ambilight:
   icon: mdi:monitor-multiple
@@ -167,6 +163,7 @@ sensor.enerpi_2x_ldr:
 camera.enerpi_2x_ldr:
   friendly_name: Hall illuminance 2 (24h)
 
+# Speedtest sensors
 sensor.speedtest_ping:
   icon: mdi:speedometer
   friendly_name: Ping
@@ -177,6 +174,7 @@ sensor.speedtest_upload:
   icon: mdi:upload
   friendly_name: Upload
 
+# Local sensors
 sensor.T_salon:
   friendly_name: Temp. salón
   homebridge_name: Temperatura (2)
@@ -187,7 +185,52 @@ sensor.salon_humidity:
   friendly_name: Humedad salón
   homebridge_name: Humedad interior
   icon: mdi:water-percent
+binary_sensor.pir_salon:
+  friendly_name: Movimiento Salón
+  sensor_class: motion
+  homebridge_hidden: true
 
+binary_sensor.motioncam_estudio:
+  sensor_class: motion
+  homebridge_name: Movimiento Estudio
+binary_sensor.motioncam_salon:
+  homebridge_name: Movimiento Salón
+  sensor_class: motion
+
+switch.motioncam_estudio:
+  homebridge_hidden: true
+switch.motioncam_escam:
+  homebridge_hidden: true
+
+# enerweb sensors
+sensor.calefaccion:
+  friendly_name: Calefacción
+  icon: mdi:oil-temperature
+  homebridge_hidden: True
+sensor.galeria_acs:
+  icon: mdi:water-pump
+  friendly_name: Tª ACS
+  homebridge_hidden: True
+sensor.galeria_impulsion_calefaccion:
+  icon: mdi:temperature-celsius
+  friendly_name: Tª impulsión de calefacción
+  homebridge_hidden: True
+sensor.galeria_retorno_calefaccion:
+  icon: mdi:temperature-celsius
+  friendly_name: Tª del retorno de calefacción
+  homebridge_hidden: True
+sensor.galeria_dht22_humidity:
+  friendly_name: Humedad en Galería
+  icon: mdi:water-percent
+sensor.galeria_dht22_temperature:
+  friendly_name: Temperatura en Galería
+  icon: mdi:thermometer
+sensor.galeria_rpi2_rpi_cpu_temp:
+  icon: mdi:raspberrypi
+  friendly_name: Tª CPU RPI
+  homebridge_hidden: True
+
+# Openweather sensors
 sensor.villena_temperature:
   friendly_name: Temperatura exterior
 sensor.villena_wind_speed:
@@ -209,15 +252,6 @@ sensor.villena_rain:
   icon: mdi:weather-rainy
 sensor.villena_forecast:
   friendly_name: Previsión
-
-sensor.alarm_clock_status:
-  homebridge_hidden: true
-sensor.alarm_clock_hour:
-  hidden: true
-  homebridge_hidden: true
-sensor.alarm_clock_minute:
-  hidden: true
-  homebridge_hidden: true
 
 ####################################################################################
 #                                WEB LINKS                                         #
@@ -242,9 +276,16 @@ weblink.rpi_3_osmc_salon:
   icon: mdi:raspberrypi
 weblink.rpi_2_sensehat_estudio:
   icon: mdi:raspberrypi
+weblink.tv_headend:
+  icon: mdi:television-guide
+weblink.motioneye:
+  icon: mdi:video
 weblink.kodi_web_interface:
   icon: mdi:kodi
 #  entity_picture: /static/images/kodi_logo.png
+weblink.slave_hass:
+  friendly_name: HA Estudio
+  icon: mdi:castle
 
 ####################################################################################
 #                                SCENES                                            #
@@ -254,6 +295,8 @@ scene.salon_normal:
 scene.salon_dim:
   homebridge_hidden: true
 scene.cuenco_blue:
+  homebridge_hidden: true
+scene.cuenco_red:
   homebridge_hidden: true
 
 ####################################################################################
