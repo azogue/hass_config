@@ -1,6 +1,5 @@
 - platform: kodi
-#  url: http://192.168.1.56:8080/jsonrpc
-  host: http://192.168.1.56
+  host: 192.168.1.56
   port: 8080
   name: Kodi
   username: !secret kodi_user
