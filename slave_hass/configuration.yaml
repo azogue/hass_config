@@ -67,7 +67,7 @@ sensor:
   - platform: myonewire
     names:
       28-800000015326: Temperatura Estudio
-    scan_interval: 20
+    scan_interval: 30
     maximum: 50
     minimum: 5
 
@@ -114,7 +114,7 @@ weblink:
     - name: Master Hass
       url: http://192.168.1.13:8123/
     - name: MotionEye
-      url: http://127.0.0.1:8765/
+      url: !secret motioneye_url
     - name: enerPI
       url: http://192.168.1.44/enerpi/
 
@@ -124,6 +124,7 @@ group:
     - sensor.cpu_use
     - sensor.ram_free
     - sensor.last_boot
+    - script.restart_hass
 
   SenseHat:
     - input_boolean.switch_matrix_display
@@ -162,3 +163,12 @@ group:
       - group.estudio
       - group.galeria
       - group.caldera
+
+shell_command:
+  restart_hass: 'sudo systemctl restart home-assistant@homeassistant'
+
+script:
+  restart_hass:
+    alias: Restart HASS
+    sequence:
+      - service: shell_command.restart_hass
