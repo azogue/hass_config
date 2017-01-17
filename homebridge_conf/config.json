@@ -1,0 +1,46 @@
+{
+    "bridge": {
+        "name": "RPIHomebridge",
+        "username": "[ONE_MAC_ADDRESS]",
+        "port": 42198,
+        "pin": "[ONE_PIN_CONFIG]",
+        "manufacturer": "Homebridge",
+        "serialNumber": "rpi3_192.168.1.13",
+        "model": "HomeAssistant Bridge"
+    },
+    "description": "Homebridge config for interfacing HA with HomeKit through homeassistant-homebrigde-plugin.",
+    "platforms": [
+        {
+            "platform": "HomeAssistant",
+            "name": "HomeAssistant",
+            "host": "[HASS_HOST]",
+            "password": "[HASS_PASSWD]",
+            "supported_types": ["binary_sensor", "scene", "sensor", "switch"]
+        },
+        {
+            "platform": "Camera-ffmpeg",
+            "cameras": [
+                {
+                    "name": "Salón ESCAM",
+                    "videoConfig": {
+                        "source": "-i http://USER:PASS@MOTIONEYEIP:STREAM_PORT_2",
+                        "maxStreams": 2,
+                        "maxWidth": 640,
+                        "maxHeight": 480,
+                        "maxFPS": 2
+                    }
+                },
+		{
+                    "name": "Estudio",
+                    "videoConfig": {
+                        "source": "-i http://USER:PASS@MOTIONEYEIP:STREAM_PORT_2",
+                        "maxStreams": 2,
+                        "maxWidth": 640,
+                        "maxHeight": 480,
+                        "maxFPS": 2
+                    }
+                }
+            ]
+        }
+    ]
+}
