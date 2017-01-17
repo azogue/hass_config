@@ -10,6 +10,6 @@ switch_master_alarm:
 switch_motion_lights:
   initial: on
 
-# enerPI Alarm (excesive current)
-switch_control_enerpi_max_power:
-  initial: on
+## enerPI Alarm (excesive current)
+#switch_control_enerpi_max_power:
+#  initial: on
