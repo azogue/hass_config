@@ -1,0 +1,30 @@
+salon_light_scene:
+  name: Escena de luz
+  options:
+   - Concentración
+   - Energía
+   - Relax
+   - Lectura
+   - 'OFF'
+  initial: Energía
+  icon: mdi:lightbulb
+
+salon_movie_mode:
+  name: Modo ambient TV
+  options:
+   - Normal
+   - Ambilight Day
+   - Ambilight Night
+  initial: Normal
+  icon: mdi:traffic-light
+
+alarm_mode:
+  name: Alarma
+  options:
+   - Desconectada
+   - En casa
+   - Fuera de casa
+   - Vacaciones
+#  initial: Vacaciones | Fuera de casa
+  initial: Desconectada
+  icon: mdi:alert
