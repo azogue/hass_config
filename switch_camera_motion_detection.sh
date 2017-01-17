@@ -8,3 +8,4 @@ then
 else
     curl -s http://$MOTION_IP:7999/$CAMERA/detection/$COMMAND|grep 'Done'|wc -l
 fi
+exit 0
