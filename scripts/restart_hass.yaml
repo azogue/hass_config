@@ -1,0 +1,16 @@
+alias: Restart HASS
+sequence:
+  - alias: Notify Restart
+    service: notify.ios
+    data:
+      title: "HASS restart"
+      target: !secret ios_target
+      message: "HomeAssistant is going to die & resurect as a phoenix now..."
+      data:
+        push:
+          category: "CONFIRM"
+
+  - alias: Restart HA
+    service: shell_command.restart_hass
+#    service: homeassistant.restart
+
