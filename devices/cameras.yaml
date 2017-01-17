@@ -17,23 +17,14 @@
 # MOTIONEYE CAMERAS
 ####################
 # RPI Camera in Slave HASS
-#- platform: generic
-#  name: PiCamera Estudio
-#  still_image_url: !secret picamera_slave_hass
-#- platform: mjpeg
-#  name: PiCamera Estudio
-#  mjpeg_url: http://192.168.1.46:8082
 - platform: generic
   name: PiCamera Estudio
-  still_image_url: http://192.168.1.46:8765/picture/2/current/
+  still_image_url: !secret motioneye_url_pic_estudio
 
 # ESCAM QF001 cheap chinese camera (as still images - generic, or mjpeg stream)
 - platform: generic
   name: ESCAM QF001
-  still_image_url: http://192.168.1.46:8765/picture/1/current/
-#- platform: mjpeg
-#  name: ESCAM QF001
-#  mjpeg_url: http://192.168.1.46:8081
+  still_image_url: !secret motioneye_url_pic_escam
 
 ################
 # OTHER CAMERAS
