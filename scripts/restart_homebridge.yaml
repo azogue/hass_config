@@ -1,0 +1,11 @@
+alias: Restart Homebridge
+sequence:
+  - service: shell_command.restart_homebridge
+  - service: notify.ios
+    data:
+      title: "Homebridge re-started"
+      message: "Now you can reload the HomeKit info from HA."
+      target: !secret ios_target
+      data:
+        push:
+          category: "CONFIRM"
