@@ -4,6 +4,16 @@ Support for 1-Wire temperature sensors. -> Mod for retry readings & drop bad rea
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.onewire/
+
+# `onewire` sensor platform mod:
+
+Added **maximum & minimum temp values** customization, because sometimes these sensors read bad values (*) which are
+in the permitted interval from (-55 to 125 ºC). With these optional conf values you can ignore reading values
+like 0 ºC or 50ºC (impossible values in a closed room in std conditions) and save some data cleaning.
+(*) I'm almost secure that these bad values correlate with little power supply downs, which occur sometimes if you
+had a lot of devices attached and/or not the best power supply in the world
+(I've had bad experiences with some Aukru power adaptors...)
+
 """
 import os
 import time
