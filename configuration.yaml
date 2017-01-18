@@ -11,14 +11,12 @@ http:
   api_password: !secret hass_pw
   ip_ban_enabled: True
   login_attempts_threshold: 5
-# TODO SSL certs
-#  ssl_certificate: '/etc/letsencrypt/live/HAname.duckdns.org/fullchain.pem'
-#  ssl_key: '/etc/letsencrypt/live/HAname.duckdns.org/privkey.pem'
+  # SSL certs working in NGINX config
+  # ssl_certificate: !secret ssl_certificate
+  # ssl_key: !secret ssl_key
 
 ####################################################
-#                                                  #
 #                     Includes                     #
-#                                                  #
 ####################################################
 binary_sensor: !include devices/binary_sensors.yaml
 camera: !include devices/cameras.yaml
@@ -26,29 +24,53 @@ device_tracker: !include devices/device_trackers.yaml
 group: !include groups.yaml
 input_boolean: !include inputs/input_booleans.yaml
 input_slider: !include inputs/input_sliders.yaml
+input_select: !include inputs/input_selects.yaml
 light: !include devices/lights.yaml
 media_player: !include devices/media_players.yaml
 notify: !include notify.yaml
 sensor: !include devices/sensors.yaml
 switch: !include devices/switches.yaml
 weblink: !include web_links.yaml
-
 automation: !include_dir_merge_list automation/
 script: !include_dir_named scripts/
 scene: !include_dir_merge_list scenes/
 
-#alarm_control_panel: !include alarm_control_panel.yaml
-#input_select: !include input_select.yaml
-
-#shell_command: !include shell_commands.yaml
-shell_command:
-  run_lacafetera: '/home/homeassistant/.homeassistant/kodi_start_last_lacafetera.sh'
+####################################################
+#                 Custom platform                  #
+####################################################
+enerpi:
+  enerpi_rpi3:
+    host: 192.168.1.44
+    name: enerPI
+    scan_interval: 10
+    monitored_variables:
+      - power
+      - ldr
+#      - ref
+    pngtiles_refresh: 300
+    dpi: 200
 
 ####################################################
-#                                                  #
 #                     Enables                      #
-#                                                  #
 ####################################################
+logger:
+  default: info
+  logs:
+    netdisco: error
+    homeassistant.core: warn
+    homeassistant.bootstrap: error
+    homeassistant.services.notify: debug
+    requests.packages.urllib3.connectionpool: warn
+    homeassistant.components.device_tracker: warn
+    homeassistant.components.netdisco: error
+    homeassistant.components.http: warn
+    homeassistant.components.media_player: warn
+    homeassistant.components.switch: error
+    homeassistant.components.sensor: warn
+    homeassistant.components.camera: error
+    # custom_components.enerpi: debug
+    # custom_components.switch: error
+
 browser:
 conversation:
 discovery:
@@ -56,22 +78,6 @@ frontend:
 sun:
 updater:
 
-logger:
-  default: info
-  logs:
-    homeassistant.core: warn
-    homeassistant.bootstrap: error
-    requests.packages.urllib3.connectionpool: warn
-    homeassistant.components.netdisco: error
-    homeassistant.components.device_tracker: warn
-    homeassistant.components.media_player: warn
-    homeassistant.components.switch: warn
-    homeassistant.components.sensor: warn
-    homeassistant.components.sensor.command_line: warn
-    homeassistant.components.http: warn
-    custom_components.enerpi: warn
-
-# Enables support for tracking state changes over time.
 history:
   include:
     domains:
@@ -88,29 +94,7 @@ history:
       - sensor.t_salon
       - sensor.temp_stats_mean
       - sensor.yr
-#      - camera
-#      - scene
-#      - group
-#      - sensor
-#      - custom_component.sensor
-#    entities:
-#      - sensor.cpu_use
-#      - sensor.ram_free
-#      - sensor.enerpi_power
-#      - sensor.enerpi_ldr
-#      - sensor.enerpi_2x_power_1
-#      - sensor.enerpi_2x_power_2
-#      - sensor.enerpi_2x_ldr
-#      - sensor.power_stats_mean
-#      - sensor.villena_temperature
-#      - sensor.villena_humidity
-#      - sensor.rpi_host
-#      - sensor.salon_humidity
-#      - sensor.salon_temperature
-#      - sensor.temp_stats_mean
-#      - sensor.t_salon
 
-# View all events in a logbook
 logbook:
   include:
     domains:
@@ -119,26 +103,79 @@ logbook:
       - sun
       - binary_sensor
 #      - device_tracker
+    entities:
+      - sensor.heating
+      - sensor.calefaccion
 
 recorder:
   purge_days: !secret recorder_purge_days
   db_url: !secret recorder_db_url
 
+####################################################
+#                     iOS platform                 #
+####################################################
 # TODO refinar y hacer funcionar las etiquetas de respuesta
 # iOS App
 ios:
-  push_categories: # Defines actionable notifications. Categories are groups of actions. You specify the category in the notification.
-    - name: Alarm
-      identifier: 'ALARM' # Must be unique and ALL CAPS
+  push_categories:
+    - name: Away
+      identifier: 'AWAY'
       actions:
-        - identifier: 'SOUND_ALARM' # Must be unique and ALL CAPS
+        - identifier: 'ALARM_ARM_NOW'
+          title: 'Arm'
+          activationMode: 'background'
+          authenticationRequired: no
+          destructive: yes
+          behavior: 'default'
+          context: 'minimal'
+        - identifier: 'ALARM_CANCEL'
+          activationMode: 'background'
+          authenticationRequired: yes
+          destructive: no
+          behavior: 'default'
+          context: 'minimal'
+
+    - name: Alarm
+      identifier: 'ALARMSOUNDED'
+      actions:
+        - identifier: 'ALARM_SLEEP'
+          title: 'Sleep'
+          activationMode: 'background'
+          authenticationRequired: no
+          destructive: no
+          behavior: 'default'
+          context: 'default'
+        - identifier: 'ALARM_CANCEL'
+          title: 'Disarm'
+          activationMode: 'background'
+          authenticationRequired: no
+          destructive: no
+          behavior: 'default'
+          context: 'default'
+
+    - name: Confirm
+      identifier: 'CONFIRM'
+      actions:
+        - identifier: 'CONFIRM_OK'
+          title: 'OK?'
+          activationMode: 'background'
+          authenticationRequired: no
+          destructive: no
+          behavior: 'default'
+          context: 'default'
+
+#  push_categories: # Defines actionable notifications. Categories are groups of actions. You specify the category in the notification.
+    - name: Other
+      identifier: 'OTHER' # Must be unique and ALL CAPS
+      actions:
+        - identifier: 'OTHERSOUNDALARM' # Must be unique and ALL CAPS
           title: 'Sound Alarm' # Needs to be short!
           activationMode: 'background' # or background. The mode in which to run the app when the action is performed.
           authenticationRequired: yes # A Boolean value indicating whether the user must unlock the device before the action is performed.
           destructive: yes # A Boolean value indicating whether the action is destructive.  When the value of this property is true, the system displays the corresponding button differently to indicate that the action is destructive.
           behavior: 'default' # or TextInput. When TextInput the system provides a way for the user to enter a text response to be included with the notification.
           context: 'default' # or Minimal. Default = In this context, the full UI is displayed for the notification’s alert. You may specify up to four custom actions in this context. Minimal = In this context, a minimal UI is displayed for the notification’s alert. You may specify up to two custom actions in this context.
-        - identifier: 'SILENCE_ALARM' # Must be unique and ALL CAPS
+        - identifier: 'OTHERSILENCEALARM' # Must be unique and ALL CAPS
           title: 'Silence Alarm' # Needs to be short!
           activationMode: 'background' # or background. The mode in which to run the app when the action is performed.
           authenticationRequired: yes # A Boolean value indicating whether the user must unlock the device before the action is performed.
@@ -150,17 +187,30 @@ ios:
           parameters: # iOS 9 only. Use this dictionary to specify any behavior-specific data for the action. For example, if you set behavior to TextInput you can use the UIUserNotificationTextInputActionButtonTitleKey key, which lets you customize the title of the button displayed by the text input interface.
             UIUserNotificationTextInputActionButtonTitleKey: "Silencio!"
 
+####################################################
+#                     Shell commands               #
+####################################################
+# These 'sudo' commands are appended in /etc/sudoers.d/vip, for the HA user only.
+shell_command:
+  restart_homebridge: 'sudo systemctl restart homebridge'
+  start_homebridge: 'sudo systemctl start homebridge'
+  stop_homebridge: 'sudo systemctl stop homebridge'
+  restart_hass: 'sudo systemctl restart home-assistant@homeassistant'
+  stop_hass: 'sudo systemctl stop home-assistant@homeassistant'
+
+####################################################
+#               Extra panels (iframes)             #
+####################################################
 panel_iframe:
   enerpi:
-    title: 'enerPI'
-#    url: 'http://192.168.1.44/enerpi/api/monitor'
-    url: 'http://192.168.1.44/enerpi/'
-    icon: mdi:flash
-  enerpi_2x:
-    title: 'enerPI 2x'
+    title: enerPI
+    url: !secret enerpi_url
     icon: mdi:power-plug
-    url: 'http://192.168.1.52/enerpi/'
   kodi:
-    title: 'Kodi'
-    url: 'http://192.168.1.56:8080/'
+    title: Kodi
+    url: !secret kodi_url
     icon: mdi:kodi
+  motioneye:
+    title: MotionEye
+    url: !secret motioneye_url
+    icon: mdi:video
