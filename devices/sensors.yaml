@@ -81,7 +81,7 @@
 
 - platform: command_line
   name: badlogin
-  command: "grep -c invalidpassword /home/homeassistant/.homeassistant/home-assistant.log"
+  command: '/bin/grep -c invalidpassword /home/homeassistant/.homeassistant/home-assistant.log'
 
 # Stats sensors:
 #- platform: statistics
