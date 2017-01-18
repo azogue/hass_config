@@ -247,6 +247,8 @@ class EnerwebHeaterState(Entity):
 
             state_ant = self._state
             t_imp_ant1, t_imp_ant2 = self._supply_ant[-1], self._supply_ant[-2]
+            if (t_imp_ant1 is None) or(t_imp_ant2 is None):
+                t_imp_ant1 = t_imp_ant2 = state_ant
             _LOGGER.debug('{}- UPDATE HEATER STATE: st_ant={}; IMP={}, RET={}, REF={}; IMP1={}, IMP2={}'
                           .format(now(), state_ant, t_imp, t_ret, t_ref, t_imp_ant1, t_imp_ant2))
 
