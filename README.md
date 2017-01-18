@@ -1,8 +1,8 @@
 # Home Assistant
 My personal [Home Assistant](https://home-assistant.io) configuration. Used for automate my home devices:
- - 9 Hue lights in two rooms
+ - 9 Hue lights in three rooms
  - 5 Etekcity RF outlets
- - 2 custom electrical current probes ([enerPI](https://github.com/azogue/enerpi) pet project), which are working in HA as `custom_components` ([code](https://github.com/azogue/hass_config/tree/master/custom_components/sensor))
+ - 1 custom electrical current probe ([enerPI](https://github.com/azogue/enerpi) pet project), which is working in HA as as `custom_component` ([code](https://github.com/azogue/hass_config/tree/master/custom_components))
  - Multiple RPI's (1x RPI rev B, 2x RPI_2, 3x RPI_3) running KODI, multiple sensors and more nerd stuff
  - ...
 
@@ -18,14 +18,18 @@ This RPI has the last version of raspbian jessie, and it's running these marvell
  - **[HomeBridge](https://github.com/nfarina/homebridge)**
  - **[Home Assistant for Homebridge](https://github.com/home-assistant/homebridge-homeassistant)**
 
+There is other RPI 2 running HA (a 'slave' one), with a PIR sensor, a DHT22 sensor and a SenseHat. This RPI also runs [MotionEye](https://github.com/ccrisan/motioneye), handling a local video stream (PI camera) and other video stream from a cheap chinesse IP camera (ESCAM QF001).
+
 In addition, recently I have been creating [some automations](https://github.com/azogue/hass_appdaemon_apps) under the new **[AppDaemon](https://home-assistant.io/ecosystem/appdaemon/) system** of apps, and I find it a bewitching method that doing anything in HA.
 
 Some info about what's here:
  * **Notifications** by: email, pushbullet account, KODI notifications and iOS Home Assistant app (in private beta for now)
  * **Device tracking** by: `nmap_tracker` and `bluetooth_tracker` (with internal BT module of RPI 3)
- * **Cameras**: Currently, only the attached NO-IR PI Camera
- * **Lights**: Phillips HUE System, excluded from homebridge (I have a 2º gen Hue bridge)
- * **Switches**: A 5x/2remote RF outlet pack from Etekcity which was extremely cheap and works like a charm sending commands with the RF emitter installed in the RPI.
- * **KODI**: Control the KODI instance which is running 24/7 in another dedicated RPI 3,
- connected to the TV+HomeCinema kit, and making as AirPlay receiver
-
+ * **Cameras**: One local NO-IR PI Camera and two more MotionEye streams from other RPI on LAN.
+ * **Lights**: Phillips HUE System, excluded from homebridge (I have a 2º gen Hue bridge which is HomeKit compatible).
+ * **Switches**: A 5x/2remote RF outlet pack from Etekcity which was extremely cheap and works like a charm sending commands with the RF emitter installed in the RPI. Also, more 'software' switches to do automations and manipulate correctly HA input_booleans with HomeKit (the `input_boolean`s don't update the initial state in the homebrige plugin, bug?), including:
+    - A custom_component/switch for turning ON and OFF my main TV, which is connected to the RPI3 with KODI (with [OSMC](https://osmc.tv) running the [`script.json-cec`](https://github.com/joshjowen/script.json-cec) add-on) --> [`cecswitch` platform](https://github.com/azogue/hass_config/tree/master/custom_components/switch).
+    - A WOL switch for my Synology NAS.
+    - `command_line` switches for turning ON|OFF and getting status for [Hyperion](https://github.com/hyperion-project/hyperion) in KODI RPI and [Motion](https://motion-project.github.io) detection on video streams.
+ * **KODI**: Control the KODI instance which is running 24/7 in another dedicated RPI 3, connected to the TV+HomeCinema kit, and making as AirPlay receiver, DVBT tuner & recorder, and main media player for movies and tv shows.
+ * Multiple scripts and automations for make my life easier...
