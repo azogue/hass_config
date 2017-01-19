@@ -189,6 +189,7 @@ DOMAIN = 'enerpi'
 
 # enerpi web api routes:
 URL_SENSORS_MASK = 'http://{}:{}/{}/api/filedownload/sensors'
+URL_CONSUMPTION_LASTWEEK = 'http://{}:{}/{}/api/consumption/from/{:%Y-%m-%d}?daily=true&round=1'
 URL_STREAM_MASK = 'http://{}:{}/{}/api/stream/realtime'
 URL_DATA_MASK = 'http://{}:{}/{}/api/last'
 URL_TILE_MASK = 'http://{}:{}/{}/static/img/generated/tile_enerpi_data_{}_last_24h.svg'
@@ -202,6 +203,7 @@ CONF_TILES_PNGS_REFRESH = "tiles_pngs_refresh"
 CONF_MAIN_POWER = "main_power"
 CONF_TILE_EXTENSION = "png"
 CONF_DELTA_REFRESH = "delta_refresh"
+CONF_LASTWEEK = "consumption_last_week"
 
 DEFAULT_PORT = 80
 DEFAULT_PREFIX = 'enerpi'
@@ -323,7 +325,14 @@ def _extract_sensor_params(sensor):
     """Extract enerpi sensors info, including background colors from rgb to hex."""
     c1 = '#' + ''.join(map('{:02x}'.format, sensor['tile_gradient_st'][:3]))
     c2 = '#' + ''.join(map('{:02x}'.format, sensor['tile_gradient_end'][:3]))
-    return sensor['name'], sensor['description'], sensor['unit'], sensor['is_rms'], sensor['icon'], c1, c2
+    if 'mdi:icon' in sensor:
+        icon = sensor['mdi:icon']
+        LOGGER.info('MDI Icon detected: {} -> {}'.format(sensor['name'], icon))
+    else:
+        icon = sensor['icon']
+        LOGGER.warn('MDI Icon not detected, using font-awesome icon (may be incompatible): {} -> {}'
+                    .format(sensor['name'], icon))
+    return sensor['name'], sensor['description'], sensor['unit'], sensor['is_rms'], icon, c1, c2
 
 
 ##########################################
@@ -358,7 +367,7 @@ def async_setup(hass, config_hosts):
 
             # Filter enerpi sensors to add
             d_sensors = {}
-            req_conf = requests.get(URL_SENSORS_MASK.format(host, port, prefix))
+            req_conf = requests.get(URL_SENSORS_MASK.format(host, port, prefix), timeout=30)
             if req_conf.ok:
                 sensors_conf = req_conf.json()
                 d_sensors = {s['name']: s for s in sensors_conf}
@@ -367,6 +376,13 @@ def async_setup(hass, config_hosts):
             else:
                 # present_sensors = list(filter(lambda x: not x.startswith('ref'), all_sensors_data.keys()))
                 sensors_append = monitored_sensors
+
+            # Get consumption of last week (to init that counter):
+            start, consumption_kwh_week = dt.datetime.today().date() - dt.timedelta(days=7), None
+            req_week = requests.get(URL_CONSUMPTION_LASTWEEK.format(host, port, prefix, start), timeout=30)
+            if req_week.ok:
+                data = req_week.json()
+                consumption_kwh_week = [round(data[k], 1) for k in sorted(data.keys())]
 
             mask_png_file = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                                          'camera', '{}_{}_tile_24h.' + CONF_TILE_EXTENSION)
@@ -395,7 +411,8 @@ def async_setup(hass, config_hosts):
                                          CONF_DEVICES: devices_ids,
                                          CONF_SCAN_INTERVAL: data_refresh, CONF_DELTA_REFRESH: delta_refresh,
                                          CONF_TILE_CAMERAS: tile_cameras, CONF_TILES_DPI: dpi,
-                                         CONF_TILES_PNGS_REFRESH: pngs_refresh, CONF_MAIN_POWER: main_power}
+                                         CONF_TILES_PNGS_REFRESH: pngs_refresh, CONF_MAIN_POWER: main_power,
+                                         CONF_LASTWEEK: consumption_kwh_week}
 
     # Load platforms sensor & camera with the enerpi_config:
     if enerpi_config:
@@ -472,7 +489,7 @@ class EnerpiSensor(Entity):
 class EnerpiStreamer(object):
     """Class for handling the ENERPI data retrieval."""
 
-    def __init__(self, hass, name, host, port, prefix, devices_ids, main_sensor,
+    def __init__(self, hass, name, host, port, prefix, devices_ids, main_sensor, lastweek_consumption,
                  tile_cameras, dpi, data_refresh, delta_refresh, pngs_refresh, is_master_enerpi=True):
         """Initialize the data object."""
         self.hass = hass
@@ -498,17 +515,19 @@ class EnerpiStreamer(object):
 
         self._roll_mean_power_300 = deque([], 300)
         self._consumption_day = 0.
-        # TODO 7 days
-        self._consumption_week = deque([0.] * 3, 3)
+
+        if lastweek_consumption is None:
+            lastweek_consumption = [0.] * 3
+        LOGGER.info('lastweek_consumption: {}'.format(lastweek_consumption))
+        self._consumption_week = deque(lastweek_consumption, 7)
+
         self._last_instant_power = 0
         self._peak = [0, utcnow()]
 
         # Set 'sub-states':
         self._attrs_devices = {}
         for entity_id, name, unit, is_rms, friendly_name, icon in devices_ids:
-            # TODO corregir icon (de fa a mdi)
-            attrs = {'icon': 'mdi:{}'.format(icon.rstrip('-o')),
-                     # 'icon': 'mdi:flash' if is_rms else 'mdi:lightbulb-outline',
+            attrs = {'icon': 'mdi:{}'.format(icon),
                      'friendly_name': friendly_name,
                      'unit_of_measurement': unit}
             self._attrs_devices[entity_id] = (name, attrs, is_rms)
