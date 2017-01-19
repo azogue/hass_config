@@ -693,9 +693,8 @@ class EnerpiStreamer(object):
                         except (ValueError, TypeError) as e:
                             if l != 'data: "CLOSE"':
                                 LOGGER.error('{} reading stream [{}]: line="{}"'.format(e.__class__, e, l))
-            except requests.ReadTimeout as e:
-                LOGGER.error('ReadTimeout [{}] reading enerPI stream (Samples OK={}). Retrying in 10 secs'
-                             .format(e, counter_samples))
+            except (requests.ReadTimeout, requests.ConnectionError) as e:
+                LOGGER.error('Error reading enerPI stream [{}]; (Samples OK={})'.format(e, counter_samples))
                 asyncio.sleep(10)
 
     @asyncio.coroutine
