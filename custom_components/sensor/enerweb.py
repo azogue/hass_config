@@ -263,11 +263,11 @@ class EnerwebHeaterState(Entity):
             # bajada brusca en ON
             elif ((state_ant > STATE_HEATING_OFF)
                   and (state_ant != STATE_HEATING_STOP) and (t_imp - t_imp_ant1 < -.25) and (t_imp - t_imp_ant2 < -.5)):
-                _LOGGER.info('HOT STOP')
+                _LOGGER.debug('HOT STOP')
                 new_state = STATE_HEATING_STOP
             # subida brusca en ON
             elif (state_ant == STATE_HEATING_STOP) and (t_imp - t_imp_ant1 > .25) and (t_imp - t_imp_ant2 > .5):
-                _LOGGER.info('HOT RE-START')
+                _LOGGER.debug('HOT RE-START')
                 new_state = STATE_HEATING_RESTART
             elif (state_ant == STATE_HEATING_COLD_START) and (t_imp - t_imp_ant1 >= 0):
                 _LOGGER.debug('ON AFTER COLD-START')
