@@ -383,6 +383,7 @@ def async_setup(hass, config_hosts):
             if req_week.ok:
                 data = req_week.json()
                 consumption_kwh_week = [round(data[k], 1) for k in sorted(data.keys())]
+                LOGGER.info('Last week consumption is {}'.format(consumption_kwh_week))
 
             mask_png_file = os.path.join(os.path.dirname(os.path.abspath(__file__)),
                                          'camera', '{}_{}_tile_24h.' + CONF_TILE_EXTENSION)
@@ -514,12 +515,13 @@ class EnerpiStreamer(object):
         self._main_key = main_sensor
 
         self._roll_mean_power_300 = deque([], 300)
-        self._consumption_day = 0.
-
         if lastweek_consumption is None:
             lastweek_consumption = [0.] * 3
-        LOGGER.info('lastweek_consumption: {}'.format(lastweek_consumption))
+        else:
+            lastweek_consumption = [1000. * x for x in lastweek_consumption]  # from kWh to Wh
         self._consumption_week = deque(lastweek_consumption, 7)
+        LOGGER.info('consumption_week: {}'.format(self._consumption_week))
+        self._consumption_day = self._consumption_week[-1]
 
         self._last_instant_power = 0
         self._peak = [0, utcnow()]
