@@ -1,0 +1,24 @@
+# Copy the content of this file into /etc/systemd/system/homebridge.service, and then:
+# sudo systemctl daemon-reload
+# sudo systemctl enable homebridge
+# To operate:
+# systemctl status homebridge
+# sudo systemctl stop homebridge
+# sudo systemctl start homebridge
+# sudo systemctl restart homebridge
+
+[Unit]
+Description=Node.js HomeKit Server
+After=syslog.target network-online.target
+
+[Service]
+Type=simple
+User=homebridge
+EnvironmentFile=/etc/default/homebridge
+ExecStart=/usr/bin/homebridge $HOMEBRIDGE_OPTS
+Restart=on-failure
+RestartSec=10
+KillMode=process
+
+[Install]
+WantedBy=multi-user.target
