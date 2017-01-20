@@ -314,9 +314,11 @@ device_tracker.nas:
   icon: mdi:desktop-tower
 device_tracker.bridge_hue:
   icon: mdi:white-balance-incandescent
+device_tracker.apple_watch:
+  icon: mdi:watch
 device_tracker.iphone:
   icon: mdi:cellphone-iphone
-device_tracker.iphone_5s:
+device_tracker.iphone_se:
   icon: mdi:cellphone-iphone
 device_tracker.ipad_carmen:
   icon: mdi:tablet-ipad

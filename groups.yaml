@@ -76,7 +76,8 @@ Red e Internet:
 
 Family:
   - device_tracker.iphone
-  - device_tracker.iphone_5s
+  - device_tracker.apple_watch
+  - device_tracker.iphone_se
 
 Cacharros:
   - sensor.iphone_battery_level
