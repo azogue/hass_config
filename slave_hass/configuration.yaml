@@ -41,7 +41,7 @@ logbook:
 updater:
 recorder:
   purge_days: !secret recorder_purge_days
-  db_url: !secret recorder_db_url
+  # db_url: !secret recorder_db_url
 
 #switch:
 #- platform: rpi_gpio
