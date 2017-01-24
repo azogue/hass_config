@@ -5,3 +5,8 @@
   username: !secret kodi_user
   password: !secret kodi_pw
   turn_off_action: quit
+
+- platform: mpd
+  host: 192.168.1.51
+#  host: 192.168.1.52  # wifi
+  location: Dormitorio (Mopidy)
