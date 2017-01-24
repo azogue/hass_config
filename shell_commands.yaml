@@ -1,0 +1,17 @@
+# These 'sudo' commands are appended in /etc/sudoers.d/, for the HA user only.
+restart_hass: 'sudo systemctl restart home-assistant@homeassistant'
+stop_hass: 'sudo systemctl stop home-assistant@homeassistant'
+
+restart_homebridge: 'sudo systemctl restart homebridge'
+start_homebridge: 'sudo systemctl start homebridge'
+stop_homebridge: 'sudo systemctl stop homebridge'
+
+restart_appdaemon: 'sudo systemctl restart appdaemon'
+stop_appdaemon: 'sudo systemctl stop appdaemon'
+
+# Use with caution
+reboot_system: 'sudo reboot now'
+
+# Complement of template_switch for changing Hyperion config (# of lights) in KODI machine with an input_select.
+hyperion_set_config_hue4: '/home/homeassistant/.homeassistant/switch_kodi_hyperion.sh set_hue4'
+hyperion_set_config_hue6: '/home/homeassistant/.homeassistant/switch_kodi_hyperion.sh set_hue6'
