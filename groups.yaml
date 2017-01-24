@@ -96,7 +96,7 @@ Links:
   - weblink.kodi_web_interface
   - weblink.tv_headend
   - weblink.enerpi
-  - weblink.enerpi_2x
+  - weblink.mopidy
   - weblink.pyoutlets
   - weblink.nas
   - weblink.router_interfibra
@@ -125,7 +125,6 @@ Master luces del salón:
   - input_slider.light_main_slider_salon
   - input_slider.light_temp_slider_salon
   - input_select.salon_light_scene
-  - input_select.salon_movie_mode
 
 Luces Dormitorio:
   - light.aura_habitacion
@@ -140,14 +139,8 @@ Enchufes:
 
 Kodi:
   - switch.kodi_tv_salon
+  - input_select.salon_movie_mode
   - switch.toggle_kodi_ambilight
-
-Despertador:
-  - switch.alarm_clock_status
-#  - input_boolean.alarm_clock_status
-  - input_slider.alarm_clock_hour
-  - input_slider.alarm_clock_minute
-  - sensor.alarm_clock_time
 
 #Escenas:
 #  - scene.cuenco_red
@@ -216,8 +209,27 @@ Control:
     - group.luces_estudio
     - group.enchufes
     - media_player.kodi
+    - media_player.dormitorio_mopidy
     - group.kodi
+#    - group.despertador
+
+Despertador:
+  - switch.alarm_clock_status
+#  - input_boolean.alarm_clock_status
+  - input_slider.alarm_clock_hour
+  - input_slider.alarm_clock_minute
+  - sensor.alarm_clock_time
+  - input_select.room_altavoces
+  - switch.altavoz
+  - input_boolean.manual_trigger_lacafetera
+
+alarm_clock:
+  name: Despertador
+  view: yes
+  icon: mdi:alarm
+  entities:
     - group.despertador
+    - media_player.dormitorio_mopidy
 
 Home Network:
   name: Red local del hogar
@@ -255,13 +267,13 @@ Master conf:
     - binary_sensor.motioncam_estudio
     - binary_sensor.pir_estudio_rpi2h
 
-DEBUG:
-  name: Debugging
-  view: yes
-  entities:
-    - group.automation_config
-    - group.escenas
-    - group.scripts
+#DEBUG:
+#  name: Debugging
+#  view: yes
+#  entities:
+#    - group.automation_config
+#    - group.escenas
+#    - group.scripts
 
 # TODO default_view eliminando cards
 #default_view:

@@ -9,12 +9,20 @@ salon_light_scene:
   initial: Energía
   icon: mdi:lightbulb
 
+room_altavoces:
+  name: Selección de altavoces
+  options:
+   - Dormitorio (Mopidy)
+   - Salón (KODI)
+  initial: Dormitorio (Mopidy)
+  icon: mdi:speaker
+
 salon_movie_mode:
   name: Modo ambient TV
   options:
    - Normal
-   - Ambilight Day
-   - Ambilight Night
+   - Ambilight Day (4)
+   - Ambilight Night (6)
   initial: Normal
   icon: mdi:traffic-light
 

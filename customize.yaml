@@ -31,6 +31,8 @@ sensor.alarm_clock_time:
   homebridge_hidden: true
   friendly_name: Hora de despertarse
   icon: mdi:alarm
+input_boolean.manual_trigger_lacafetera:
+  icon: mdi:play-circle
 
 input_boolean.switch_master_alarm:
   hidden: true
@@ -264,8 +266,8 @@ weblink.pyoutlets:
   icon: mdi:power-plug
 weblink.enerpi:
   icon: mdi:flash
-weblink.enerpi_2x:
-  icon: mdi:flash
+weblink.mopidy:
+  icon: mdi:music
 #  entity_picture: /static/images/enerpi.png
 weblink.nas:
   icon: mdi:library-music
