@@ -24,5 +24,5 @@
   - service: notify.ios
     data:
       title: 'New Home Assistant Release'
-      target: !secret myemail
+      target: !secret ios_target
       message: "Home Assistant  {{ states.updater.updater.state }}  is now available."

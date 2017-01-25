@@ -8,26 +8,9 @@ sequence:
       data:
         push:
           badge: 0
-#          sound: "US-EN-Morgan-Freeman-Boss-Is-Arriving.wav"
-          sound: "US-EN-Morgan-Freeman-Welcome-Home.wav"
-          category: "CONFIRM" # Needs to match the top level identifier you used in the ios configuration
-          action_data: # Anything passed in action_data will get echoed back to Home Assistant.
-            entity_id: light.cuenco
-#            my_custom_data: "lalala"
+          sound: "US-EN-Morgan-Freeman-Boss-Is-Arriving.wav"
+#          sound: "US-EN-Morgan-Freeman-Welcome-Home.wav"
+          category: "EXECORDER" # Needs to match the top level identifier you used in the ios configuration
   - delay:
       seconds: 120
   - service: script.restart_homebridge
-
-#  - service: notify.gmail
-#    data:
-#      title: 'HASS has started'
-#      message: 'Test de notificaciones vía email'
-#  - service: notify.pushbullet
-#    data:
-#      title: 'Hello!'
-#      target: !secret pb_target
-#      message: 'Hass start!'
-
-#  - delay:
-#      # time interval for alarm sound and light flashing
-#      seconds: 10

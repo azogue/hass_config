@@ -131,26 +131,32 @@ Luces Dormitorio:
   - light.hue_habitacion
 
 Enchufes:
-  - switch.cocina
-  - switch.calefactor
-  - switch.camara
-  - switch.altavoz
-  - switch.caldera
+  control: hidden
+  entities:
+    - switch.cocina
+    - switch.calefactor
+    - switch.camara
+    - switch.altavoz
+    - switch.caldera
 
 Kodi:
-  - switch.kodi_tv_salon
-  - input_select.salon_movie_mode
-  - switch.toggle_kodi_ambilight
+  control: hidden
+  entities:
+    - switch.kodi_tv_salon
+    - input_select.salon_movie_mode
+    - switch.toggle_kodi_ambilight
 
 #Escenas:
 #  - scene.cuenco_red
 #  - scene.cuenco_blue
 
 Scripts:
-  - script.test_notify
-  - script.test_notify_pb
-  - script.notify_hass_start
-  - script.flash_cuenco
+  control: hidden
+  entities:
+    - script.test_notify
+    - script.test_notify_pb
+    - script.notify_hass_start
+    - script.flash_cuenco
 
 enerPI:
   - sensor.enerpi
@@ -169,17 +175,21 @@ enerPI:
 #  - camera.enerpi_2x_tile_ldr
 
 enerPI Max Power Control:
-  - input_boolean.switch_control_enerpi_max_power
-  - input_slider.enerpi_max_power
-  - input_slider.enerpi_max_power_reset
+  control: hidden
+  entities:
+    - input_boolean.switch_control_enerpi_max_power
+    - input_slider.enerpi_max_power
+    - input_slider.enerpi_max_power_reset
 
 Hass control:
-  - input_boolean.switch_motion_lights
-  - input_slider.light_duration_after_motion
-  - script.restart_hass
-  - script.restart_homebridge
-  - switch.motioncam_estudio
-  - switch.motioncam_escam
+  control: hidden
+  entities:
+    - input_boolean.switch_motion_lights
+    - input_slider.light_duration_after_motion
+    - script.restart_hass
+    - script.restart_homebridge
+    - switch.motioncam_estudio
+    - switch.motioncam_escam
 
 Alarma:
   - switch.switch_master_alarm
@@ -214,14 +224,16 @@ Control:
 #    - group.despertador
 
 Despertador:
-  - switch.alarm_clock_status
-#  - input_boolean.alarm_clock_status
-  - input_slider.alarm_clock_hour
-  - input_slider.alarm_clock_minute
-  - sensor.alarm_clock_time
-  - input_select.room_altavoces
-  - switch.altavoz
-  - input_boolean.manual_trigger_lacafetera
+  control: hidden
+  entities:
+    - switch.alarm_clock_status
+  #  - input_boolean.alarm_clock_status
+    - input_slider.alarm_clock_hour
+    - input_slider.alarm_clock_minute
+    - sensor.alarm_clock_time
+    - input_select.room_altavoces
+    - switch.altavoz
+    - input_boolean.manual_trigger_lacafetera
 
 alarm_clock:
   name: Despertador
@@ -266,14 +278,6 @@ Master conf:
     - binary_sensor.pir_salon
     - binary_sensor.motioncam_estudio
     - binary_sensor.pir_estudio_rpi2h
-
-#DEBUG:
-#  name: Debugging
-#  view: yes
-#  entities:
-#    - group.automation_config
-#    - group.escenas
-#    - group.scripts
 
 # TODO default_view eliminando cards
 #default_view:
