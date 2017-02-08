@@ -186,8 +186,11 @@ Hass control:
   entities:
     - input_boolean.switch_motion_lights
     - input_slider.light_duration_after_motion
-    - script.restart_hass
+    - switch.systemd_appdaemon
+    - script.restart_appdaemon
+    - switch.systemd_homebridge
     - script.restart_homebridge
+    - script.restart_hass
     - switch.motioncam_estudio
     - switch.motioncam_escam
 
@@ -279,7 +282,7 @@ Master conf:
     - binary_sensor.motioncam_estudio
     - binary_sensor.pir_estudio_rpi2h
 
-# TODO default_view eliminando cards
+# TODO default_view eliminando cards | y ordenar cards en cada view!
 #default_view:
 #    view: yes
 #    entities:

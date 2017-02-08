@@ -133,7 +133,12 @@ switch.kodi_tv_salon:
   homebridge_name: Tele
   assumed_state: true
 
-
+switch.systemd_appdaemon:
+  homebridge_hidden: true
+  icon: mdi:settings
+switch.systemd_homebridge:
+  homebridge_hidden: true
+  icon: mdi:settings
 ####################################################################################
 #                                SENSORS                                           #
 ####################################################################################

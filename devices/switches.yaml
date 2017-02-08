@@ -51,6 +51,18 @@
       command_state: '/home/homeassistant/.homeassistant/switch_camera_motion_detection.sh 192.168.1.46 2 status'
       friendly_name: MotionDetect Estudio
       value_template: '{{ value_json == 1 }}'
+    systemd_appdaemon:
+      command_on: '/home/homeassistant/.homeassistant/switch_systemd_service.sh appdaemon start'
+      command_off: '/home/homeassistant/.homeassistant/switch_systemd_service.sh appdaemon stop'
+      command_state: '/home/homeassistant/.homeassistant/switch_systemd_service.sh appdaemon status'
+      friendly_name: Appdaemon service
+      value_template: '{{ value_json == 1 }}'
+    systemd_homebridge:
+      command_on: '/home/homeassistant/.homeassistant/switch_systemd_service.sh homebridge start'
+      command_off: '/home/homeassistant/.homeassistant/switch_systemd_service.sh homebridge stop'
+      command_state: '/home/homeassistant/.homeassistant/switch_systemd_service.sh homebridge status'
+      friendly_name: Homebridge service
+      value_template: '{{ value_json == 1 }}'
 
 # Input_boolean's to switches because homebridge doesn't update the initial state of IBs, so IB are ignored and Ss added
 - platform: template
