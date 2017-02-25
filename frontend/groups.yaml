@@ -1,30 +1,30 @@
-Tiempo en Villena:
-  - sun.sun
-  - sensor.villena_weather
-  - sensor.villena_temperature
-  - sensor.villena_wind_speed
-  - sensor.villena_humidity
-  - sensor.villena_pressure
-  - sensor.villena_condition
-  - sensor.villena_cloud_coverage
-  - sensor.villena_rain
-  - sensor.villena_forecast
-  - sensor.yr_symbol
+Alarma:
+  - switch.switch_master_alarm
+  - input_select.alarm_mode
 
-Host RPi3:
-  - sensor.cpu_use
-  - sensor.ram_free
-  - sensor.last_boot
-  - sensor.disk_use_home
-  - sensor.badlogin
-#  - sensor.since_last_boot
-#  - sensor.since_last_boot_templated
+Alarm Control:
+  control: hidden
+  entities:
+  - switch.use_pir_salon
+  - switch.motioncam_escam
+  - switch.use_sound_sensor_rpi2h
+  - switch.use_vibration_sensor_rpi2h
+  - switch.use_pir_estudio_rpi2h
+  - switch.motioncam_estudio
 
-Host RPi2Hat:
-  - sensor.cpu_use_rpi2h
-  - sensor.ram_free_rpi2h
-  - sensor.last_boot_rpi2h
-  - sensor.disk_use__rpi2h
+Eugenio:
+  entities:
+    - device_tracker.iphone
+    - device_tracker.iphone_bt
+
+Mary:
+  entities:
+    - device_tracker.iphone_se
+    - device_tracker.iphone_se_bt
+
+Family:
+  - group.eugenio
+  - group.mary
 
 Salón:
   - sensor.main_power
@@ -46,6 +46,8 @@ Estudio RPi2h:
     - sensor.pressure_rpi2h
     - binary_sensor.pir_estudio_rpi2h
     - binary_sensor.motioncam_estudio
+    - binary_sensor.vibration_sensor_rpi2h
+    - binary_sensor.sound_sensor_rpi2h
 
 Caldera:
   - binary_sensor.heating
@@ -60,35 +62,62 @@ Galería:
   - sensor.galeria_dht22_humidity
   - sensor.galeria_rpi2_rpi_cpu_temp
 
-Red e Internet:
-  - sensor.speedtest_ping
-  - sensor.speedtest_download
-  - sensor.speedtest_upload
-  - device_tracker.router_interfibra
-  - device_tracker.bridge_hue
-  - device_tracker.nas
-  - device_tracker.airport_extreme
-  - device_tracker.wifi_ext
-  - device_tracker.airport
-  - device_tracker.imac
-  - device_tracker.mbp
-  - switch.wol_nas
+Cámaras:
+  - camera.picamera_salon
+  - camera.escam_qf001
+  - camera.picamera_estudio
 
-Family:
-  - device_tracker.iphone
-  - device_tracker.apple_watch
-  - device_tracker.iphone_se
+Luces Salón:
+  - light.bola_grande
+  - light.bola_pequena
+  - light.pie_tv
+  - light.pie_sofa
+  - light.cuenco
+  - light.lamparita
 
-Cacharros:
-  - sensor.iphone_battery_level
-  - sensor.iphone_battery_state
-  - device_tracker.ipad_carmen
-  - device_tracker.ipad_carmen_bt
-  - device_tracker.rpi_wifi
-  - device_tracker.rpi2hat
-  - device_tracker.rpi2_wifi
-  - device_tracker.rpi3w
-  - device_tracker.rpi3osmc
+Luces Dormitorio:
+  - light.aura_habitacion
+  - light.hue_habitacion
+
+Luces Estudio:
+  control: hidden
+  entities:
+    - light.flexo
+
+Master luces del salón:
+  - input_slider.light_main_slider_salon
+  - input_slider.light_temp_slider_salon
+  - input_select.salon_light_scene
+
+Enchufes:
+  control: hidden
+  entities:
+    - switch.cocina
+    - switch.calefactor
+    - switch.camara
+    - switch.altavoz
+    - switch.caldera
+
+Kodi:
+  control: hidden
+  entities:
+    - switch.kodi_tv_salon
+#    - input_select.salon_movie_mode
+    - switch.toggle_kodi_ambilight
+    - switch.toggle_config_kodi_ambilight
+
+Tiempo en Villena:
+  - sun.sun
+  - sensor.villena_weather
+  - sensor.villena_temperature
+  - sensor.villena_wind_speed
+  - sensor.villena_humidity
+  - sensor.villena_pressure
+  - sensor.villena_condition
+  - sensor.villena_cloud_coverage
+  - sensor.villena_rain
+  - sensor.villena_forecast
+  - sensor.yr_symbol
 
 Links:
   - weblink.slave_hass
@@ -105,46 +134,47 @@ Links:
   - weblink.rpi_3_osmc_salon
   - weblink.rpi_2_sensehat_estudio
 
-Cámaras:
-  - camera.picamera_salon
-  - camera.picamera_estudio
-  - camera.escam_qf001
+Host RPi3:
+  - sensor.cpu_use
+  - sensor.ram_free
+  - sensor.last_boot
+  - sensor.disk_use_home
+#  - sensor.badlogin
+#  - sensor.since_last_boot
+#  - sensor.since_last_boot_templated
 
-Luces Estudio:
-  - light.flexo
+Host RPi2Hat:
+  - sensor.cpu_use_rpi2h
+  - sensor.ram_free_rpi2h
+  - sensor.last_boot_rpi2h
+  - sensor.disk_use__rpi2h
 
-Luces Salón:
-  - light.bola_grande
-  - light.bola_pequena
-  - light.pie_tv
-  - light.pie_sofa
-  - light.cuenco
-  - light.lamparita
+Red e Internet:
+  - sensor.speedtest_ping
+  - sensor.speedtest_download
+  - sensor.speedtest_upload
+  - device_tracker.router_interfibra
+  - device_tracker.bridge_hue
+  - device_tracker.nas
+  - device_tracker.airport_extreme
+  - device_tracker.wifi_ext
+  - device_tracker.airport
+  - device_tracker.imac
+  - device_tracker.mbp
+  - switch.wol_nas
 
-Master luces del salón:
-  - input_slider.light_main_slider_salon
-  - input_slider.light_temp_slider_salon
-  - input_select.salon_light_scene
-
-Luces Dormitorio:
-  - light.aura_habitacion
-  - light.hue_habitacion
-
-Enchufes:
-  control: hidden
-  entities:
-    - switch.cocina
-    - switch.calefactor
-    - switch.camara
-    - switch.altavoz
-    - switch.caldera
-
-Kodi:
-  control: hidden
-  entities:
-    - switch.kodi_tv_salon
-    - input_select.salon_movie_mode
-    - switch.toggle_kodi_ambilight
+Cacharros:
+  - sensor.iphone_battery_level
+  - sensor.iphone_battery_state
+  - device_tracker.apple_watch
+  - device_tracker.ipad_carmen
+  - device_tracker.ipad_carmen_bt
+  - device_tracker.jo01
+  - device_tracker.rpi_wifi
+  - device_tracker.rpi2hat
+  - device_tracker.rpi2_wifi
+  - device_tracker.rpi3w
+  - device_tracker.rpi3osmc
 
 #Escenas:
 #  - scene.cuenco_red
@@ -191,12 +221,8 @@ Hass control:
     - switch.systemd_homebridge
     - script.restart_homebridge
     - script.restart_hass
-    - switch.motioncam_estudio
-    - switch.motioncam_escam
-
-Alarma:
-  - switch.switch_master_alarm
-  - input_select.alarm_mode
+    - script.reboot
+    - script.shutdown
 
 Status:
   name: Home Status
@@ -238,6 +264,18 @@ Despertador:
     - switch.altavoz
     - input_boolean.manual_trigger_lacafetera
 
+Debug Alarm:
+  control: hidden
+  entities:
+    - binary_sensor.pir_salon
+    - binary_sensor.motioncam_salon
+    - binary_sensor.pir_estudio_rpi2h
+    - binary_sensor.motioncam_estudio
+    - binary_sensor.vibration_sensor_rpi2h
+    - binary_sensor.sound_sensor_rpi2h
+    - binary_sensor.vibration_sensor_raw_rpi2h
+    - binary_sensor.sound_sensor_raw_rpi2h
+
 alarm_clock:
   name: Despertador
   view: yes
@@ -245,6 +283,7 @@ alarm_clock:
   entities:
     - group.despertador
     - media_player.dormitorio_mopidy
+    - media_player.kodi
 
 Home Network:
   name: Red local del hogar
@@ -252,9 +291,9 @@ Home Network:
   icon: mdi:sitemap
   entities:
     - group.links
+    - group.family
     - group.host_rpi3
     - group.host_rpi2hat
-    - group.family
     - group.cacharros
     - group.red_e_internet
 
@@ -274,13 +313,15 @@ Master conf:
   view: yes
   entities:
     - group.alarma
-    - group.hass_control
+    - group.alarm_control
     - group.camaras
+    - group.hass_control
     - binary_sensor.heating
     - binary_sensor.motioncam_salon
     - binary_sensor.pir_salon
     - binary_sensor.motioncam_estudio
     - binary_sensor.pir_estudio_rpi2h
+    - group.debug_alarm
 
 # TODO default_view eliminando cards | y ordenar cards en cada view!
 #default_view:

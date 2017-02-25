@@ -79,9 +79,9 @@
     alarm_clock_time:
       value_template: '{{ states("sensor.alarm_clock_hour") }}:{% if states("sensor.alarm_clock_minute")|length == 1 %}0{% endif %}{{ states("sensor.alarm_clock_minute") }}'
 
-- platform: command_line
-  name: badlogin
-  command: '/bin/grep -c invalidpassword /home/homeassistant/.homeassistant/home-assistant.log'
+#- platform: command_line
+#  name: badlogin
+#  command: '/bin/grep -c invalidpassword /home/homeassistant/.homeassistant/home-assistant.log'
 
 # Stats sensors:
 #- platform: statistics

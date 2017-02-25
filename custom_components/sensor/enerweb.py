@@ -27,7 +27,7 @@ import logging
 import requests
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from sqlalchemy.exc import OperationalError, InternalError
+from sqlalchemy.exc import OperationalError, InternalError, TimeoutError
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
@@ -206,7 +206,7 @@ class EnerwebSensor(Entity):
                         self._last_update = data_entity[KEY_TIMESTAMP]
                         self._state = data_entity[self._sensor_mag]
             except KeyError as e:
-                _LOGGER.warn('KeyError: {}. No UPDATE OF {}'.format(e, self._name))
+                _LOGGER.warning('KeyError: {}. No UPDATE OF {}'.format(e, self._name))
                 return
         if (self._round is not None) and (self._state is not None):
             self._state = round(self._state, self._round)
@@ -258,7 +258,7 @@ class EnerwebHeaterState(Entity):
                 new_state = STATE_HEATING_OFF
             # subida brusca desde Tº ~ ref
             elif (state_ant == STATE_HEATING_OFF) and (t_imp > t_ret) and (t_imp - t_imp_ant1 > 1):
-                _LOGGER.info('COLD START')
+                _LOGGER.debug('COLD START')
                 new_state = STATE_HEATING_COLD_START
             # bajada brusca en ON
             elif ((state_ant > STATE_HEATING_OFF)
@@ -419,17 +419,15 @@ class EnerwebData(object):
                     f_log('{}- SQL_UPDATE last_data={} [{}]'.format(now(), last_data, self._last_valid_request))
                     self._last_request_was_invalid = False
                 else:
-                    _LOGGER.warn('SQL_UPDATE NO LAST_DATA! => session={}'.format(s))
+                    _LOGGER.warning('SQL_UPDATE NO LAST_DATA! => session={}'.format(s))
                     self._last_request_was_invalid = True
-            except OperationalError as e:
-                _LOGGER.error('ERROR {}: no se puede crear motor de DB en: {}'.format(e, path_database))
-                self._mysql_session = None
-                self._last_request_was_invalid = True
-            except InternalError as e:
-                _LOGGER.error('INTERNAL ERROR {}: no se puede acceder a DB en: {}'.format(e, path_database))
+            except (OperationalError, TimeoutError, InternalError) as e:
+                if not self._last_request_was_invalid:
+                    _LOGGER.error('{}: {}'.format(e.__class__, e))
                 self._mysql_session = None
                 self._last_request_was_invalid = True
             except Exception as e:
-                _LOGGER.error('UNKNOWN ERROR {} [{}] trying to update from SQL DB'.format(e, e.__class__))
+                if not self._last_request_was_invalid:
+                    _LOGGER.error('UNKNOWN ERROR {} [{}] trying to update from SQL DB'.format(e, e.__class__))
                 self._mysql_session = None
                 self._last_request_was_invalid = True

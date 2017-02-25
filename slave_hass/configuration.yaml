@@ -10,12 +10,13 @@ homeassistant:
 logger:
   default: warn
   logs:
-    homeassistant.loader: info
+#    homeassistant.loader: info
     requests: error
     homeassistant.components.http: warn
-    homeassistant.components.binary_sensor: info
+#    homeassistant.components.binary_sensor: info
+#    homeassistant.components.switch: info
     custom_components.sensor.mysensehat: info
-    custom_components.sensor.myonewire: info
+#    custom_components.sensor.myonewire: info
 
 http:
   api_password: !secret hass_pw
@@ -43,12 +44,28 @@ recorder:
   purge_days: !secret recorder_purge_days
   # db_url: !secret recorder_db_url
 
-#switch:
-#- platform: rpi_gpio
-#  ports:
-#    16: Red
-#    20: Green
-#    21: Blue
+switch:
+- platform: rpi_gpio
+  invert_logic: true
+  ports:
+    6: Relé de sirena
+    13: Relé 2
+
+- platform: command_line
+  scan_interval: 120
+  switches:
+    systemd_appdaemon:
+      command_on: '/home/homeassistant/.homeassistant/switch_systemd_service.sh appdaemon start'
+      command_off: '/home/homeassistant/.homeassistant/switch_systemd_service.sh appdaemon stop'
+      command_state: '/home/homeassistant/.homeassistant/switch_systemd_service.sh appdaemon status'
+      friendly_name: Appdaemon service
+      value_template: '{{ value_json == 1 }}'
+    systemd_motioneye:
+      command_on: '/home/homeassistant/.homeassistant/switch_systemd_service.sh motioneye start'
+      command_off: '/home/homeassistant/.homeassistant/switch_systemd_service.sh motioneye stop'
+      command_state: '/home/homeassistant/.homeassistant/switch_systemd_service.sh motioneye status'
+      friendly_name: MotionEye service
+      value_template: '{{ value_json == 1 }}'
 
 binary_sensor:
 - platform: rpi_gpio
@@ -58,6 +75,14 @@ binary_sensor:
     27: PIR Estudio
   bouncetime: 50
   pull_mode: "UP"
+
+- platform: rpi_gpio
+  name: sensores digitales
+  ports:
+    19: vibration_sensor_raw
+    26: sound_sensor_raw
+  bouncetime: 50
+  pull_mode: "DOWN"
 
 input_boolean:
   switch_matrix_display:
@@ -96,19 +121,6 @@ sensor:
       - type: processor_use
       - type: last_boot
 
-# RPI Camera
-#camera:
-#  - platform: rpi_camera
-#    name: PiCamera Estudio
-#    image_width: 1024
-#    image_height: 768
-#    image_quality: 70
-#    image_rotation: 180
-#    timelapse: 1000
-#    horizontal_flip: 1
-#    vertical_flip: 0
-#    file_path: /home/homeassistant/picamera/image.jpg
-
 weblink:
   entities:
     - name: Master Hass
@@ -124,7 +136,11 @@ group:
     - sensor.cpu_use
     - sensor.ram_free
     - sensor.last_boot
+    - switch.systemd_appdaemon
+    - switch.systemd_motioneye
     - script.restart_hass
+    - shell_command.cmd_reboot
+    - shell_command.cmd_shutdown
 
   SenseHat:
     - input_boolean.switch_matrix_display
@@ -144,6 +160,10 @@ group:
     - sensor.humidity
     - sensor.pressure
     - binary_sensor.pir_estudio
+#    - binary_sensor.vibration_sensor
+#    - binary_sensor.sound_sensor
+    - binary_sensor.vibration_sensor_raw
+    - binary_sensor.sound_sensor_raw
 
   Home Network:
     name: Red local del hogar
@@ -166,6 +186,9 @@ group:
 
 shell_command:
   restart_hass: 'sudo systemctl restart home-assistant@homeassistant'
+  # Use with caution
+  cmd_reboot: 'sudo reboot now'
+  cmd_shutdown: 'sudo shutdown now'
 
 script:
   restart_hass:

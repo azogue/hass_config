@@ -28,7 +28,39 @@ push:
           destructive: no
           behavior: 'default'
           context: 'default'
-        - identifier: 'NOTHING'
+        - identifier: 'AWAY_NOTHING'
+          title: 'No hacer nada'
+          activationMode: 'background'
+          authenticationRequired: no
+          destructive: no
+          behavior: 'default'
+          context: 'default'
+
+    - name: inhome
+      identifier: 'INHOME'
+      actions:
+        - identifier: 'WELCOME_HOME'
+          title: 'Encender luces'
+          activationMode: 'background'
+          authenticationRequired: yes
+          destructive: no
+          behavior: 'default'
+          context: 'default'
+        - identifier: 'WELCOME_HOME_TV'
+          title: 'Encender la TV'
+          activationMode: 'background'
+          authenticationRequired: yes
+          destructive: no
+          behavior: 'default'
+          context: 'default'
+        - identifier: 'IGNORE_HOME'
+          title: 'Ignorar la llegada'
+          activationMode: 'background'
+          authenticationRequired: no
+          destructive: yes
+          behavior: 'default'
+          context: 'default'
+        - identifier: 'HOME_NOTHING'
           title: 'No hacer nada'
           activationMode: 'background'
           authenticationRequired: no
@@ -98,24 +130,29 @@ push:
           context: 'default'
 
     - name: alarm
-      identifier: 'ALARM'
+      identifier: 'ALARMCLOCK'
       actions:
-        - identifier: 'SOUND_ALARM'
-          title: 'Sound Alarm'
+        - identifier: 'INIT_DAY'
+          title: 'A la ducha!'
           activationMode: 'background'
-          authenticationRequired: yes
+          authenticationRequired: no
+          destructive: no
+          behavior: 'default'
+          context: 'default'
+        - identifier: 'POSTPONE_ALARMCLOCK'
+          title: 'Postponer...'
+          activationMode: 'background'
+          authenticationRequired: no
+          destructive: no
+          behavior: 'default'
+          context: 'default'
+        - identifier: 'ALARMCLOCK_OFF'
+          title: 'Apagar'
+          activationMode: 'background'
+          authenticationRequired: no
           destructive: yes
           behavior: 'default'
           context: 'default'
-        - identifier: 'SILENCE_ALARM'
-          title: 'Silence Alarm'
-          activationMode: 'background'
-          authenticationRequired: yes
-          destructive: no
-          behavior: 'textInput'
-          context: 'default'
-          textInputButtonTitle: 'Silencio!'
-          textInputPlaceholder: 'Placeholder'
 
     - name: other
       identifier: 'OTHER' # Must be unique and ALL CAPS

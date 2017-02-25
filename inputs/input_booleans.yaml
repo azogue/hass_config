@@ -16,3 +16,12 @@ manual_trigger_lacafetera:
 ## enerPI Alarm (excesive current)
 #switch_control_enerpi_max_power:
 #  initial: on
+
+use_pir_estudio_rpi2h:
+  initial: 'on'
+use_pir_salon:
+  initial: 'on'
+use_sound_sensor_rpi2h:
+  initial: 'on'
+use_vibration_sensor_rpi2h:
+  initial: 'on'

@@ -6,7 +6,7 @@
   name: ios
   target: !secret ios_target
 
-- platform: smtp
+- platform: richsmtp
   name: gmail
   server: smtp.gmail.com
   port: 587
@@ -15,6 +15,8 @@
   username: !secret hass_email
   password: !secret hass_email_pw
   recipient: !secret myemail
+  timeout: 60
+  product_name: UgePiso
 
 - platform: kodi
   name: kodi

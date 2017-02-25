@@ -5,7 +5,7 @@ homeassistant:
   unit_system: metric
   elevation: !secret elevation
   time_zone: Europe/Madrid
-  customize: !include customize.yaml
+  customize: !include frontend/customize.yaml
 
 http:
   base_url: !secret base_url
@@ -27,17 +27,17 @@ light: !include devices/lights.yaml
 binary_sensor: !include devices/binary_sensors.yaml
 sensor: !include devices/sensors.yaml
 switch: !include devices/switches.yaml
-shell_command: !include shell_commands.yaml
 media_player: !include devices/media_players.yaml
+device_tracker: !include devices/device_trackers.yaml
+shell_command: !include shell/shell_commands.yaml
 scene: !include_dir_merge_list scenes/
-weblink: !include web_links.yaml
 automation: !include_dir_merge_list automation/
 script: !include_dir_named scripts/
-panel_iframe: !include iframe_panels.yaml
-ios: !include ios_app.yaml
-device_tracker: !include devices/device_trackers.yaml
-notify: !include notify.yaml
-group: !include groups.yaml
+ios: !include notify/ios_app.yaml
+notify: !include notify/notify.yaml
+panel_iframe: !include frontend/iframe_panels.yaml
+weblink: !include frontend/web_links.yaml
+group: !include frontend/groups.yaml
 
 ####################################################
 #                 Custom platforms                 #
@@ -46,7 +46,8 @@ enerpi:
   enerpi_rpi3:
     host: 192.168.1.44
     name: enerPI
-    scan_interval: 10
+    scan_interval: 60
+    delta_refresh: 1000
     monitored_variables:
       - power
       - ldr
@@ -58,7 +59,7 @@ enerpi:
 #                     Enables                      #
 ####################################################
 logger:
-  default: info
+  default: warn
   logs:
     netdisco: error
     homeassistant.core: warn
@@ -73,6 +74,8 @@ logger:
     homeassistant.components.switch: error
     homeassistant.components.sensor: warn
     homeassistant.components.notify.ios: debug
+    homeassistant.custom_components.binary_sensor: debug
+    homeassistant.custom_components.notify.richsmtp: debug
     # custom_components.enerpi: debug
     # custom_components.switch: error
 
@@ -106,7 +109,7 @@ logbook:
       - switch
       - media_player
       - sun
-      - binary_sensor
+#      - binary_sensor
 #      - device_tracker
     entities:
       - sensor.heating

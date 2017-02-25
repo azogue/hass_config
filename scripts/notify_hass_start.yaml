@@ -7,10 +7,10 @@ sequence:
       target: !secret ios_target
       data:
         push:
-          badge: 0
+          badge: 5
           sound: "US-EN-Morgan-Freeman-Boss-Is-Arriving.wav"
 #          sound: "US-EN-Morgan-Freeman-Welcome-Home.wav"
-          category: "EXECORDER" # Needs to match the top level identifier you used in the ios configuration
+          category: "CONFIRM" # Needs to match the top level identifier you used in the ios configuration
   - delay:
       seconds: 120
   - service: script.restart_homebridge

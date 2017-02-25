@@ -34,33 +34,40 @@
   scan_interval: 120
   switches:
     toggle_kodi_ambilight:
-      command_on: '/home/homeassistant/.homeassistant/switch_kodi_hyperion.sh 1'
-      command_off: '/home/homeassistant/.homeassistant/switch_kodi_hyperion.sh 0'
-      command_state: '/home/homeassistant/.homeassistant/switch_kodi_hyperion.sh'
+      command_on: '/home/homeassistant/.homeassistant/shell/switch_kodi_hyperion.sh 1'
+      command_off: '/home/homeassistant/.homeassistant/shell/switch_kodi_hyperion.sh 0'
+      command_state: '/home/homeassistant/.homeassistant/shell/switch_kodi_hyperion.sh'
       friendly_name: KODI Ambilight
       value_template: '{{ value_json == 1 }}'
+    toggle_config_kodi_ambilight:
+      command_on: '/home/homeassistant/.homeassistant/shell/switch_kodi_hyperion.sh set_hue6'
+      command_off: '/home/homeassistant/.homeassistant/shell/switch_kodi_hyperion.sh set_hue4'
+      command_state: '/home/homeassistant/.homeassistant/shell/switch_kodi_hyperion.sh num_lights'
+      friendly_name: KODI Ambilight INMERSION
+      value_template: '{{ value_json == 6 }}'
+
     motioncam_escam:
-      command_on: '/home/homeassistant/.homeassistant/switch_camera_motion_detection.sh 192.168.1.46 1 start'
-      command_off: '/home/homeassistant/.homeassistant/switch_camera_motion_detection.sh 192.168.1.46 1 pause'
-      command_state: '/home/homeassistant/.homeassistant/switch_camera_motion_detection.sh 192.168.1.46 1 status'
-      friendly_name: MotionDetect Salón
+      command_on: '/home/homeassistant/.homeassistant/shell/switch_camera_motion_detection.sh 192.168.1.46 1 start'
+      command_off: '/home/homeassistant/.homeassistant/shell/switch_camera_motion_detection.sh 192.168.1.46 1 pause'
+      command_state: '/home/homeassistant/.homeassistant/shell/switch_camera_motion_detection.sh 192.168.1.46 1 status'
+      friendly_name: Usar movimiento en vídeo Salón
       value_template: '{{ value_json == 1 }}'
     motioncam_estudio:
-      command_on: '/home/homeassistant/.homeassistant/switch_camera_motion_detection.sh 192.168.1.46 2 start'
-      command_off: '/home/homeassistant/.homeassistant/switch_camera_motion_detection.sh 192.168.1.46 2 pause'
-      command_state: '/home/homeassistant/.homeassistant/switch_camera_motion_detection.sh 192.168.1.46 2 status'
-      friendly_name: MotionDetect Estudio
+      command_on: '/home/homeassistant/.homeassistant/shell/switch_camera_motion_detection.sh 192.168.1.46 2 start'
+      command_off: '/home/homeassistant/.homeassistant/shell/switch_camera_motion_detection.sh 192.168.1.46 2 pause'
+      command_state: '/home/homeassistant/.homeassistant/shell/switch_camera_motion_detection.sh 192.168.1.46 2 status'
+      friendly_name: Usar movimiento en vídeo Estudio
       value_template: '{{ value_json == 1 }}'
     systemd_appdaemon:
-      command_on: '/home/homeassistant/.homeassistant/switch_systemd_service.sh appdaemon start'
-      command_off: '/home/homeassistant/.homeassistant/switch_systemd_service.sh appdaemon stop'
-      command_state: '/home/homeassistant/.homeassistant/switch_systemd_service.sh appdaemon status'
+      command_on: '/home/homeassistant/.homeassistant/shell/switch_systemd_service.sh appdaemon start'
+      command_off: '/home/homeassistant/.homeassistant/shell/switch_systemd_service.sh appdaemon stop'
+      command_state: '/home/homeassistant/.homeassistant/shell/switch_systemd_service.sh appdaemon status'
       friendly_name: Appdaemon service
       value_template: '{{ value_json == 1 }}'
     systemd_homebridge:
-      command_on: '/home/homeassistant/.homeassistant/switch_systemd_service.sh homebridge start'
-      command_off: '/home/homeassistant/.homeassistant/switch_systemd_service.sh homebridge stop'
-      command_state: '/home/homeassistant/.homeassistant/switch_systemd_service.sh homebridge status'
+      command_on: '/home/homeassistant/.homeassistant/shell/switch_systemd_service.sh homebridge start'
+      command_off: '/home/homeassistant/.homeassistant/shell/switch_systemd_service.sh homebridge stop'
+      command_state: '/home/homeassistant/.homeassistant/shell/switch_systemd_service.sh homebridge status'
       friendly_name: Homebridge service
       value_template: '{{ value_json == 1 }}'
 
@@ -87,6 +94,39 @@
       turn_off:
         service: input_boolean.turn_off
         entity_id: input_boolean.switch_master_alarm
+
+    use_pir_estudio_rpi2h:
+      turn_off:
+        entity_id: input_boolean.use_pir_estudio_rpi2h
+        service: input_boolean.turn_off
+      turn_on:
+        entity_id: input_boolean.use_pir_estudio_rpi2h
+        service: input_boolean.turn_on
+      value_template: '{{ states.input_boolean.use_pir_estudio_rpi2h.state == "on"}}'
+    use_pir_salon:
+      turn_off:
+        entity_id: input_boolean.use_pir_salon
+        service: input_boolean.turn_off
+      turn_on:
+        entity_id: input_boolean.use_pir_salon
+        service: input_boolean.turn_on
+      value_template: '{{ states.input_boolean.use_pir_salon.state == "on" }}'
+    use_sound_sensor_rpi2h:
+      turn_off:
+        entity_id: input_boolean.use_sound_sensor_rpi2h
+        service: input_boolean.turn_off
+      turn_on:
+        entity_id: input_boolean.use_sound_sensor_rpi2h
+        service: input_boolean.turn_on
+      value_template: '{{ states.input_boolean.use_sound_sensor_rpi2h.state == "on"}}'
+    use_vibration_sensor_rpi2h:
+      turn_off:
+        entity_id: input_boolean.use_vibration_sensor_rpi2h
+        service: input_boolean.turn_off
+      turn_on:
+        entity_id: input_boolean.use_vibration_sensor_rpi2h
+        service: input_boolean.turn_on
+      value_template: '{{ states.input_boolean.use_vibration_sensor_rpi2h.state == "on" }}'
 
 #- platform: rpi_gpio
 #  ports:

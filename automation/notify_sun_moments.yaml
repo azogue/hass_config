@@ -19,7 +19,7 @@
   trigger:
     platform: sun
     event: sunset
-    offset: '+00:00:00'
+#    offset: '+00:00:00'
   action:
     service: notify.ios
     data:
@@ -29,4 +29,4 @@
         push:
           badge: 0
           sound: "US-EN-Morgan-Freeman-Setting-The-Mood.wav"
-          category: "CONFIRM" # Needs to match the top level identifier you used in the ios configuration
+          category: "CONFIRM"

@@ -24,20 +24,22 @@
                     "name": "Salón ESCAM",
                     "videoConfig": {
                         "source": "-i http://USER:PASS@MOTIONEYEIP:STREAM_PORT_2",
+                        "nw_stillImageSource": "-i http://MOTIONEYEIP/cams/picture/1/current/?_username=USER&_signature=XXXXXXXXX",
                         "maxStreams": 2,
                         "maxWidth": 640,
                         "maxHeight": 480,
-                        "maxFPS": 2
+                        "maxFPS": 5
                     }
                 },
 		{
                     "name": "Estudio",
                     "videoConfig": {
                         "source": "-i http://USER:PASS@MOTIONEYEIP:STREAM_PORT_2",
+                        "nw_stillImageSource": "-f jpeg_pipe -i http://MOTIONEYEIP/cams/picture/2/current/?_username=USER&_signature=XXXXXXXXX",
                         "maxStreams": 2,
                         "maxWidth": 640,
                         "maxHeight": 480,
-                        "maxFPS": 2
+                        "maxFPS": 5
                     }
                 }
             ]

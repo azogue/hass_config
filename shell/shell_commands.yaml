@@ -10,8 +10,5 @@ restart_appdaemon: 'sudo systemctl restart appdaemon'
 stop_appdaemon: 'sudo systemctl stop appdaemon'
 
 # Use with caution
-reboot_system: 'sudo reboot now'
-
-# Complement of template_switch for changing Hyperion config (# of lights) in KODI machine with an input_select.
-hyperion_set_config_hue4: '/home/homeassistant/.homeassistant/switch_kodi_hyperion.sh set_hue4'
-hyperion_set_config_hue6: '/home/homeassistant/.homeassistant/switch_kodi_hyperion.sh set_hue6'
+cmd_reboot: 'sudo reboot now'
+cmd_shutdown: 'sudo shutdown now'

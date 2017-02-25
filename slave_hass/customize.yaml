@@ -29,6 +29,14 @@ binary_sensor.pir_estudio:
   friendly_name: Movimiento en Estudio
   sensor_class: motion
   homebridge_hidden: true
+binary_sensor.vibration_sensor_raw:
+  friendly_name: Vibración en Estudio
+  sensor_class: vibration
+  homebridge_hidden: true
+binary_sensor.sound_sensor_raw:
+  friendly_name: Sonido en Estudio
+  sensor_class: sound
+  homebridge_hidden: true
 
 # (testing)
 input_boolean.switch_matrix_display:
@@ -43,3 +51,10 @@ weblink.enerpi:
   icon: mdi:flash
 weblink.motioneye:
   icon: mdi:video
+
+switch.systemd_appdaemon:
+  homebridge_hidden: true
+  icon: mdi:settings
+switch.systemd_homebridge:
+  homebridge_hidden: true
+  icon: mdi:settings

@@ -128,6 +128,10 @@ switch.toggle_kodi_ambilight:
   icon: mdi:monitor-multiple
   homebridge_name: Kodi Ambilight
 
+switch.toggle_config_kodi_ambilight:
+  icon: mdi:traffic-light
+  homebridge_hidden: true
+
 switch.kodi_tv_salon:
   friendly_name: Tele
   homebridge_name: Tele
@@ -193,20 +197,27 @@ sensor.salon_humidity:
   homebridge_name: Humedad interior
   icon: mdi:water-percent
 binary_sensor.pir_salon:
-  friendly_name: Movimiento Salón
+  friendly_name: Movimiento en Salón
   sensor_class: motion
   homebridge_hidden: true
 
 binary_sensor.motioncam_estudio:
   sensor_class: motion
-  homebridge_name: Movimiento Estudio
+  homebridge_name: Vídeo-Mov. en Estudio
 binary_sensor.motioncam_salon:
-  homebridge_name: Movimiento Salón
+  homebridge_name: Vídeo-Mov. en Salón
   sensor_class: motion
-
-switch.motioncam_estudio:
+binary_sensor.pir_estudio_rpi2h:
+  friendly_name: Movimiento en Estudio
+  sensor_class: motion
   homebridge_hidden: true
-switch.motioncam_escam:
+binary_sensor.vibration_sensor_rpi2h:
+  friendly_name: Vibración en Estudio
+  sensor_class: vibration
+  homebridge_hidden: true
+binary_sensor.sound_sensor_rpi2h:
+  friendly_name: Sonido en Estudio
+  sensor_class: sound
   homebridge_hidden: true
 
 # enerweb sensors
@@ -272,7 +283,7 @@ weblink.pyoutlets:
 weblink.enerpi:
   icon: mdi:flash
 weblink.mopidy:
-  icon: mdi:music
+  icon: mdi:music-box-outline
 #  entity_picture: /static/images/enerpi.png
 weblink.nas:
   icon: mdi:library-music
@@ -293,6 +304,24 @@ weblink.kodi_web_interface:
 weblink.slave_hass:
   friendly_name: HA Estudio
   icon: mdi:castle
+
+####################################################################################
+#                                GROUPS                                            #
+####################################################################################
+group.eugenio:
+  entity_picture: /static/images/eugenio.png
+group.mary:
+  entity_picture: /static/images/mari_carmen.png
+
+####################################################################################
+#                                SCRIPTS                                           #
+####################################################################################
+script.reboot:
+  friendly_name: Reiniciar
+  icon: mdi:alert-octagram
+script.shutdown:
+  friendly_name: APAGAR
+  icon: mdi:power
 
 ####################################################################################
 #                                SCENES                                            #
@@ -325,7 +354,11 @@ device_tracker.apple_watch:
   icon: mdi:watch
 device_tracker.iphone:
   icon: mdi:cellphone-iphone
+device_tracker.iphone_bt:
+  icon: mdi:cellphone-iphone
 device_tracker.iphone_se:
+  icon: mdi:cellphone-iphone
+device_tracker.iphone_se_bt:
   icon: mdi:cellphone-iphone
 device_tracker.ipad_carmen:
   icon: mdi:tablet-ipad
@@ -349,3 +382,30 @@ device_tracker.rpi3osmcw:
   icon: mdi:raspberrypi
 device_tracker.impresora_brother:
   icon: mdi:printer
+device_tracker.jo01:
+  icon: mdi:music-note-bluetooth
+
+
+switch.use_pir_estudio_rpi2h:
+  homebridge_hidden: true
+  friendly_name: Usar movimiento en Estudio
+  icon: mdi:bullseye
+switch.use_pir_salon:
+  homebridge_hidden: true
+  friendly_name: Usar movimiento en Salón
+  icon: mdi:bullseye
+switch.use_sound_sensor_rpi2h:
+  homebridge_hidden: true
+  friendly_name: Usar sonido en Estudio
+  icon: mdi:surround-sound
+switch.use_vibration_sensor_rpi2h:
+  homebridge_hidden: true
+  friendly_name: Usar vibración en Estudio
+  icon: mdi:vibrate
+
+switch.motioncam_estudio:
+  homebridge_hidden: true
+  icon: mdi:camera-burst
+switch.motioncam_escam:
+  homebridge_hidden: true
+  icon: mdi:camera-burst

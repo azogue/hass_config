@@ -16,13 +16,17 @@
     - platform: state
       entity_id: updater.updater
   action:
-  - service: notify.pushbullet
-    data:
-      title: 'New Home Assistant Release'
-      target: !secret pb_target
-      message: "Home Assistant  {{ states.updater.updater.state }}  is now available."
+#  - service: notify.pushbullet
+#    data:
+#      title: 'New Home Assistant Release'
+#      target: !secret pb_target
+#      message: "Home Assistant  {{ states.updater.updater.state }}  is now available."
   - service: notify.ios
     data:
       title: 'New Home Assistant Release'
       target: !secret ios_target
       message: "Home Assistant  {{ states.updater.updater.state }}  is now available."
+      data:
+        push:
+          badge: 1
+          category: "CONFIRM"

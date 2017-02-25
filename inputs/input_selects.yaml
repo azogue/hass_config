@@ -17,14 +17,14 @@ room_altavoces:
   initial: Dormitorio (Mopidy)
   icon: mdi:speaker
 
-salon_movie_mode:
-  name: Modo ambient TV
-  options:
-   - Normal
-   - Ambilight Day (4)
-   - Ambilight Night (6)
-  initial: Normal
-  icon: mdi:traffic-light
+#salon_movie_mode:
+#  name: Modo ambient TV
+#  options:
+#   - Normal
+#   - Ambilight Day (4)
+#   - Ambilight Night (6)
+#  initial: Normal
+#  icon: mdi:traffic-light
 
 alarm_mode:
   name: Alarma

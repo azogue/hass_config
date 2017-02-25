@@ -6,8 +6,9 @@ entities:
     url: !secret motioneye_url
   - name: enerPI
     url: !secret enerpi_url
-
 # LAN-Only access
+  - name: Mopidy
+    url: !secret mopidy_url
   - name: Slave HASS
     url: http://192.168.1.46:8123/
 #  - name: enerPI 2x

@@ -11,7 +11,6 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.mime.image import MIMEImage
 import email.utils
-from email.mime.application import MIMEApplication
 
 import voluptuous as vol
 
@@ -19,22 +18,28 @@ from homeassistant.components.notify import (
     ATTR_TITLE, ATTR_TITLE_DEFAULT, ATTR_DATA, PLATFORM_SCHEMA,
     BaseNotificationService)
 from homeassistant.const import (
-    CONF_USERNAME, CONF_PASSWORD, CONF_PORT, CONF_SENDER, CONF_RECIPIENT)
+    CONF_USERNAME, CONF_PASSWORD, CONF_PORT, CONF_SENDER, CONF_RECIPIENT, CONF_TIMEOUT)
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
+
+
 
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_IMAGES = 'images'  # optional embedded image file attachments
+ATTR_HTML = 'html'
 
 CONF_STARTTLS = 'starttls'
 CONF_DEBUG = 'debug'
 CONF_SERVER = 'server'
+CONF_PRODUCT_NAME = 'product_name'
 
 DEFAULT_HOST = 'localhost'
 DEFAULT_PORT = 25
 DEFAULT_DEBUG = False
 DEFAULT_STARTTLS = False
+DEFAULT_PRODUCT_NAME = 'HomeAssistant'
+DEFAULT_TIMEOUT = 5
 
 # pylint: disable=no-value-for-parameter
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -59,6 +64,8 @@ def get_service(hass, config, discovery_info=None):
         config.get(CONF_USERNAME),
         config.get(CONF_PASSWORD),
         config.get(CONF_RECIPIENT),
+        config.get(CONF_PRODUCT_NAME, DEFAULT_PRODUCT_NAME),
+        config.get(CONF_TIMEOUT, DEFAULT_TIMEOUT),
         config.get(CONF_DEBUG))
 
     if mail_service.connection_is_valid():
@@ -71,7 +78,7 @@ class MailNotificationService(BaseNotificationService):
     """Implement the notification service for E-Mail messages."""
 
     def __init__(self, server, port, sender, starttls, username,
-                 password, recipient, debug):
+                 password, recipient, product_name, timeout, debug):
         """Initialize the service."""
         self._server = server
         self._port = port
@@ -80,12 +87,14 @@ class MailNotificationService(BaseNotificationService):
         self.username = username
         self.password = password
         self.recipient = recipient
+        self._product_name = product_name
+        self._timeout = timeout
         self.debug = debug
-        self.tries = 2
+        self.tries = 3
 
     def connect(self):
         """Connect/authenticate to SMTP Server."""
-        mail = smtplib.SMTP(self._server, self._port, timeout=5)
+        mail = smtplib.SMTP(self._server, self._port, timeout=120)
         mail.set_debuglevel(self.debug)
         mail.ehlo_or_helo_if_needed()
         if self.starttls:
@@ -130,14 +139,17 @@ class MailNotificationService(BaseNotificationService):
         data = kwargs.get(ATTR_DATA)
 
         if data:
-            msg = _build_multipart_msg(message, images=data.get(ATTR_IMAGES))
+            if ATTR_HTML in data:
+                msg = _build_html_msg(message, data[ATTR_HTML], images=data.get(ATTR_IMAGES))
+            else:
+                msg = _build_multipart_msg(message, images=data.get(ATTR_IMAGES))
         else:
             msg = _build_text_msg(message)
 
         msg['Subject'] = subject
         msg['To'] = self.recipient
-        msg['From'] = self._sender
-        msg['X-Mailer'] = 'HomeAssistant'
+        msg['From'] = '{} <{}>'.format(self._product_name, self._sender)
+        msg['X-Mailer'] = self._product_name
         msg['Date'] = email.utils.format_datetime(dt_util.now())
         msg['Message-Id'] = email.utils.make_msgid()
 
@@ -146,18 +158,26 @@ class MailNotificationService(BaseNotificationService):
     def _send_email(self, msg):
         """Send the message."""
         mail = self.connect()
-        for _ in range(self.tries):
+        for i in range(self.tries):
             try:
                 mail.sendmail(self._sender, self.recipient,
                               msg.as_string())
                 break
-            except smtplib.SMTPException:
-                _LOGGER.warning('SMTPException sending mail: '
-                                'retrying connection')
+            except smtplib.SMTPServerDisconnected:
+                _LOGGER.warning('SMTPServerDisconnected sending mail: retrying connection')
                 mail.quit()
                 mail = self.connect()
-
-        mail.quit()
+            except smtplib.SMTPException as e:
+                _LOGGER.warning('SMTPException sending mail: "{}". Retrying connection [{}]'.format(e, i))
+                try:
+                    mail.quit()
+                except Exception as e:
+                    _LOGGER.error('Error "{}" [{}] trying to mail.quit() in retry={}'.format(e, e.__class__, i))
+                mail = self.connect()
+        try:
+            mail.quit()
+        except Exception as e:
+            _LOGGER.error('Error "{}" [{}] trying to mail.quit()'.format(e, e.__class__))
 
 
 def _build_text_msg(message):
@@ -181,23 +201,36 @@ def _build_multipart_msg(message, images):
         body_text.append('<img src="cid:{}"><br>'.format(cid))
         try:
             with open(atch_name, 'rb') as attachment_file:
-                file_bytes = attachment_file.read()
-                try:
-                    attachment = MIMEImage(file_bytes)
-                    msg.attach(attachment)
-                    attachment.add_header('Content-ID', '<{}>'.format(cid))
-                except TypeError:
-                    _LOGGER.warning('Attachment %s has an unkown MIME type.'
-                                    ' Falling back to file', atch_name)
-                    attachment = MIMEApplication(file_bytes, Name=atch_name)
-                    attachment['Content-Disposition'] = ('attachment; '
-                                                         'filename="%s"' %
-                                                         atch_name)
-                    msg.attach(attachment)
+                attachment = MIMEImage(attachment_file.read())
+                msg.attach(attachment)
+                attachment.add_header('Content-ID', '<{}>'.format(cid))
         except FileNotFoundError:
             _LOGGER.warning('Attachment %s not found. Skipping',
                             atch_name)
 
-    body_html = MIMEText(''.join(body_text), 'html')
+    body_html = MIMEText(''.join(body_text), ATTR_HTML)
     msg_alt.attach(body_html)
+    return msg
+
+
+def _build_html_msg(text, html, images):
+    """Build Multipart message with in-line images and rich html (UTF-8)."""
+
+    _LOGGER.info('Building html rich email')
+    msg = MIMEMultipart('related')
+    alternative = MIMEMultipart('alternative')
+    alternative.attach(MIMEText(text, 'plain', _charset='utf-8'))
+    alternative.attach(MIMEText(html, ATTR_HTML, _charset='utf-8'))
+    msg.attach(alternative)
+
+    for atch_num, atch_name in enumerate(images):
+        # cid = '{}'.format(atch_num)
+        # body_text.append('<img src="cid:{}"><br>'.format(cid))
+        try:
+            with open(atch_name, 'rb') as attachment_file:
+                attachment = MIMEImage(attachment_file.read())
+                msg.attach(attachment)
+                attachment.add_header('Content-ID', '<{}>'.format(atch_num))
+        except FileNotFoundError:
+            _LOGGER.warning('Attachment %s not found. Skipping', atch_name)
     return msg

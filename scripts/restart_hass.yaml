@@ -9,8 +9,9 @@ sequence:
       data:
         push:
           category: "CONFIRM"
-
+  - delay:
+      seconds: 3
   - alias: Restart HA
-    service: shell_command.restart_hass
-#    service: homeassistant.restart
+#    service: shell_command.restart_hass
+    service: homeassistant.restart
 

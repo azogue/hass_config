@@ -208,10 +208,10 @@ CONF_LASTWEEK = "consumption_last_week"
 DEFAULT_PORT = 80
 DEFAULT_PREFIX = 'enerpi'
 DEFAULT_NAME = 'enerPI'
-DEFAULT_DPI = 300
-DEFAULT_DATA_REFRESH = 10
+DEFAULT_DPI = 150
+DEFAULT_DATA_REFRESH = 30
 DEFAULT_PNGTILES_REFRESH = 600
-DEFAULT_MIN_DELTA_W_CHANGE = 50
+DEFAULT_MIN_DELTA_W_CHANGE = 500
 
 KEY_TIMESTAMP = "ts"
 KEYS_REQUIRED_MSG = [KEY_TIMESTAMP, "host", "msg"]
@@ -263,6 +263,25 @@ def get_last_data_request(host, port=DEFAULT_PORT, prefix=DEFAULT_PREFIX, retrie
 ##########################################
 # ENERPI TILES: REMOTE SVG TO LOCAL PNG:
 ##########################################
+def _check_if_svg_tile_changed(new_svg_content_b, path_png_file):
+    new_content = False
+    path_cache = path_png_file[:-4] + '_cache.svg'
+    if os.path.exists(path_cache):
+        with open(path_cache, 'r+b') as f:
+            if f.read() != new_svg_content_b:
+                f.seek(0)
+                f.write(new_svg_content_b)
+                new_content = True
+            else:
+                LOGGER.info('NOT Updating tile {} (same as before)'.format(path_cache))
+    else:
+        LOGGER.info('1ª SVG TILE DOWNLOAD: {}'.format(path_cache))
+        with open(path_cache, 'wb') as f:
+            f.write(new_svg_content_b)
+        new_content = True
+    return new_content
+
+
 def _make_tile_abs_size_and_background(svg_content, col1='#8C27D3', col2='#BFA0F5', opacity=0.8):
     """Transform SVG from relative to absolute size, and append radial gradient color in background."""
     rg_dimensions = re.compile('viewBox="0 0 (\d{2,4}) (\d{2,4})" ')
@@ -285,14 +304,24 @@ def _make_tile_abs_size_and_background(svg_content, col1='#8C27D3', col2='#BFA0F
                   svg_content_abs[:idx_insert_g + 8] + tile_gradient + svg_content_abs[idx_insert_g + 8:], count=1)
 
 
-def _get_remote_tile_svg_and_transform(host, port, prefix, name, c1, c2):
+def _get_remote_tile_svg_and_transform(host, port, prefix, name, c1, c2, path_png_file):
     """Get remote SVG file and transform it before exporting to PNG."""
-    r_svg = requests.get(URL_TILE_MASK.format(host, port, prefix, name))
-    if r_svg.ok:
-        svg_content_s = r_svg.content.decode()
-        return _make_tile_abs_size_and_background(svg_content_s, c1, c2)
+    new_tile, tile = False, None
+    url_tile = URL_TILE_MASK.format(host, port, prefix, name)
+    ok, r_svg = False, None
+    try:
+        r_svg = requests.get(url_tile, timeout=30)
+        ok = r_svg.ok
+    except (requests.ReadTimeout, requests.ConnectionError) as e:
+        LOGGER.error('REQUEST TILE ERROR: {} [{}]'.format(e, e.__class__))
+    if ok:
+        svg_content_b = r_svg.content
+        new_tile = _check_if_svg_tile_changed(svg_content_b, path_png_file)
+        if new_tile:
+            tile = _make_tile_abs_size_and_background(svg_content_b.decode(), c1, c2).encode()
+        return new_tile, tile
     LOGGER.error('TILE REQUEST ERROR: {}'.format(r_svg))
-    return None
+    return new_tile, tile
 
 
 def _png_tile_export(svg_content_bytes, png_file, dpi=300):
@@ -315,10 +344,10 @@ def _png_tile_export(svg_content_bytes, png_file, dpi=300):
 
 def _creation_local_png_tile(host, port, prefix, name, c1, c2, png_file, dpi=DEFAULT_DPI):
     """Creates local PNG version of remote SVG enerpi tile."""
-    svg_content = _get_remote_tile_svg_and_transform(host, port, prefix, name, c1, c2)
-    if svg_content is not None:
-        return _png_tile_export(svg_content.encode(), png_file, dpi)
-    return False
+    new_tile, svg_content_b = _get_remote_tile_svg_and_transform(host, port, prefix, name, c1, c2, png_file)
+    if new_tile and (svg_content_b is not None):
+        return new_tile, _png_tile_export(svg_content_b, png_file, dpi)
+    return new_tile, False
 
 
 def _extract_sensor_params(sensor):
@@ -327,11 +356,11 @@ def _extract_sensor_params(sensor):
     c2 = '#' + ''.join(map('{:02x}'.format, sensor['tile_gradient_end'][:3]))
     if 'mdi:icon' in sensor:
         icon = sensor['mdi:icon']
-        LOGGER.info('MDI Icon detected: {} -> {}'.format(sensor['name'], icon))
+        LOGGER.debug('MDI Icon detected: {} -> {}'.format(sensor['name'], icon))
     else:
         icon = sensor['icon']
-        LOGGER.warn('MDI Icon not detected, using font-awesome icon (may be incompatible): {} -> {}'
-                    .format(sensor['name'], icon))
+        LOGGER.warning('MDI Icon not detected, using font-awesome icon (may be incompatible): {} -> {}'
+                       .format(sensor['name'], icon))
     return sensor['name'], sensor['description'], sensor['unit'], sensor['is_rms'], icon, c1, c2
 
 
@@ -520,7 +549,6 @@ class EnerpiStreamer(object):
         else:
             lastweek_consumption = [1000. * x for x in lastweek_consumption]  # from kWh to Wh
         self._consumption_week = deque(lastweek_consumption, 7)
-        LOGGER.info('consumption_week: {}'.format(self._consumption_week))
         self._consumption_day = self._consumption_week[-1]
 
         self._last_instant_power = 0
@@ -549,28 +577,12 @@ class EnerpiStreamer(object):
             s2_attrs = s1_attrs.copy()
             s2_attrs["friendly_name"] = "Reset level(kW)"
             s2_attrs["icon"] = "mdi:flash-off"
-            LOGGER.debug('{}: {}'.format(MPC_BOOL_SWITCH, switch_attrs))
+            # LOGGER.debug('{}: {}'.format(MPC_BOOL_SWITCH, switch_attrs))
             self.hass.states.async_set(MPC_BOOL_SWITCH, STATE_ON, attributes=switch_attrs, force_update=False)
-            LOGGER.debug('{}: {}'.format(MPC_SLIDER_MAX, s1_attrs))
+            # LOGGER.debug('{}: {}'.format(MPC_SLIDER_MAX, s1_attrs))
             self.hass.states.async_set(MPC_SLIDER_MAX, 4.0, attributes=s1_attrs, force_update=False)
-            LOGGER.debug('{}: {}'.format(MPC_SLIDER_MIN, s2_attrs))
+            # LOGGER.debug('{}: {}'.format(MPC_SLIDER_MIN, s2_attrs))
             self.hass.states.async_set(MPC_SLIDER_MIN, 2.0, attributes=s2_attrs, force_update=False)
-
-        # TODO enerPI grouping:
-        # entities = "sensor.{},".format(name)
-        # entities += ",".join(self._attrs_devices.keys()) + ","
-        # entities += ",".join(['camera.{}'.format(c[0]) for c in tile_cameras])
-        # group_attrs = {"entity_id": entities, "friendly_name": name, "icon": ICON}
-        # LOGGER.debug('group_attrs: {}'.format(group_attrs))
-        # self.hass.states.async_set('group.{}'.format(name), STATE_ON, attributes=group_attrs, force_update=False)
-        # LOGGER.info('ENERPI Sensors added. If you want to group or customize, the entities are: ** {} **'
-        #             .format(', '.join([self._entity_id] + list(self._attrs_devices.keys()))))
-
-        # LOGGER.debug('{}: {}'.format(MPC_GROUP, group_ctl_attrs))
-        # group_ctl_attrs = {"entity_id": ",".join([MPC_BOOL_SWITCH, MPC_SLIDER_MAX, MPC_SLIDER_MIN]),
-        #                    "friendly_name": '{} Max Power Control'.format(name)}
-        # LOGGER.debug('{}: {}'.format(MPC_GROUP, group_ctl_attrs))
-        # self.hass.states.async_set(MPC_GROUP, STATE_ON, attributes=group_ctl_attrs, force_update=False)
 
         # Local PNG conf
         self._sensors_tiles_conf = tile_cameras
@@ -707,11 +719,11 @@ class EnerpiStreamer(object):
         self._last_tile_generation = tic = time()
         png_filepaths = []
         for cam_name, cam_path, mag, desc, unit, is_rms, c1, c2 in self._sensors_tiles_conf:
-            ok = _creation_local_png_tile(self._host, self._port, self._prefix, mag, c1, c2, cam_path, self._png_dpi)
-            if ok:
-                png_filepaths.append(cam_path)
-            else:
+            new_tile, ok = _creation_local_png_tile(self._host, self._port, self._prefix, mag, c1, c2, cam_path, self._png_dpi)
+            if new_tile and not ok:
                 LOGGER.error('Error generating TILE: {} -> {}'.format(cam_name, cam_path))
+            else:
+                png_filepaths.append(cam_path)
         toc = time()
         if png_filepaths:
             basep = os.path.dirname(png_filepaths[0])

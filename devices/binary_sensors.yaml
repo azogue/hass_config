@@ -15,6 +15,24 @@
       entity_id:
         - sensor.calefaccion
 
+- platform: dummy
+  sensors:
+    motioncam_estudio:
+      friendly_name: Vídeo-Mov. en Estudio
+      sensor_class: motion
+    motioncam_salon:
+      friendly_name: Vídeo-Mov. en Salón
+      sensor_class: motion
+    pir_estudio_rpi2h:
+      friendly_name: Movimiento en Estudio
+      sensor_class: motion
+    vibration_sensor_rpi2h:
+      friendly_name: Vibración en Estudio
+      sensor_class: vibration
+    sound_sensor_rpi2h:
+      friendly_name: Sonido en Estudio
+      sensor_class: sound
+
 # **Motion detection on MotionEye streams**
 
 # These are created with Motion running on the slave HASS RPI, adding these custom actions on event_start|_end:
