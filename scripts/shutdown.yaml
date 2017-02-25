@@ -1,0 +1,15 @@
+alias: Apagar RPI
+sequence:
+  - service: notify.ios
+    data:
+      title: 'Apagando sistema de vigilancia'
+      message: "Espera al menos 30 segundos para desenchufar"
+      target: !secret ios_target
+      data:
+        push:
+          badge: 10
+          sound: "US-EN-Morgan-Freeman-Vacate-The-Premises.wav"
+          category: "CONFIRM"
+  - delay:
+      seconds: 3
+  - service: shell_command.cmd_shutdown

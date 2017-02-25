@@ -1,0 +1,15 @@
+alias: Reiniciar RPI
+sequence:
+  - service: notify.ios
+    data:
+      title: 'Reiniciando sistema de vigilancia'
+      message: "En unos minutos estará funcionando de nuevo"
+      target: !secret ios_target
+      data:
+        push:
+          badge: 5
+          sound: "US-EN-Morgan-Freeman-Vacate-The-Premises.wav"
+          category: "CONFIRM"
+  - delay:
+      seconds: 3
+  - service: shell_command.cmd_reboot
