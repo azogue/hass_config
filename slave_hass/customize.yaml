@@ -27,16 +27,17 @@ sensor.dht22_humidity:
 
 binary_sensor.pir_estudio:
   friendly_name: Movimiento en Estudio
-  sensor_class: motion
+  device_class: motion
   homebridge_hidden: true
 binary_sensor.vibration_sensor_raw:
   friendly_name: Vibración en Estudio
-  sensor_class: vibration
+  device_class: vibration
   homebridge_hidden: true
 binary_sensor.sound_sensor_raw:
   friendly_name: Sonido en Estudio
-  sensor_class: sound
+  device_class: sound
   homebridge_hidden: true
+
 
 # (testing)
 input_boolean.switch_matrix_display:

@@ -38,7 +38,8 @@ input_boolean.switch_master_alarm:
   hidden: true
 switch.switch_master_alarm:
   homebridge_name: Alarma general
-  icon: mdi:alert-octagon
+#  icon: mdi:shield-half-full
+  icon: mdi:shield
 
 input_boolean.switch_motion_lights:
   friendly_name: Luz con movimiento en Salón
@@ -198,26 +199,26 @@ sensor.salon_humidity:
   icon: mdi:water-percent
 binary_sensor.pir_salon:
   friendly_name: Movimiento en Salón
-  sensor_class: motion
+  device_class: motion
   homebridge_hidden: true
 
 binary_sensor.motioncam_estudio:
-  sensor_class: motion
+  device_class: motion
   homebridge_name: Vídeo-Mov. en Estudio
 binary_sensor.motioncam_salon:
   homebridge_name: Vídeo-Mov. en Salón
-  sensor_class: motion
+  device_class: motion
 binary_sensor.pir_estudio_rpi2h:
   friendly_name: Movimiento en Estudio
-  sensor_class: motion
+  device_class: motion
   homebridge_hidden: true
 binary_sensor.vibration_sensor_rpi2h:
   friendly_name: Vibración en Estudio
-  sensor_class: vibration
+  device_class: vibration
   homebridge_hidden: true
 binary_sensor.sound_sensor_rpi2h:
   friendly_name: Sonido en Estudio
-  sensor_class: sound
+  device_class: sound
   homebridge_hidden: true
 
 # enerweb sensors

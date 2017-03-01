@@ -7,6 +7,8 @@ homeassistant:
   time_zone: Europe/Madrid
   customize: !include customize.yaml
 
+config:
+
 logger:
   default: warn
   logs:
@@ -70,7 +72,7 @@ switch:
 binary_sensor:
 - platform: rpi_gpio
   name: sensores de movimiento
-  sensor_class: motion
+#  device_class: motion
   ports:
     27: PIR Estudio
   bouncetime: 50

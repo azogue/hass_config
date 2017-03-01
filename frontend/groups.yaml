@@ -2,15 +2,17 @@ Alarma:
   - switch.switch_master_alarm
   - input_select.alarm_mode
 
-Alarm Control:
+Inputs Alarm:
   control: hidden
   entities:
-  - switch.use_pir_salon
-  - switch.motioncam_escam
-  - switch.use_sound_sensor_rpi2h
-  - switch.use_vibration_sensor_rpi2h
-  - switch.use_pir_estudio_rpi2h
-  - switch.motioncam_estudio
+    - binary_sensor.pir_salon
+    - binary_sensor.motioncam_salon
+    - binary_sensor.pir_estudio_rpi2h
+    - binary_sensor.motioncam_estudio
+    - binary_sensor.vibration_sensor_rpi2h
+    - binary_sensor.sound_sensor_rpi2h
+    - binary_sensor.vibration_sensor_raw_rpi2h
+    - binary_sensor.sound_sensor_raw_rpi2h
 
 Eugenio:
   entities:
@@ -26,6 +28,11 @@ Family:
   - group.eugenio
   - group.mary
 
+Master luces del salón:
+  - input_slider.light_main_slider_salon
+  - input_slider.light_temp_slider_salon
+  - input_select.salon_light_scene
+
 Salón:
   - sensor.main_power
   - sensor.consumo_cocina
@@ -34,6 +41,11 @@ Salón:
   - sensor.salon_humidity
   - binary_sensor.pir_salon
   - binary_sensor.motioncam_salon
+
+Luces Estudio:
+  control: hidden
+  entities:
+    - light.flexo
 
 Estudio RPi2h:
   name: Estudio
@@ -49,24 +61,6 @@ Estudio RPi2h:
     - binary_sensor.vibration_sensor_rpi2h
     - binary_sensor.sound_sensor_rpi2h
 
-Caldera:
-  - binary_sensor.heating
-  - sensor.calefaccion
-  - sensor.galeria_impulsion_calefaccion
-  - sensor.galeria_retorno_calefaccion
-  - sensor.galeria_acs
-  - switch.caldera
-
-Galería:
-  - sensor.galeria_dht22_temperature
-  - sensor.galeria_dht22_humidity
-  - sensor.galeria_rpi2_rpi_cpu_temp
-
-Cámaras:
-  - camera.picamera_salon
-  - camera.escam_qf001
-  - camera.picamera_estudio
-
 Luces Salón:
   - light.bola_grande
   - light.bola_pequena
@@ -79,15 +73,23 @@ Luces Dormitorio:
   - light.aura_habitacion
   - light.hue_habitacion
 
-Luces Estudio:
-  control: hidden
-  entities:
-    - light.flexo
+Cámaras:
+  - camera.picamera_salon
+  - camera.escam_qf001
+  - camera.picamera_estudio
 
-Master luces del salón:
-  - input_slider.light_main_slider_salon
-  - input_slider.light_temp_slider_salon
-  - input_select.salon_light_scene
+Caldera:
+  - binary_sensor.heating
+  - sensor.calefaccion
+  - sensor.galeria_impulsion_calefaccion
+  - sensor.galeria_retorno_calefaccion
+  - sensor.galeria_acs
+  - switch.caldera
+
+Galería:
+  - sensor.galeria_dht22_temperature
+  - sensor.galeria_dht22_humidity
+  - sensor.galeria_rpi2_rpi_cpu_temp
 
 Enchufes:
   control: hidden
@@ -224,18 +226,18 @@ Hass control:
     - script.reboot
     - script.shutdown
 
-Status:
-  name: Home Status
-  icon: mdi:castle
-  view: yes
-  entities:
-    - group.salon
-    - group.estudio_rpi2h
-    - group.galeria
-    - group.caldera
-    - group.camaras
-    - group.family
-    - group.tiempo_en_villena
+#Status:
+#  name: Home Status
+#  icon: mdi:castle
+#  view: yes
+#  entities:
+#    - group.salon
+#    - group.estudio_rpi2h
+#    - group.galeria
+#    - group.caldera
+#    - group.camaras
+#    - group.family
+#    - group.tiempo_en_villena
 
 Control:
   name: Home Control
@@ -248,7 +250,7 @@ Control:
     - group.luces_estudio
     - group.enchufes
     - media_player.kodi
-    - media_player.dormitorio_mopidy
+#    - media_player.dormitorio_mopidy
     - group.kodi
 #    - group.despertador
 
@@ -264,17 +266,15 @@ Despertador:
     - switch.altavoz
     - input_boolean.manual_trigger_lacafetera
 
-Debug Alarm:
-  control: hidden
+enerpi_view:
+  name: enerPI
+  icon: mdi:flash
+  view: yes
   entities:
-    - binary_sensor.pir_salon
-    - binary_sensor.motioncam_salon
-    - binary_sensor.pir_estudio_rpi2h
-    - binary_sensor.motioncam_estudio
-    - binary_sensor.vibration_sensor_rpi2h
-    - binary_sensor.sound_sensor_rpi2h
-    - binary_sensor.vibration_sensor_raw_rpi2h
-    - binary_sensor.sound_sensor_raw_rpi2h
+    - sensor.enerpi
+    - group.enerpi
+    - group.enerpi_2x
+    - group.enerpi_max_power_control
 
 alarm_clock:
   name: Despertador
@@ -291,41 +291,59 @@ Home Network:
   icon: mdi:sitemap
   entities:
     - group.links
-    - group.family
+#    - group.family
     - group.host_rpi3
     - group.host_rpi2hat
     - group.cacharros
     - group.red_e_internet
 
-enerpi_view:
-  name: enerPI
-  icon: mdi:flash
-  view: yes
+Alarm Control:
+  control: hidden
   entities:
-    - sensor.enerpi
-    - group.enerpi
-    - group.enerpi_2x
-    - group.enerpi_max_power_control
+  - switch.use_pir_salon
+  - switch.motioncam_escam
+  - switch.use_sound_sensor_rpi2h
+  - switch.use_vibration_sensor_rpi2h
+  - switch.use_pir_estudio_rpi2h
+  - switch.motioncam_estudio
 
-Master conf:
-  name: Master configuration
-  icon: mdi:infinity
+Alarm Panel:
+  name: Alarm configuration
+  icon: mdi:shield-outline
   view: yes
   entities:
     - group.alarma
-    - group.alarm_control
+    - group.inputs_alarm
     - group.camaras
-    - group.hass_control
-    - binary_sensor.heating
-    - binary_sensor.motioncam_salon
-    - binary_sensor.pir_salon
-    - binary_sensor.motioncam_estudio
-    - binary_sensor.pir_estudio_rpi2h
-    - group.debug_alarm
+    - group.alarm_control
 
-# TODO default_view eliminando cards | y ordenar cards en cada view!
-#default_view:
-#    view: yes
-#    entities:
-#      - group.awesome_people
-#      - group.climate
+Master conf:
+  name: Master configuration
+  icon: mdi:settings
+  view: yes
+  entities:
+    - group.alarma
+    - group.hass_control
+    - group.all_automations
+    - group.all_scripts
+
+default_view:
+#  name: Piso
+  icon: mdi:home
+  view: yes
+  entities:
+    - group.family
+    - group.master_luces_del_salon
+    - group.salon
+    - group.luces_estudio
+    - group.estudio_rpi2h
+    - group.luces_dormitorio
+    - group.galeria
+    - group.caldera
+    - group.camaras
+#    - group.luces_salon
+    - group.enchufes
+    - media_player.kodi
+    - group.tiempo_en_villena
+#    - media_player.dormitorio_mopidy
+#    - group.kodi
