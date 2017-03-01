@@ -11,7 +11,7 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.mime.image import MIMEImage
 import email.utils
-
+import os
 import voluptuous as vol
 
 from homeassistant.components.notify import (
@@ -21,7 +21,6 @@ from homeassistant.const import (
     CONF_USERNAME, CONF_PASSWORD, CONF_PORT, CONF_SENDER, CONF_RECIPIENT, CONF_TIMEOUT)
 import homeassistant.helpers.config_validation as cv
 import homeassistant.util.dt as dt_util
-
 
 
 _LOGGER = logging.getLogger(__name__)
@@ -54,6 +53,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
+# noinspection PyUnusedLocal
 def get_service(hass, config, discovery_info=None):
     """Get the mail notification service."""
     mail_service = MailNotificationService(
@@ -226,11 +226,13 @@ def _build_html_msg(text, html, images):
     for atch_num, atch_name in enumerate(images):
         # cid = '{}'.format(atch_num)
         # body_text.append('<img src="cid:{}"><br>'.format(cid))
+        name = os.path.basename(atch_name)
         try:
             with open(atch_name, 'rb') as attachment_file:
-                attachment = MIMEImage(attachment_file.read())
+                attachment = MIMEImage(attachment_file.read(), filename=name)
                 msg.attach(attachment)
-                attachment.add_header('Content-ID', '<{}>'.format(atch_num))
+                # attachment.add_header('Content-ID', '<{}>'.format(atch_num))
+                attachment.add_header('Content-ID', '<{}>'.format(name))
         except FileNotFoundError:
-            _LOGGER.warning('Attachment %s not found. Skipping', atch_name)
+            _LOGGER.warning('Attachment {} [#{}] not found. Skipping'.format(atch_name, atch_num))
     return msg
