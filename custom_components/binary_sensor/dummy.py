@@ -5,8 +5,8 @@ Support for Dummy Binary Sensors. (for update its states from outside HASS)
 """
 import logging
 import voluptuous as vol
-from homeassistant.components.binary_sensor import BinarySensorDevice, SENSOR_CLASSES_SCHEMA, PLATFORM_SCHEMA
-from homeassistant.const import CONF_FRIENDLY_NAME, CONF_SENSOR_CLASS, CONF_SENSORS
+from homeassistant.components.binary_sensor import BinarySensorDevice, DEVICE_CLASSES_SCHEMA, PLATFORM_SCHEMA
+from homeassistant.const import CONF_FRIENDLY_NAME, CONF_DEVICE_CLASS, CONF_SENSORS
 import homeassistant.helpers.config_validation as cv
 
 
@@ -16,7 +16,7 @@ DEFAULT_NAME = 'Binary Dummy Sensor'
 
 SENSOR_SCHEMA = vol.Schema({
     vol.Required(CONF_FRIENDLY_NAME): cv.string,
-    vol.Optional(CONF_SENSOR_CLASS, default=None): SENSOR_CLASSES_SCHEMA
+    vol.Optional(CONF_DEVICE_CLASS, default=None): DEVICE_CLASSES_SCHEMA
 })
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
@@ -31,19 +31,19 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     sensors = []
     for device, device_config in config[CONF_SENSORS].items():
         fn = device_config.get(CONF_FRIENDLY_NAME)
-        sensor_class = device_config.get(CONF_SENSOR_CLASS)
-        sensors.append(DummyBinarySensor(device, sensor_class, fn))
+        device_class = device_config.get(CONF_DEVICE_CLASS)
+        sensors.append(DummyBinarySensor(device, device_class, fn))
     add_devices(sensors)
 
 
 class DummyBinarySensor(BinarySensorDevice):
     """Represent a Dummy binary sensor."""
 
-    def __init__(self, name, sensor_class, friendly_name):
+    def __init__(self, name, device_class, friendly_name):
         """Initialize the Command line binary sensor."""
         # self._hass = hass
         self._name = name
-        self._sensor_class = sensor_class
+        self._device_class = device_class
         self._friendly_name = friendly_name
         # self._icon = icon
         self._state = False
@@ -66,14 +66,14 @@ class DummyBinarySensor(BinarySensorDevice):
         return self._state
 
     @property
-    def sensor_class(self):
+    def device_class(self):
         """Return the class of the binary sensor."""
-        return self._sensor_class
-    #
+        return self._device_class
+
     @property
     def state_attributes(self):
         """Return the state attributes."""
-        return dict(friendly_name=self._friendly_name, sensor_class=self._sensor_class)
+        return dict(friendly_name=self._friendly_name, device_class=self._device_class)
 
     # @property
     # def icon(self):
