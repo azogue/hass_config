@@ -11,6 +11,8 @@ entities:
     url: !secret mopidy_url
   - name: Slave HASS
     url: http://192.168.1.46:8123/
+  - name: Slave HASS MPD
+    url: http://192.168.1.52:8123/
 #  - name: enerPI 2x
 #    url: http://192.168.1.52/enerpi/
 #  - name: PyOutlets
@@ -19,10 +21,8 @@ entities:
     url: http://192.168.1.1
   - name: Wifi Extender AP
     url: http://192.168.1.11
-#  - name: RPI Caldera
-#    url: http://192.168.1.47/enerweb/
-#  - name: RPI 2 SenseHat Estudio
-#    url: http://192.168.1.46/enerweb/
+  - name: RPI Caldera
+    url: http://192.168.1.47/enerweb/
   - name: RPI 3 OSMC Salón
     url: http://192.168.1.56/enerweb/
   - name: TV Headend
