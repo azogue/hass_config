@@ -24,3 +24,8 @@ dist
 **/*.h5
 **/*.csv
 **/*Copia en conflicto*
+transfer.sh
+exclude_patterns.txt
+getremotedb.sh
+catlog.sh
+testing_gen.yaml
