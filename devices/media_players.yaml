@@ -7,6 +7,6 @@
   turn_off_action: quit
 
 - platform: mpd
-  host: 192.168.1.51
-#  host: 192.168.1.52  # wifi
+#  host: 192.168.1.51  # wifi
+  host: 192.168.1.52
   location: Dormitorio (Mopidy)
