@@ -31,7 +31,7 @@ from sqlalchemy.exc import OperationalError, InternalError, TimeoutError, SQLAlc
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (CONF_HOST, TEMP_CELSIUS, CONF_SENSORS, CONF_TIMEOUT, CONF_NAME, CONF_SCAN_INTERVAL,
+from homeassistant.const import (CONF_HOST, TEMP_CELSIUS, CONF_SENSORS, CONF_TIMEOUT, CONF_NAME,
                                  STATE_UNKNOWN, STATE_ON, STATE_OFF)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
@@ -53,7 +53,7 @@ URL_MASK_ENERWEB_GET_DATA_MYSQL = 'mysql+cymysql://{}:{}@{}/data_enerweb'
 SQLMASK_SELECT_TABLE_COLUMN_NAMES = "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = \"{}\""
 SQLMASK_SELECT_TABLE_LAST_VALUES = "SELECT * FROM {} ORDER BY ID DESC LIMIT {}"
 
-DEFAULT_SCAN_INTERVAL_SEC = 40
+SCAN_INTERVAL = timedelta(seconds=40)
 
 KEY_TIMESTAMP = 'ts'
 SENSOR_TYPES_UNITS = {
@@ -74,7 +74,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_SENSORS): vol.All(cv.ensure_list, [cv.ensure_list]),
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
-    vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL_SEC): cv.positive_int,
+    # vol.Optional(CONF_SCAN_INTERVAL): cv.positive_int,
     vol.Optional(CONF_MYSQL_USER, default=None): cv.string,
     vol.Optional(CONF_MYSQL_PASS, default=None): cv.string,
     vol.Optional(CONF_ROUND, default=None): cv.positive_int,
@@ -103,7 +103,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     sensors_append = config[CONF_SENSORS]
     name = config[CONF_NAME]
     timeout = config[CONF_TIMEOUT]
-    scan_interval = config[CONF_SCAN_INTERVAL]
+    # scan_interval = config[CONF_SCAN_INTERVAL]
     round_result = config[CONF_ROUND]
 
     # MySQL remote access (vs requests to enerweb API)
@@ -126,7 +126,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
                              .format(sensor_type, sensor_mag, sensor_name, sensor_unit))
                 dev.append((sensor_type, sensor_mag, sensor_name, sensor_unit, sensor_class, round_result))
     if dev:
-        data_handler = EnerwebData(hass, enerweb_host, dev, time_zone, timeout, mysql_user, mysql_pass, scan_interval)
+        data_handler = EnerwebData(hass, enerweb_host, dev, time_zone, timeout, mysql_user, mysql_pass)
         sensors = [EnerwebSensor(data_handler, use_mysql, name, s_type, s_mag, s_name, s_unit, s_class, round_r)
                    for s_type, s_mag, s_name, s_unit, s_class, round_r in dev]
 
@@ -300,7 +300,7 @@ class EnerwebData(object):
     """Get the latest data for the enerweb platform."""
 
     def __init__(self, hass, enerweb_host, devices, timezone, timeout=DEFAULT_TIMEOUT,
-                 mysql_user=None, mysql_pass=None, scan_interval_sec=DEFAULT_SCAN_INTERVAL_SEC):
+                 mysql_user=None, mysql_pass=None):
         """Initialize the data handler object."""
         self._hass = hass
         self._host = enerweb_host
@@ -308,7 +308,7 @@ class EnerwebData(object):
         self._timezone = timezone
         self._use_requests = mysql_user is None
         self._timeout = timeout
-        self._scan_interval = timedelta(seconds=scan_interval_sec)
+        # self._scan_interval = timedelta(seconds=scan_interval)
         self._mysql_u = mysql_user
         self._mysql_p = mysql_pass
         self._mysql_session = None
@@ -329,7 +329,7 @@ class EnerwebData(object):
 
         # 1rst data request:
         async_track_point_in_utc_time(self._hass, self.async_update, now() + timedelta(seconds=3))
-        async_track_time_interval(self._hass, self.async_update, self._scan_interval)
+        async_track_time_interval(self._hass, self.async_update, SCAN_INTERVAL)
 
         if self.last_sensor_data is not None:
             _LOGGER.info('ENERWEB DATA CONFIRMED IN SITE: {}; HOSTNAME: {}; SENSORS: {}'
