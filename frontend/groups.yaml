@@ -73,10 +73,22 @@ Luces Dormitorio:
   - light.aura_habitacion
   - light.hue_habitacion
 
+Dormitorio RPI2MPD:
+  name: Dormitorio
+  entities:
+    - sensor.temperatura_dormitorio_rpi2mpd
+    - sensor.dht22_dormitorio_temperature_rpi2mpd
+    - sensor.dht22_dormitorio_humidity_rpi2mpd
+
 Cámaras:
   - camera.picamera_salon
   - camera.escam_qf001
   - camera.picamera_estudio
+
+Galería:
+  - sensor.galeria_dht22_temperature
+  - sensor.galeria_dht22_humidity
+  - sensor.galeria_rpi2_rpi_cpu_temp
 
 Caldera:
   - binary_sensor.heating
@@ -85,11 +97,6 @@ Caldera:
   - sensor.galeria_retorno_calefaccion
   - sensor.galeria_acs
   - switch.caldera
-
-Galería:
-  - sensor.galeria_dht22_temperature
-  - sensor.galeria_dht22_humidity
-  - sensor.galeria_rpi2_rpi_cpu_temp
 
 Enchufes:
   control: hidden
@@ -123,10 +130,11 @@ Tiempo en Villena:
 
 Links:
   - weblink.slave_hass
+  - weblink.slave_hass_mpd
+  - weblink.enerpi
   - weblink.motioneye
   - weblink.kodi_web_interface
   - weblink.tv_headend
-  - weblink.enerpi
   - weblink.mopidy
   - weblink.pyoutlets
   - weblink.nas
@@ -134,7 +142,6 @@ Links:
   - weblink.wifi_extender_ap
   - weblink.rpi_caldera
   - weblink.rpi_3_osmc_salon
-  - weblink.rpi_2_sensehat_estudio
 
 Host RPi3:
   - sensor.cpu_use
@@ -150,6 +157,12 @@ Host RPi2Hat:
   - sensor.ram_free_rpi2h
   - sensor.last_boot_rpi2h
   - sensor.disk_use__rpi2h
+
+Host RPi2 MPD:
+  - sensor.cpu_use_rpi2mpd
+  - sensor.ram_free_rpi2mpd
+  - sensor.last_boot_rpi2mpd
+  - sensor.disk_use__rpi2mpd
 
 Red e Internet:
   - sensor.speedtest_ping
@@ -174,7 +187,8 @@ Cacharros:
   - device_tracker.jo01
   - device_tracker.rpi_wifi
   - device_tracker.rpi2hat
-  - device_tracker.rpi2_wifi
+  - device_tracker.rpi2
+#  - device_tracker.rpi2_wifi
   - device_tracker.rpi3w
   - device_tracker.rpi3osmc
 
@@ -194,6 +208,11 @@ enerPI:
   - sensor.enerpi
   - sensor.enerpi_power
   - sensor.enerpi_ldr
+
+enerPI_consumption:
+  - camera.enerpi_tile_kwh
+
+enerPI_tiles:
   - camera.enerpi_tile_power
   - camera.enerpi_tile_ldr
 
@@ -226,17 +245,17 @@ Hass control:
     - script.reboot
     - script.shutdown
 
-#Status:
-#  name: Home Status
-#  icon: mdi:castle
-#  view: yes
-#  entities:
-#    - group.salon
-#    - group.estudio_rpi2h
-#    - group.galeria
-#    - group.caldera
+Status:
+  name: Home Status
+  icon: mdi:castle
+  view: yes
+  entities:
+    - group.salon
+    - group.estudio_rpi2h
+    - group.dormitorio_rpi2mpd
+    - group.galeria
+    - group.caldera
 #    - group.camaras
-#    - group.family
 #    - group.tiempo_en_villena
 
 Control:
@@ -249,9 +268,9 @@ Control:
     - group.luces_dormitorio
     - group.luces_estudio
     - group.enchufes
-    - media_player.kodi
-#    - media_player.dormitorio_mopidy
     - group.kodi
+    - media_player.kodi
+    - media_player.dormitorio_mopidy
 #    - group.despertador
 
 Despertador:
@@ -271,9 +290,11 @@ enerpi_view:
   icon: mdi:flash
   view: yes
   entities:
-    - sensor.enerpi
+#    - sensor.enerpi
     - group.enerpi
-    - group.enerpi_2x
+    - group.enerpi_consumption
+    - group.enerpi_tiles
+#    - group.enerpi_2x
     - group.enerpi_max_power_control
 
 alarm_clock:
@@ -285,18 +306,6 @@ alarm_clock:
     - media_player.dormitorio_mopidy
     - media_player.kodi
 
-Home Network:
-  name: Red local del hogar
-  view: yes
-  icon: mdi:sitemap
-  entities:
-    - group.links
-#    - group.family
-    - group.host_rpi3
-    - group.host_rpi2hat
-    - group.cacharros
-    - group.red_e_internet
-
 Alarm Control:
   control: hidden
   entities:
@@ -306,6 +315,19 @@ Alarm Control:
   - switch.use_vibration_sensor_rpi2h
   - switch.use_pir_estudio_rpi2h
   - switch.motioncam_estudio
+
+Home Network:
+  name: Red local del hogar
+  view: yes
+  icon: mdi:sitemap
+  entities:
+    - group.links
+#    - group.family
+    - group.host_rpi3
+    - group.host_rpi2hat
+    - group.host_rpi2_mpd
+    - group.cacharros
+    - group.red_e_internet
 
 Alarm Panel:
   name: Alarm configuration
@@ -338,6 +360,7 @@ default_view:
     - group.luces_estudio
     - group.estudio_rpi2h
     - group.luces_dormitorio
+    - group.dormitorio_rpi2mpd
     - group.galeria
     - group.caldera
     - group.camaras
