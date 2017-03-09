@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
 import asyncio
-from ..enerpi import (EnerpiStreamer, LOGGER, EnerpiSensor,
-                      CONF_HOST, CONF_PORT, CONF_PREFIX, CONF_SCAN_INTERVAL, CONF_DELTA_REFRESH, CONF_DEVICES,
-                      CONF_MAIN_POWER, CONF_TILE_CAMERAS, CONF_TILES_DPI, CONF_TILES_PNGS_REFRESH, CONF_LASTWEEK)
+from ..enerpi import (EnerpiStreamer, LOGGER, EnerpiSensor, CONF_HOST, CONF_PORT, CONF_PREFIX,
+                      CONF_SCAN_INTERVAL, CONF_DELTA_REFRESH, CONF_DEVICES, CONF_MAIN_POWER, CONF_LASTWEEK)
 
 
 ##########################################
@@ -25,14 +24,11 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info):
             main_power = config_enerpi_host.get(CONF_MAIN_POWER)
             data_refresh = config_enerpi_host.get(CONF_SCAN_INTERVAL)
             delta_refresh = config_enerpi_host.get(CONF_DELTA_REFRESH)
-            dpi = config_enerpi_host.get(CONF_TILES_DPI)
-            tile_cameras = config_enerpi_host.get(CONF_TILE_CAMERAS)
-            pngs_refresh = config_enerpi_host.get(CONF_TILES_PNGS_REFRESH)
             lastweek_consumption = config_enerpi_host.get(CONF_LASTWEEK)
 
             streamer = EnerpiStreamer(hass, clean_name, host, port, prefix,
-                                      devices, main_power, lastweek_consumption, tile_cameras,
-                                      dpi, data_refresh, delta_refresh, pngs_refresh, is_master_enerpi=is_master)
+                                      devices, main_power, lastweek_consumption,
+                                      data_refresh, delta_refresh, is_master)
             is_master = False
             devices_enerpi_hosts.append(EnerpiSensor(streamer, clean_name))
             LOGGER.info('enerPI platform sensors "{}". Sensors added: **{}**'.format(clean_name, devices))

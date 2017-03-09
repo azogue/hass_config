@@ -164,11 +164,9 @@ logger:
 import asyncio
 from collections import deque, OrderedDict
 import datetime as dt
-from dateutil.parser import parse
 from json import loads
 import logging
 import os
-import re
 import requests
 from time import time
 import voluptuous as vol
@@ -178,10 +176,12 @@ import homeassistant.helpers.config_validation as cv
 from homeassistant.components.camera.local_file import LocalFile
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import slugify, utcnow
-from homeassistant.components.discovery import load_platform
+from homeassistant.util.dt import now
+from homeassistant.helpers.event import async_track_time_interval, async_track_point_in_utc_time
+from homeassistant.helpers.discovery import load_platform
 
 
-REQUIREMENTS = ['cairosvg>=1.0.22']
+REQUIREMENTS = ['python-dateutil>=2.6']
 DEPENDENCIES = ['sensor', 'camera']
 
 ICON = 'mdi:flash'
@@ -192,13 +192,12 @@ URL_SENSORS_MASK = 'http://{}:{}/{}/api/filedownload/sensors'
 URL_CONSUMPTION_LASTWEEK = 'http://{}:{}/{}/api/consumption/from/{:%Y-%m-%d}?daily=true&round=1'
 URL_STREAM_MASK = 'http://{}:{}/{}/api/stream/realtime'
 URL_DATA_MASK = 'http://{}:{}/{}/api/last'
-URL_TILE_MASK = 'http://{}:{}/{}/static/img/generated/tile_enerpi_data_{}_last_24h.svg'
+URL_TILE_MASK = 'http://{}:{}/{}/static/img/generated/tile_enerpi_data_{}_last_24h.png'
 
-CONF_DPI = 'dpi'
 CONF_PNGTILES_REFRESH = 'pngtiles_refresh'
 
+CONF_MONITORED_TILES = "monitored_tiles"
 CONF_TILE_CAMERAS = "tile_cameras"
-CONF_TILES_DPI = "tiles_dpi"
 CONF_TILES_PNGS_REFRESH = "tiles_pngs_refresh"
 CONF_MAIN_POWER = "main_power"
 CONF_TILE_EXTENSION = "png"
@@ -208,7 +207,7 @@ CONF_LASTWEEK = "consumption_last_week"
 DEFAULT_PORT = 80
 DEFAULT_PREFIX = 'enerpi'
 DEFAULT_NAME = 'enerPI'
-DEFAULT_DPI = 150
+
 DEFAULT_DATA_REFRESH = 30
 DEFAULT_PNGTILES_REFRESH = 600
 DEFAULT_MIN_DELTA_W_CHANGE = 500
@@ -226,10 +225,10 @@ CONFIG_SCHEMA = vol.Schema({
             vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.string,
             vol.Optional(CONF_PREFIX, default=DEFAULT_PREFIX): cv.string,
             vol.Optional(CONF_MONITORED_VARIABLES, default=['all']): cv.ensure_list,
+            vol.Optional(CONF_MONITORED_TILES, default=[]): cv.ensure_list,
             vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_DATA_REFRESH): cv.positive_int,
             vol.Optional(CONF_DELTA_REFRESH, default=DEFAULT_MIN_DELTA_W_CHANGE): cv.positive_int,
-            vol.Optional(CONF_PNGTILES_REFRESH, default=DEFAULT_PNGTILES_REFRESH): cv.positive_int,
-            vol.Optional(CONF_DPI, default=DEFAULT_DPI): cv.positive_int
+            vol.Optional(CONF_PNGTILES_REFRESH, default=DEFAULT_PNGTILES_REFRESH): cv.positive_int
         })
     })
 }, required=True, extra=vol.ALLOW_EXTRA)
@@ -261,99 +260,48 @@ def get_last_data_request(host, port=DEFAULT_PORT, prefix=DEFAULT_PREFIX, retrie
 
 
 ##########################################
-# ENERPI TILES: REMOTE SVG TO LOCAL PNG:
+# ENERPI TILES: REMOTE PNGs:
 ##########################################
-def _check_if_svg_tile_changed(new_svg_content_b, path_png_file):
-    new_content = False
-    path_cache = path_png_file[:-4] + '_cache.svg'
-    if os.path.exists(path_cache):
-        with open(path_cache, 'r+b') as f:
-            if f.read() != new_svg_content_b:
-                f.seek(0)
-                f.write(new_svg_content_b)
+@asyncio.coroutine
+def _check_if_tile_changed(new_png_content_b, path_png_file):
+    new_content = True
+    if os.path.exists(path_png_file):
+        new_content = False
+        with open(path_png_file, 'rb') as f:
+            if f.read() != new_png_content_b:
                 new_content = True
-            else:
-                LOGGER.info('NOT Updating tile {} (same as before)'.format(path_cache))
+    if new_content:
+        if not os.path.exists(path_png_file):
+            LOGGER.info('1ª SVG TILE DOWNLOAD: {}'.format(path_png_file))
+        LOGGER.debug('Updating tile {}'.format(path_png_file))
+        with open(path_png_file, 'wb') as f:
+            f.write(new_png_content_b)
     else:
-        LOGGER.info('1ª SVG TILE DOWNLOAD: {}'.format(path_cache))
-        with open(path_cache, 'wb') as f:
-            f.write(new_svg_content_b)
-        new_content = True
+        LOGGER.debug('NOT Updating tile {} (same as before)'.format(path_png_file))
     return new_content
 
 
-def _make_tile_abs_size_and_background(svg_content, col1='#8C27D3', col2='#BFA0F5', opacity=0.8):
-    """Transform SVG from relative to absolute size, and append radial gradient color in background."""
-    rg_dimensions = re.compile('viewBox="0 0 (\d{2,4}) (\d{2,4})" ')
-    rg_w = re.compile('width="(\d{1,3}%)" preserveAspectRatio="none"')
-    rg_h = re.compile('svg height="(\d{1,3}%)" ')
-    id_g = 'custom_grad_bg'
-    tile_gradient = '''<radialGradient id="{}" gradientUnits="userSpaceOnUse" cx="70%" cy="70%" r="100%">
-    <stop stop-color="{}" offset="0"/><stop stop-color="{}" offset="1"/></radialGradient>'''.format(id_g, col1, col2)
-    try:
-        width, height = rg_dimensions.findall(svg_content)[0]
-    except IndexError:
-        LOGGER.error("Can't get dimensions of SVG. is correct? {}".format(svg_content))
-        return svg_content
-    svg_content_abs = rg_h.sub('svg height="{}pt" '.format(height),
-                               rg_w.sub('width="{}pt"'.format(width), svg_content, count=1),
-                               count=1)
-    idx_insert_g = svg_content_abs.find('<defs>\n')
-    return re.sub('style="fill:none;opacity:0;"',
-                  'style="fill:url(#{});opacity:{};"'.format(id_g, opacity),
-                  svg_content_abs[:idx_insert_g + 8] + tile_gradient + svg_content_abs[idx_insert_g + 8:], count=1)
-
-
-def _get_remote_tile_svg_and_transform(host, port, prefix, name, c1, c2, path_png_file):
-    """Get remote SVG file and transform it before exporting to PNG."""
-    new_tile, tile = False, None
+@asyncio.coroutine
+def _get_remote_png_tile(host, port, prefix, name):
+    """Get remote PNG file."""
     url_tile = URL_TILE_MASK.format(host, port, prefix, name)
     ok, r_svg = False, None
     try:
-        r_svg = requests.get(url_tile, timeout=30)
+        r_svg = requests.get(url_tile, timeout=10)
         ok = r_svg.ok
     except (requests.ReadTimeout, requests.ConnectionError) as e:
         LOGGER.error('REQUEST TILE ERROR: {} [{}]'.format(e, e.__class__))
+    yield from asyncio.sleep(0)
     if ok:
-        svg_content_b = r_svg.content
-        new_tile = _check_if_svg_tile_changed(svg_content_b, path_png_file)
-        if new_tile:
-            tile = _make_tile_abs_size_and_background(svg_content_b.decode(), c1, c2).encode()
-        return new_tile, tile
-    LOGGER.error('TILE REQUEST ERROR: {}'.format(r_svg))
-    return new_tile, tile
-
-
-def _png_tile_export(svg_content_bytes, png_file, dpi=300):
-    """Cairo PNG export from SVG."""
-    import cairosvg
-    from lxml.etree import XMLSyntaxError
-
-    # *** Not working in RPI  as `cairosvg.svg2png(svg_content_bytes, write_to=png_file, dpi=dpi)` !?? ***
-    local_svg = png_file[:-3] + 'svg'
-    with open(local_svg, 'wb') as f:
-        f.write(svg_content_bytes)
-    try:
-        # noinspection PyUnresolvedReferences
-        cairosvg.svg2png(url=local_svg, write_to=png_file, dpi=dpi)
-        return True
-    except XMLSyntaxError as e:
-        LOGGER.error('PNG_TILE ({}) -> Export error: {}'.format(png_file, e))
-        return False
-
-
-def _creation_local_png_tile(host, port, prefix, name, c1, c2, png_file, dpi=DEFAULT_DPI):
-    """Creates local PNG version of remote SVG enerpi tile."""
-    new_tile, svg_content_b = _get_remote_tile_svg_and_transform(host, port, prefix, name, c1, c2, png_file)
-    if new_tile and (svg_content_b is not None):
-        return new_tile, _png_tile_export(svg_content_b, png_file, dpi)
-    return new_tile, False
+        return r_svg.content
+    LOGGER.error('TILE REQUEST ERROR: {} - {}'.format(r_svg, url_tile))
+    return None
 
 
 def _extract_sensor_params(sensor):
     """Extract enerpi sensors info, including background colors from rgb to hex."""
-    c1 = '#' + ''.join(map('{:02x}'.format, sensor['tile_gradient_st'][:3]))
-    c2 = '#' + ''.join(map('{:02x}'.format, sensor['tile_gradient_end'][:3]))
+    # c1 = '#' + ''.join(map('{:02x}'.format, sensor['tile_gradient_st'][:3]))
+    # c2 = '#' + ''.join(map('{:02x}'.format, sensor['tile_gradient_end'][:3]))
     if 'mdi:icon' in sensor:
         icon = sensor['mdi:icon']
         LOGGER.debug('MDI Icon detected: {} -> {}'.format(sensor['name'], icon))
@@ -361,7 +309,7 @@ def _extract_sensor_params(sensor):
         icon = sensor['icon']
         LOGGER.warning('MDI Icon not detected, using font-awesome icon (may be incompatible): {} -> {}'
                        .format(sensor['name'], icon))
-    return sensor['name'], sensor['description'], sensor['unit'], sensor['is_rms'], icon, c1, c2
+    return sensor['name'], sensor['description'], sensor['unit'], sensor['is_rms'], icon
 
 
 ##########################################
@@ -378,7 +326,7 @@ def async_setup(hass, config_hosts):
         port = config.get(CONF_PORT)
         prefix = config.get(CONF_PREFIX)
         monitored_sensors = config.get(CONF_MONITORED_VARIABLES)
-        dpi = config.get(CONF_DPI)
+        monitored_tiles = config.get(CONF_MONITORED_TILES)
         data_refresh = config.get(CONF_SCAN_INTERVAL)
         delta_refresh = config.get(CONF_DELTA_REFRESH)
         pngs_refresh = config.get(CONF_PNGTILES_REFRESH)
@@ -422,25 +370,30 @@ def async_setup(hass, config_hosts):
                 if (sensor_key in d_sensors.keys()) or (sensor_key in all_sensors_data.keys()):
                     if sensor_key not in d_sensors.keys():  # ref sensor
                         friendly_name, unit, is_rms, icon = sensor_key, '', True, 'numeric'
-                        c1, c2 = '#FF2211', '#DDDDDD'
+                        # c1, c2 = '#FF2211', '#DDDDDD'
                     else:
                         sensor = d_sensors[sensor_key]
-                        sensor_key, friendly_name, unit, is_rms, icon, c1, c2 = _extract_sensor_params(sensor)
+                        sensor_key, friendly_name, unit, is_rms, icon = _extract_sensor_params(sensor)
                         if is_rms and main_power is None:
                             main_power = sensor_key
                     devices_ids.append(('{}.{}_{}'.format('sensor', clean_name, sensor_key),
                                         sensor_key, unit, is_rms, friendly_name, icon))
-                    # Create empty local files
-                    open(png_file, 'w').close()
-                    tile_cameras.append(('{}_{}_{}'.format(clean_name, 'tile', sensor_key), png_file,
-                                         sensor_key, friendly_name, unit, is_rms, c1, c2))
+                    if not monitored_tiles or (sensor_key in monitored_tiles):
+                        # Create empty local files
+                        open(png_file, 'w').close()
+                        tile_cameras.append(('{}_{}_{}'.format(clean_name, 'tile', sensor_key),
+                                             png_file, sensor_key, friendly_name))
                 else:
                     LOGGER.error("Sensor type: {} does not exist in {}".format(sensor_key, d_sensors.keys()))
-
+            if tile_cameras:
+                # Append tile consumo
+                s_key = 'kWh'
+                png_file = mask_png_file.format(clean_name, s_key)
+                open(png_file, 'w').close()
+                tile_cameras.append(('{}_{}_{}'.format(clean_name, 'tile', s_key), png_file, s_key, 'Consumption'))
             enerpi_config[clean_name] = {CONF_NAME: name, CONF_HOST: host, CONF_PORT: port, CONF_PREFIX: prefix,
-                                         CONF_DEVICES: devices_ids,
+                                         CONF_DEVICES: devices_ids, CONF_TILE_CAMERAS: tile_cameras,
                                          CONF_SCAN_INTERVAL: data_refresh, CONF_DELTA_REFRESH: delta_refresh,
-                                         CONF_TILE_CAMERAS: tile_cameras, CONF_TILES_DPI: dpi,
                                          CONF_TILES_PNGS_REFRESH: pngs_refresh, CONF_MAIN_POWER: main_power,
                                          CONF_LASTWEEK: consumption_kwh_week}
 
@@ -448,6 +401,8 @@ def async_setup(hass, config_hosts):
     if enerpi_config:
         load_platform(hass, 'sensor', DOMAIN, enerpi_config)
         load_platform(hass, 'camera', DOMAIN, enerpi_config)
+        # hass.loop.async_add_job(async_load_platform(hass, 'sensor', DOMAIN, enerpi_config))
+        # hass.loop.async_add_job(async_load_platform(hass, 'camera', DOMAIN, enerpi_config))
         return True
     else:
         LOGGER.error('ENERPI PLATFORM NOT LOADED')
@@ -457,17 +412,45 @@ def async_setup(hass, config_hosts):
 class EnerpiTileCam(LocalFile):
     """Custom LocalFile Camera for enerPI tiles as local PNG's"""
 
-    def __init__(self, entity_name, file_path, host, enerpi_name, desc):
+    def __init__(self, hass, entity_name, file_path, host, port, prefix, enerpi_name, mag, desc, pngs_refresh):
         """Initialize Local File Camera component."""
         super().__init__(entity_name, file_path)
+        self._hass = hass
         self._host = host
-        self._enerpi = enerpi_name
+        self._port = port
+        self._prefix = prefix
+        self._enerpi_name = enerpi_name
+        self._mag = mag
         self._desc = desc
+        self._last_tile_generation = None
+        self._delta_refresh = dt.timedelta(seconds=pngs_refresh)
+
+        async_track_point_in_utc_time(self._hass, self.update_local_png_tiles, now() + dt.timedelta(seconds=5))
+        async_track_time_interval(self._hass, self.update_local_png_tiles, self._delta_refresh)
+
+    # noinspection PyUnusedLocal
+    @asyncio.coroutine
+    def update_local_png_tiles(self, *args):
+        """Re-generates LOCAL PNG Files from enerpi remote SVG tiles."""
+        if self._last_tile_generation is None:  # 1st tile generation
+            LOGGER.info('ENERPI png tiles 1st generation for --> {}'.format(os.path.basename(self._file_path)))
+        tic = time()
+        new_tile = yield from _get_remote_png_tile(self._host, self._port, self._prefix, self._mag)
+        if new_tile is not None:
+            toc = time()
+            self._last_tile_generation = dt.datetime.now()
+            changed = yield from _check_if_tile_changed(new_tile, self._file_path)
+            LOGGER.debug('ENERPI: {} PNG TILE generated. Changed:{}; TOOK {:.2f} sec'
+                         .format(self._mag, changed, toc - tic))
+        else:
+            toc = time()
+            LOGGER.error('Error generating TILE: {} -> {}. TOOK {:.2f} sec'
+                         .format(self.entity_id, self._file_path, toc - tic))
 
     @property
     def brand(self):
         """Camera brand."""
-        return 'Enerpi TILE from {}'.format(self._host)
+        return 'enerPI from {}'.format(self._host)
 
     @property
     def model(self):
@@ -478,7 +461,8 @@ class EnerpiTileCam(LocalFile):
     def state_attributes(self):
         """Camera state attributes."""
         st_attrs = super().state_attributes
-        st_attrs.update({"friendly_name": '{} ({})'.format(self._desc, self._enerpi)})
+        st_attrs.update({"friendly_name": '{} ({})'.format(self._desc, self._enerpi_name),
+                         "last_changed": self._last_tile_generation})
         return st_attrs
 
 
@@ -520,7 +504,7 @@ class EnerpiStreamer(object):
     """Class for handling the ENERPI data retrieval."""
 
     def __init__(self, hass, name, host, port, prefix, devices_ids, main_sensor, lastweek_consumption,
-                 tile_cameras, dpi, data_refresh, delta_refresh, pngs_refresh, is_master_enerpi=True):
+                 data_refresh, delta_refresh, is_master_enerpi=True):
         """Initialize the data object."""
         self.hass = hass
         self._name = name
@@ -533,7 +517,6 @@ class EnerpiStreamer(object):
         # Refresh config:
         self._refresh_interval = data_refresh
         self._refresh_delta = delta_refresh
-        self._refresh_interval_pngtiles = pngs_refresh
 
         # Enerpi streaming data & stats:
         self.last_data = {}
@@ -584,18 +567,11 @@ class EnerpiStreamer(object):
             # LOGGER.debug('{}: {}'.format(MPC_SLIDER_MIN, s2_attrs))
             self.hass.states.async_set(MPC_SLIDER_MIN, 2.0, attributes=s2_attrs, force_update=False)
 
-        # Local PNG conf
-        self._sensors_tiles_conf = tile_cameras
-        self._png_dpi = dpi
-        self._last_tile_generation = None
-
-        # Generate local png's from remote SVG Tiles (1ºst time)
-        self.hass.async_add_job(self.async_update_local_png_tiles())
-
         # Start receiving stream:
         try:
             asyncio.ensure_future(self._generator_stream(), loop=self.hass.loop)
         except AttributeError:  # for python 3.4.2
+            # noinspection PyDeprecation
             asyncio.async(self._generator_stream(), loop=self.hass.loop)
 
     @property
@@ -628,6 +604,8 @@ class EnerpiStreamer(object):
 
     @asyncio.coroutine
     def _generator_stream(self):
+        from dateutil.parser import parse
+
         counter_samples = 0
         while True:
             LOGGER.debug('Starting enerPI stream receiver')
@@ -679,11 +657,6 @@ class EnerpiStreamer(object):
                             else:
                                 str_state = 'danger'
 
-                            # PNG tiles regeneration:
-                            if ((self._last_tile_generation is not None) and
-                                    (time() - self._last_tile_generation > self._refresh_interval_pngtiles - .5)):
-                                self.hass.async_add_job(self.async_update_local_png_tiles())
-
                             # State change
                             if ((self._last_state_ch is None) or (self._state != str_state) or
                                     (abs(self._last_instant_power - main_instant_power) > self._refresh_delta) or
@@ -710,28 +683,3 @@ class EnerpiStreamer(object):
             except (requests.ReadTimeout, requests.ConnectionError) as e:
                 LOGGER.error('Error reading enerPI stream [{}]; (Samples OK={})'.format(e, counter_samples))
                 asyncio.sleep(10)
-
-    @asyncio.coroutine
-    def async_update_local_png_tiles(self):
-        """Re-generates LOCAL PNG Files from enerpi remote SVG tiles."""
-        if self._last_tile_generation is None:  # 1st tile generation
-            LOGGER.info('ENERPI png tiles 1st generation for --> {}'.format(self._sensors_tiles_conf))
-        self._last_tile_generation = tic = time()
-        png_filepaths = []
-        for cam_name, cam_path, mag, desc, unit, is_rms, c1, c2 in self._sensors_tiles_conf:
-            new_tile, ok = _creation_local_png_tile(self._host, self._port, self._prefix, mag, c1, c2, cam_path, self._png_dpi)
-            if new_tile and not ok:
-                LOGGER.error('Error generating TILE: {} -> {}'.format(cam_name, cam_path))
-            else:
-                png_filepaths.append(cam_path)
-        toc = time()
-        if png_filepaths:
-            basep = os.path.dirname(png_filepaths[0])
-            names = [p.replace(basep, '') for p in png_filepaths]
-            LOGGER.debug('({:%d-%b %H:%M:%S}) ENERPI: {} PNGs generated. TOOK {:.2f} sec'
-                         .format(dt.datetime.now(), len(names), toc - tic))
-            if (toc - tic) > .1 * self._refresh_interval_pngtiles:  # if gen time > 10 % ∆T --> re-schedule next gen
-                self._last_tile_generation = time()
-        elif self._sensors_tiles_conf:
-            LOGGER.error('NO PNG local tiles generation ?! Sensor conf is: {}, tiles_conf is: {}'
-                         .format(self._attrs_devices, self._sensors_tiles_conf))
