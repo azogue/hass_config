@@ -1,0 +1,235 @@
+homeassistant:
+  name: Dormitorio
+  latitude: !secret latitude
+  longitude: !secret longitude
+  unit_system: metric
+  elevation: !secret elevation
+  time_zone: Europe/Madrid
+  customize: !include customize.yaml
+
+config:
+
+logger:
+  default: warn
+  logs:
+    homeassistant.loader: info
+    requests: error
+    homeassistant.components.http: warn
+    homeassistant.components.binary_sensor: info
+#    homeassistant.components.switch: info
+    custom_components.sensor.myonewire: info
+
+http:
+  api_password: !secret hass_pw
+  ip_ban_enabled: True
+  login_attempts_threshold: 5
+
+browser:
+frontend:
+history:
+  exclude:
+    domains:
+     - scripts
+     - automation
+     - weblink
+     - updater
+     - group
+     - camera
+    entities:
+     - sensor.last_boot
+     - sensor.disk_use_
+
+logbook:
+updater:
+recorder:
+  purge_days: !secret recorder_purge_days
+  # db_url: !secret recorder_db_url
+
+switch:
+- platform: command_line
+  scan_interval: 120
+  switches:
+    systemd_appdaemon:
+      command_on: '/home/homeassistant/.homeassistant/switch_systemd_service.sh appdaemon start'
+      command_off: '/home/homeassistant/.homeassistant/switch_systemd_service.sh appdaemon stop'
+      command_state: '/home/homeassistant/.homeassistant/switch_systemd_service.sh appdaemon status'
+      friendly_name: Appdaemon service
+      value_template: '{{ value_json == 1 }}'
+    systemd_shairport_sync:
+      command_on: '/home/homeassistant/.homeassistant/switch_systemd_service.sh shairport-sync start'
+      command_off: '/home/homeassistant/.homeassistant/switch_systemd_service.sh shairport-sync stop'
+      command_state: '/home/homeassistant/.homeassistant/switch_systemd_service.sh shairport-sync status'
+      friendly_name: Shairport-Sync service
+      value_template: '{{ value_json == 1 }}'
+    systemd_mpd:
+      command_on: '/home/homeassistant/.homeassistant/switch_systemd_service.sh mpd start'
+      command_off: '/home/homeassistant/.homeassistant/switch_systemd_service.sh mpd stop'
+      command_state: '/home/homeassistant/.homeassistant/switch_systemd_service.sh mpd status'
+      friendly_name: MPD service
+      value_template: '{{ value_json == 1 }}'
+    systemd_upmpdcli:
+      command_on: '/home/homeassistant/.homeassistant/switch_systemd_service.sh upmpdcli start'
+      command_off: '/home/homeassistant/.homeassistant/switch_systemd_service.sh upmpdcli stop'
+      command_state: '/home/homeassistant/.homeassistant/switch_systemd_service.sh upmpdcli status'
+      friendly_name: upmpdcli service
+      value_template: '{{ value_json == 1 }}'
+    systemd_mopidy:
+      command_on: '/home/homeassistant/.homeassistant/switch_systemd_service.sh mopidy start'
+      command_off: '/home/homeassistant/.homeassistant/switch_systemd_service.sh mopidy stop'
+      command_state: '/home/homeassistant/.homeassistant/switch_systemd_service.sh mopidy status'
+      friendly_name: Mopidy service
+      value_template: '{{ value_json == 1 }}'
+#    systemd_motioneye:
+#      command_on: '/home/homeassistant/.homeassistant/switch_systemd_service.sh motioneye start'
+#      command_off: '/home/homeassistant/.homeassistant/switch_systemd_service.sh motioneye stop'
+#      command_state: '/home/homeassistant/.homeassistant/switch_systemd_service.sh motioneye status'
+#      friendly_name: MotionEye service
+#      value_template: '{{ value_json == 1 }}'
+
+#binary_sensor:
+#- platform: rpi_gpio
+#  name: sensores de movimiento
+##  device_class: motion
+#  ports:
+#    27: PIR Dormitorio
+#  bouncetime: 50
+#  pull_mode: "UP"
+#
+#- platform: rpi_gpio
+#  name: sensores digitales
+#  ports:
+##    19: vibration_sensor_dormitorio_raw
+#    26: sound_sensor_dormitorio_raw
+#  bouncetime: 50
+#  pull_mode: "DOWN"
+
+sensor:
+  - platform: myonewire
+    names:
+      28-80000001595e: Temperatura Dormitorio
+    scan_interval: 30
+    maximum: 50
+    minimum: 5
+
+  - platform: dht
+    sensor: DHT22
+    pin: 24
+    name: dht22_dormitorio
+    scan_interval: 20
+    monitored_conditions:
+      - temperature
+      - humidity
+
+  - platform: systemmonitor
+    resources:
+      - type: disk_use_percent
+        arg: /
+      - type: memory_free
+      - type: processor_use
+      - type: last_boot
+
+media_player:
+  - platform: mpd
+    host: 127.0.0.1
+    location: Mopidy
+
+weblink:
+  entities:
+    - name: Master Hass
+      url: http://192.168.1.13:8123/
+    - name: Hass Estudio
+      url: http://192.168.1.46:8123/
+    - name: enerPI
+      url: http://192.168.1.44/enerpi/
+    - name: Mopidy
+      url: http://192.168.1.52:6680/musicbox_webclient
+
+shell_command:
+  restart_hass: 'sudo systemctl restart home-assistant@homeassistant'
+  # Use with caution
+  cmd_reboot: 'sudo reboot now'
+  cmd_shutdown: 'sudo shutdown now'
+
+script:
+  restart_hass:
+    alias: Restart HASS
+    sequence:
+      - service: persistent_notification.create
+        data:
+          title: 'Reiniciando Home Assistant'
+          message: "En unos segundos estará funcionando de nuevo..."
+      - delay:
+          seconds: 3
+      - service: shell_command.restart_hass
+  reboot:
+    alias: Reiniciar RPI
+    sequence:
+      - service: persistent_notification.create
+        data:
+          title: 'Reiniciando sistema de vigilancia'
+          message: "En unos minutos estará funcionando de nuevo"
+      - delay:
+          seconds: 3
+      - service: shell_command.cmd_reboot
+  shutdown:
+    alias: Apagar RPI
+    sequence:
+      - service: persistent_notification.create
+        data:
+          title: 'Apagando sistema de vigilancia'
+          message: "Espera al menos 30 segundos para desenchufar"
+      - delay:
+          seconds: 3
+      - service: shell_command.cmd_shutdown
+
+group:
+  Dormitorio:
+    - sensor.temperatura_dormitorio
+    - sensor.dht22_dormitorio_temperature
+    - sensor.dht22_dormitorio_humidity
+    - binary_sensor.pir_dormitorio
+#    - binary_sensor.vibration_sensor
+    - binary_sensor.sound_sensor_dormitorio
+#    - binary_sensor.vibration_sensor_raw
+    - binary_sensor.sound_sensor_dormitorio_raw
+    - media_player.mopidy
+
+  RPi 2 monitor:
+    control: hidden
+    entities:
+      - sensor.disk_use_
+      - sensor.cpu_use
+      - sensor.ram_free
+      - sensor.last_boot
+      - switch.systemd_appdaemon
+      - switch.systemd_mpd
+      - switch.systemd_mopidy
+      - switch.systemd_upmpdcli
+      - switch.systemd_shairport_sync
+  #    - switch.systemd_motioneye
+      - script.restart_hass
+      - script.reboot
+      - script.shutdown
+
+  Links:
+    - weblink.master_hass
+    - weblink.hass_estudio
+    - weblink.mopidy
+#    - weblink.motioneye
+    - weblink.enerpi
+
+  Status:
+    name: Home Status
+    icon: mdi:castle
+    view: yes
+    entities:
+      - group.dormitorio
+
+  Home Network:
+    name: Red local del hogar
+    icon: mdi:sitemap
+    view: yes
+    entities:
+      - group.rpi_2_monitor
+#      - group.rgbled
+      - group.links

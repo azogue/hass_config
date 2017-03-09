@@ -1,0 +1,54 @@
+# SENSORS
+sensor.temperatura_dormitorio:
+  friendly_name: Temperatura
+  homebridge_name: Temperatura Dormitorio
+
+sensor.dht22_dormitorio_temperature:
+  friendly_name: Temperatura Dormitorio (dht22)
+sensor.dht22_dormitorio_humidity:
+  friendly_name: Humedad Dormitorio
+  icon: mdi:water-percent
+
+binary_sensor.pir_dormitorio:
+  friendly_name: Movimiento en Dormitorio
+  device_class: motion
+  homebridge_hidden: true
+binary_sensor.vibration_sensor_raw:
+  friendly_name: Vibración en Dormitorio
+  device_class: vibration
+  homebridge_hidden: true
+binary_sensor.sound_sensor_raw:
+  friendly_name: Sonido en Dormitorio
+  device_class: sound
+  homebridge_hidden: true
+
+# LINKS
+weblink.master_hass:
+  icon: mdi:castle
+weblink.hass_estudio:
+  icon: mdi:castle
+weblink.enerpi:
+  icon: mdi:flash
+weblink.mopidy:
+  icon: mdi:music-box-outline
+#weblink.motioneye:
+#  icon: mdi:video
+
+switch.systemd_appdaemon:
+  homebridge_hidden: true
+  icon: mdi:settings
+switch.systemd_shairport_sync:
+  homebridge_hidden: true
+  icon: mdi:settings
+switch.systemd_mpd:
+  homebridge_hidden: true
+  icon: mdi:settings
+switch.systemd_upmpdcli:
+  homebridge_hidden: true
+  icon: mdi:settings
+switch.systemd_mopidy:
+  homebridge_hidden: true
+  icon: mdi:settings
+switch.systemd_homebridge:
+  homebridge_hidden: true
+  icon: mdi:settings
