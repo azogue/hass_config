@@ -30,9 +30,9 @@
     vibration_sensor_rpi2h:
       friendly_name: Vibración en Estudio
       device_class: vibration
-    sound_sensor_rpi2h:
-      friendly_name: Sonido en Estudio
-      device_class: sound
+#    sound_sensor_rpi2h:
+#      friendly_name: Sonido en Estudio
+#      device_class: sound
 
 # **Motion detection on MotionEye streams**
 
