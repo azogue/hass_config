@@ -1,5 +1,5 @@
 homeassistant:
-  name: RPI2
+  name: Estudio
   latitude: !secret latitude
   longitude: !secret longitude
   unit_system: metric
@@ -47,11 +47,11 @@ recorder:
   # db_url: !secret recorder_db_url
 
 switch:
-- platform: rpi_gpio
-  invert_logic: true
-  ports:
-    6: Relé de sirena
-    13: Relé 2
+#- platform: rpi_gpio
+#  invert_logic: true
+#  ports:
+#    6: Relé de sirena
+#    13: Relé 2
 
 - platform: command_line
   scan_interval: 120
@@ -75,14 +75,14 @@ binary_sensor:
 #  device_class: motion
   ports:
     27: PIR Estudio
-  bouncetime: 50
+  bouncetime: 100
   pull_mode: "UP"
 
 - platform: rpi_gpio
   name: sensores digitales
   ports:
-    19: vibration_sensor_raw
-    26: sound_sensor_raw
+    21: vibration_sensor_raw
+#    26: sound_sensor_raw
   bouncetime: 50
   pull_mode: "DOWN"
 
@@ -123,69 +123,6 @@ sensor:
       - type: processor_use
       - type: last_boot
 
-weblink:
-  entities:
-    - name: Master Hass
-      url: http://192.168.1.13:8123/
-    - name: MotionEye
-      url: !secret motioneye_url
-    - name: enerPI
-      url: http://192.168.1.44/enerpi/
-
-group:
-  RPi 2 SenseHat monitor:
-    - sensor.disk_use_
-    - sensor.cpu_use
-    - sensor.ram_free
-    - sensor.last_boot
-    - switch.systemd_appdaemon
-    - switch.systemd_motioneye
-    - script.restart_hass
-    - shell_command.cmd_reboot
-    - shell_command.cmd_shutdown
-
-  SenseHat:
-    - input_boolean.switch_matrix_display
-
-  Links:
-    - weblink.master_hass
-    - weblink.motioneye
-    - weblink.enerpi
-
-  Estudio:
-    - sensor.temperatura_estudio
-    - sensor.dht22_temperature
-    - sensor.dht22_humidity
-#    - sensor.dht11_temperature
-#    - sensor.dht11_humidity
-    - sensor.temperature
-    - sensor.humidity
-    - sensor.pressure
-    - binary_sensor.pir_estudio
-#    - binary_sensor.vibration_sensor
-#    - binary_sensor.sound_sensor
-    - binary_sensor.vibration_sensor_raw
-    - binary_sensor.sound_sensor_raw
-
-  Home Network:
-    name: Red local del hogar
-    icon: mdi:sitemap
-    view: yes
-    entities:
-      - group.rpi_2_sensehat_monitor
-      - group.sensehat
-#      - group.rgbled
-      - group.links
-
-  Status:
-    name: Home Status
-    icon: mdi:castle
-    view: yes
-    entities:
-      - group.estudio
-      - group.galeria
-      - group.caldera
-
 shell_command:
   restart_hass: 'sudo systemctl restart home-assistant@homeassistant'
   # Use with caution
@@ -196,4 +133,97 @@ script:
   restart_hass:
     alias: Restart HASS
     sequence:
+      - service: persistent_notification.create
+        data:
+          title: 'Reiniciando Home Assistant'
+          message: "En unos segundos estará funcionando de nuevo..."
+      - delay:
+          seconds: 3
       - service: shell_command.restart_hass
+  reboot:
+    alias: Reiniciar RPI
+    sequence:
+      - service: persistent_notification.create
+        data:
+          title: 'Reiniciando Raspberry PI'
+          message: "En unos minutos estará funcionando de nuevo"
+      - delay:
+          seconds: 3
+      - service: shell_command.cmd_reboot
+  shutdown:
+    alias: Apagar RPI
+    sequence:
+      - service: persistent_notification.create
+        data:
+          title: 'Apagando Raspberry PI'
+          message: "Espera al menos 30 segundos para desenchufar"
+      - delay:
+          seconds: 3
+      - service: shell_command.cmd_shutdown
+
+weblink:
+  entities:
+    - name: Master Hass
+      url: http://192.168.1.13:8123/
+    - name: Hass Dormitorio
+      url: http://192.168.1.52:8123/
+    - name: MotionEye
+      url: !secret motioneye_url
+    - name: enerPI
+      url: http://192.168.1.44/enerpi/
+
+group:
+  Estudio:
+    - sensor.temperatura_estudio
+    - sensor.dht22_temperature
+    - sensor.dht22_humidity
+#    - sensor.dht11_temperature
+#    - sensor.dht11_humidity
+    - sensor.temperature
+    - sensor.humidity
+    - sensor.pressure
+    - binary_sensor.pir_estudio
+    - binary_sensor.vibration_sensor
+    - binary_sensor.sound_sensor
+    - binary_sensor.vibration_sensor_raw
+    - binary_sensor.sound_sensor_raw
+
+  RPi 2 SenseHat monitor:
+    control: hidden
+    entities:
+      - sensor.disk_use_
+      - sensor.cpu_use
+      - sensor.ram_free
+      - sensor.last_boot
+      - switch.systemd_appdaemon
+      - switch.systemd_motioneye
+      - script.restart_hass
+      - script.reboot
+      - script.shutdown
+
+  SenseHat:
+    - input_boolean.switch_matrix_display
+
+  Links:
+    - weblink.master_hass
+    - weblink.hass_dormitorio
+    - weblink.motioneye
+    - weblink.enerpi
+
+  Status:
+    name: Home Status
+    icon: mdi:castle
+    view: yes
+    entities:
+      - group.estudio
+      - group.sense_hat
+
+  Home Network:
+    name: Red local del hogar
+    icon: mdi:sitemap
+    view: yes
+    entities:
+      - group.rpi_2_sensehat_monitor
+      - group.sensehat
+#      - group.rgbled
+      - group.links

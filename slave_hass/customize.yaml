@@ -48,6 +48,8 @@ input_boolean.switch_matrix_display:
 # LINKS
 weblink.master_hass:
   icon: mdi:castle
+weblink.hass_dormitorio:
+  icon: mdi:castle
 weblink.enerpi:
   icon: mdi:flash
 weblink.motioneye:
