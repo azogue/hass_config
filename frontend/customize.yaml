@@ -305,6 +305,9 @@ weblink.kodi_web_interface:
 weblink.slave_hass:
   friendly_name: HA Estudio
   icon: mdi:castle
+weblink.slave_hass_mpd:
+  friendly_name: HA Dormitorio
+  icon: mdi:castle
 
 ####################################################################################
 #                                GROUPS                                            #
