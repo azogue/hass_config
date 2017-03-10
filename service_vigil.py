@@ -13,7 +13,7 @@ from dateutil.parser import parse
 import os
 import re
 import socket
-from subprocess import check_output
+from subprocess import check_output, CalledProcessError, STDOUT
 import sys
 
 
@@ -27,14 +27,26 @@ import yaml
 
 
 MASK_STATUS_SERV = '/bin/systemctl status {}'
-SERVICES_CHECK = ['nginx', 'appdaemon', 'noip', 'home-assistant@homeassistant', 'homebridge', 'motioneye']
+SERVICES_CHECK = {
+    'localhost': {'mask': MASK_STATUS_SERV,
+                  'services': ['nginx', 'noip', 'appdaemon', 'home-assistant@homeassistant', 'homebridge']},
+    # 'rpi33': {'mask': 'ssh pi@192.168.1.13 ' + MASK_STATUS_SERV,
+    #           'services': ['nginx', 'noip', 'appdaemon', 'home-assistant@homeassistant', 'homebridge']},
+    'rpi2h': {'mask': 'ssh pi@192.168.1.46 ' + MASK_STATUS_SERV,
+              'services': ['appdaemon', 'home-assistant@homeassistant', 'motioneye']},
+    'rpi2': {'mask': 'ssh pi@192.168.1.52 ' + MASK_STATUS_SERV,
+             'services': ['mpd', 'mopidy', 'shairport-sync', 'upmpdcli', 'appdaemon', 'home-assistant@homeassistant']}
+}
 LOG_CSVFILE = os.path.join(basedir, 'log_service_status.csv')
 # os.chdir(basedir)
 
 PATH_SECRETS = os.path.join(basedir, 'secrets.yaml')
 EXT_IP_FILE = os.path.join(basedir, 'external_ip.txt')
-with open(EXT_IP_FILE) as _file:
-    EXT_IP = _file.read()
+try:
+    with open(EXT_IP_FILE) as _file:
+        EXT_IP = _file.read()
+except FileNotFoundError:
+    EXT_IP = '???.???.???.???'
 
 # Configuration
 with open(PATH_SECRETS) as _file:
@@ -75,9 +87,11 @@ def _send_email(email_subject, email_content, target):
     return False
 
 
-def check_service_status(service, data_services, verbose=False):
+def check_service_status(machine, mask_cmd, service, data_services, verbose=False):
     """
     Checks service status
+    :param machine: machine identifier ('localhost' or a friendly name for a remote machine)
+    :param mask_cmd: string mask to make the status command (in localhost or ssh'ing a remote machine)
     :param service: service name
     :param data_services: dict for recolecting service status data
     :param verbose: print info in stdout
@@ -86,21 +100,28 @@ def check_service_status(service, data_services, verbose=False):
 
     """
     rg_date = re.compile('since \w+ (.+) \w+;')
-    cmd = MASK_STATUS_SERV.format(service)
-    out = check_output(cmd.split()).decode()
+    cmd = mask_cmd.format(service)
+    try:
+        out = check_output(cmd.split(), stderr=STDOUT).decode()
+    except CalledProcessError as e:
+        out = e.output.decode()
+    key = '{}_{}'.format(machine, service)
     # print(out)
     active_status = list(filter(lambda x: 'Active:' in x, out.splitlines()))
     if active_status:
         act = active_status[0]
         # print(act)
-        date = parse(rg_date.findall(act)[0])
+        try:
+            date = parse(rg_date.findall(act)[0])
+        except IndexError:
+            date = None
         # print(date)
-        data_services[service] = ('active (running)' in act, date, act)
+        data_services[key] = ('active (running)' in act, date, act)
         if verbose:
-            print('** {}: Active={}; FROM: {}'.format(service, data_services[service][0], data_services[service][1]))
-        return data_services[service][0]
-    data_services[service] = (False, None, out)
-    print('ERROR in {}:\n{}'.format(service, out))
+            print('  * {:30} Active={} FROM: {}'.format(service + ':', data_services[key][0], data_services[key][1]))
+        return data_services[key][0]
+    data_services[key] = (False, None, out)
+    print('ERROR in {}->{}:\n{}'.format(machine, service, out))
     return False
 
 
@@ -112,11 +133,16 @@ def _update_csv_log(data_services):
     :rtype: bool
     """
     write_col_index = write_new_row = False
-    col_index = ';'.join(['{0}_ok;{0}_start'.format(s) for s in SERVICES_CHECK]) + ';\n'
+
+    col_index = ';'.join(['{0}_{1}_ok;{0}_{1}_start'.format(m, s)
+                          for m, d in sorted(SERVICES_CHECK.items()) for s in d['services']])
+    col_index += ';\n'
     # print(col_index)
-    row_status = ';'.join(['{};{}'.format(data_services[s][0], data_services[s][1])
-                           for s in SERVICES_CHECK]) + ';\n'
+    row_status = ';'.join(['{};{}'.format(*data_services['{}_{}'.format(m, s)])
+                           for m, d in sorted(SERVICES_CHECK.items()) for s in d['services']])
+    row_status += ';\n'
     # print(row_status)
+
     if not os.path.exists(LOG_CSVFILE):
         write_col_index = True
         write_new_row = True
@@ -137,6 +163,7 @@ def _update_csv_log(data_services):
         return True
     return False
 
+
 if __name__ == '__main__':
     force_send = verbose_mode = False
     if len(sys.argv) > 1:
@@ -145,23 +172,30 @@ if __name__ == '__main__':
             force_send = True
 
     d_serv = {}
-    for service_i in SERVICES_CHECK:
-        check_service_status(service_i, d_serv, verbose_mode)
+    for machine_id, data in SERVICES_CHECK.items():
+        mask = data['mask']
+        if verbose_mode:
+            print('\n---> SERVICE STATUS IN {}:'.format(machine_id.upper()))
+        for service_i in data['services']:
+            check_service_status(machine_id, mask, service_i, d_serv, verbose_mode)
+
     if _update_csv_log(d_serv) or force_send:
+
+        subject = '*** {} [{}] - SERVICES STATUS'.format(BASE_URL, EXT_IP)
+        msg = ''
+        for machine_id, data in sorted(SERVICES_CHECK.items()):
+            mask = data['mask']
+            msg += '\n---> SERVICE STATUS OF {}:\n'.format(machine_id.upper())
+            for service_i in data['services']:
+                key = '{}_{}'.format(machine_id, service_i)
+                msg += '  * {:30} Active={} FROM: {}\n\t Raw: "{}"\n'.format(service_i + ':', *d_serv[key])
         if 'new_logdata' in d_serv:
-            subject = '*** {} [{}] - SERVICES STATUS CHANGED!'.format(BASE_URL, EXT_IP)
-            msg = 'RPI IN {}, {}\n\n*** SERVICES STATUS CHANGED:\n{}\n\nNEW_LOGDATA:\n{}'
-            servs_status = '\n'.join(['{}:\t{}'.format(s, data) for s, data in d_serv.items()])
-            msg = msg.format(EXT_IP, BASE_URL, servs_status, d_serv['new_logdata'])
-        else:
-            subject = '*** {} [{}] - SERVICES STATUS'.format(BASE_URL, EXT_IP)
-            msg = 'RPI IN {}, {}\n\n*** SERVICES STATUS:\n{}\n'
-            servs_status = '\n'.join(['{}:\t{}'.format(s, data) for s, data in d_serv.items()])
-            msg = msg.format(EXT_IP, BASE_URL, servs_status)
+            subject += ' CHANGED!'
+            msg += '\n\nNEW_LOGDATA:\n{}'.format(d_serv['new_logdata'])
 
         # Notificación:
-        # if verbose_mode:
-        print(msg)
+        if verbose_mode:
+            print(msg)
         _send_push_notification(PB_TOKEN, subject, msg, EMAIL_TARGET)
         _send_email(subject, msg, EMAIL_TARGET)
         if EMAIL_DEBUG is not None:
