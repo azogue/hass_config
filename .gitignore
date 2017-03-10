@@ -26,3 +26,7 @@ deps
 .uuid
 *.db
 *.log
+*.csv
+
+slave_hass/custom_components
+slave_hass_mpd/custom_components
