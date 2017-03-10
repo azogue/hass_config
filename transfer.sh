@@ -2,7 +2,8 @@
 HASSIP=192.168.1.13
 REMOTE_HASS=/home/homeassistant/.homeassistant
 LOCAL_HASS=/Users/uge/Dropbox/PYTHON/PYPROJECTS/hass_config
-REMOTE_STATIC_PATH=/srv/homeassistant/lib/python3.6/site-packages/homeassistant/components/frontend/www_static/
+#REMOTE_STATIC_PATH=/srv/homeassistant/lib/python3.6/site-packages/homeassistant/components/frontend/www_static/
+REMOTE_STATIC_PATH=/home/homeassistant/.pyenv/versions/3.6.0/envs/hass36/lib/python3.6/site-packages/homeassistant/components/frontend/www_static/
 
 echo Set permissions for PI
 ssh pi@$HASSIP sudo chmod 777 -R $REMOTE_HASS
