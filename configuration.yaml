@@ -39,6 +39,7 @@ panel_iframe: !include frontend/iframe_panels.yaml
 weblink: !include frontend/web_links.yaml
 group: !include frontend/groups.yaml
 
+config:
 ####################################################
 #                 Custom platforms                 #
 ####################################################
@@ -46,14 +47,12 @@ enerpi:
   enerpi_rpi3:
     host: 192.168.1.44
     name: enerPI
-    scan_interval: 60
+    scan_interval: 30
     delta_refresh: 1000
     monitored_variables:
       - power
       - ldr
-#      - ref
     pngtiles_refresh: 300
-    dpi: 200
 
 ####################################################
 #                     Enables                      #
@@ -62,26 +61,20 @@ logger:
   default: warn
   logs:
     netdisco: error
-    homeassistant.core: warn
     homeassistant.bootstrap: error
-    homeassistant.services.notify: debug
-    requests.packages.urllib3.connectionpool: warn
     homeassistant.components.camera: error
-    homeassistant.components.device_tracker: warn
     homeassistant.components.netdisco: error
-    homeassistant.components.http: warn
-    homeassistant.components.media_player: warn
-    homeassistant.components.switch: error
-    homeassistant.components.sensor: warn
+    homeassistant.services.notify: info
     homeassistant.components.notify.ios: debug
-    homeassistant.custom_components.binary_sensor: debug
-    homeassistant.custom_components.notify.richsmtp: debug
-    # custom_components.enerpi: debug
+    # custom_components.binary_sensor: debug
+    custom_components.notify.richsmtp: debug
+    # custom_components.sensor.enerweb: info
+    # custom_components.enerpi: info
     # custom_components.switch: error
 
 browser:
-conversation:
-discovery:
+#conversation:
+#discovery:
 frontend:
 sun:
 updater:
