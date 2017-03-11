@@ -13,22 +13,54 @@
       pulselength: 185
       code_on: 4527411
       code_off: 4527420
+      signal_repetitions: 20
     caldera:
       pulselength: 185
       code_on: 4527555
       code_off: 4527564
+      signal_repetitions: 30
     camara:
       pulselength: 185
       code_on: 4527875
       code_off: 4527884
+      signal_repetitions: 20
     altavoz:
       pulselength: 185
       code_on: 4529411
       code_off: 4529420
+      signal_repetitions: 20
     calefactor:
       pulselength: 185
       code_on: 4535555
       code_off: 4535564
+      signal_repetitions: 20
+
+    # new pack of Etekcity (3x)
+    impresora:
+      pulselength: 186
+      code_on: 4478259
+      code_off: 4478268
+      signal_repetitions: 20
+#    new_switch_2:
+#      pulselength: 186
+#      code_on: 4478403
+#      code_off: 4478412
+#      signal_repetitions: 20
+#    new_switch_3:
+#      pulselength: 186
+#      code_on: 4478723
+#      code_off: 4478732
+#      signal_repetitions: 20
+#    new_switch_4:  # no switch, only remote button
+#      pulselength: 186
+#      code_on: 4480259
+#      code_off: 4480268
+#      signal_repetitions: 20
+#    new_switch_5:  # no switch, only remote button
+#      pulselength: 186
+#      code_on: 4486403
+#      code_off: 4486412
+#      signal_repetitions: 20
 
 - platform: command_line
   scan_interval: 120
