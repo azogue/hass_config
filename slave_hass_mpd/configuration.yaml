@@ -86,14 +86,14 @@ switch:
 #      friendly_name: MotionEye service
 #      value_template: '{{ value_json == 1 }}'
 
-#binary_sensor:
-#- platform: rpi_gpio
-#  name: sensores de movimiento
-##  device_class: motion
-#  ports:
-#    27: PIR Dormitorio
-#  bouncetime: 50
-#  pull_mode: "UP"
+binary_sensor:
+- platform: rpi_gpio
+  name: sensores de movimiento
+#  device_class: motion
+  ports:
+    27: PIR Dormitorio
+  bouncetime: 50
+  pull_mode: "UP"
 #
 #- platform: rpi_gpio
 #  name: sensores digitales
