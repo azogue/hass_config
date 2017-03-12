@@ -21,15 +21,14 @@
   host: !secret host_galeria
   mysql_user: !secret galeria_mysql_user
   mysql_password: !secret galeria_mysql_password
-  scan_interval: 45
   round: 1
   sensors:
     - ds18b20:
         0000071d270e: Retorno calefacción
         031504c1eeff: Impulsión calefacción
         03150492d7ff: ACS
-    - rpi2:
-        rpit: RPI CPU temp
+#    - rpi2:
+#        rpit: RPI CPU temp
     - dht22:
         temp: Temperature
         hum: Humidity
@@ -39,6 +38,7 @@
   api_key: !secret openweathermap_api_key
   forecast: 1
   name: Villena
+  scan_interval: 120
   monitored_conditions:
     - weather
     - temperature
@@ -54,6 +54,7 @@
 # Host & network sensors:
 - platform: systemmonitor
   name: RPI Host
+  scan_interval: 30
   resources:
     - type: disk_use_percent
       arg: /home
