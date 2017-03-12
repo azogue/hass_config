@@ -415,7 +415,7 @@ switch.use_pir_salon:
   homebridge_hidden: true
   friendly_name: Usar movimiento en Salón
   icon: mdi:bullseye
-switch.use_pir_dormitorio_rpimpd:
+switch.use_pir_dormitorio_rpi2mpd:
   homebridge_hidden: true
   friendly_name: Usar movimiento en Dormitorio
   icon: mdi:bullseye
