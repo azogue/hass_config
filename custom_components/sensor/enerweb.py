@@ -136,7 +136,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         s_ref = list(filter(lambda x: 'dht22' in x.name.lower() and x.unit_of_measurement == TEMP_CELSIUS, sensors))[0]
         # noinspection PyTypeChecker
         sensors.append(EnerwebHeaterState(data_handler, s_imp, s_ret, s_ref))
-        yield from async_add_devices(sensors)
+        async_add_devices(sensors)
     else:
         return False
 

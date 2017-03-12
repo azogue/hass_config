@@ -36,6 +36,6 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info):
         LOGGER.warn('No enerPI sensors present in configuration.')
         return False
     if devices_enerpi_hosts:
-        yield from async_add_devices(devices_enerpi_hosts)
+        async_add_devices(devices_enerpi_hosts)
     else:
         return False

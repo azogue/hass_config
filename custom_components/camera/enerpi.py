@@ -40,6 +40,6 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info):
         LOGGER.warn('No enerPI cameras present in configuration.')
         return False
     if cameras:
-        yield from async_add_devices(cameras)
+        async_add_devices(cameras)
     else:
         return False
