@@ -109,7 +109,7 @@ switch.cocina:
   friendly_name: LED Cocina
   homebridge_name: Cocina
 switch.calefactor:
-  icon: mdi:power-plug
+  icon: mdi:fan
   friendly_name: Calefactor Baño
   homebridge_name: Calefactor
 switch.camara:
@@ -124,6 +124,16 @@ switch.caldera:
   icon: mdi:radiator
   friendly_name: Caldera de gas
   homebridge_name: Caldera
+switch.impresora:
+  icon: mdi:printer
+  friendly_name: Impresora
+
+switch.new_switch_2:
+  icon: mdi:power-plug
+  friendly_name: Enchufe 2
+switch.new_switch_3:
+  icon: mdi:power-plug
+  friendly_name: Enchufe 3
 
 switch.toggle_kodi_ambilight:
   icon: mdi:monitor-multiple
@@ -204,10 +214,17 @@ binary_sensor.pir_salon:
 
 binary_sensor.motioncam_estudio:
   device_class: motion
-  homebridge_name: Vídeo-Mov. en Estudio
+#  homebridge_name: Vídeo-Mov. en Estudio
+  homebridge_hidden: true
 binary_sensor.motioncam_salon:
-  homebridge_name: Vídeo-Mov. en Salón
+#  homebridge_name: Vídeo-Mov. en Salón
   device_class: motion
+  homebridge_hidden: true
+
+binary_sensor.pir_dormitorio_rpi2mpd:
+  friendly_name: Movimiento en Dormitorio
+  device_class: motion
+  homebridge_hidden: true
 binary_sensor.pir_estudio_rpi2h:
   friendly_name: Movimiento en Estudio
   device_class: motion
@@ -397,6 +414,10 @@ switch.use_pir_estudio_rpi2h:
 switch.use_pir_salon:
   homebridge_hidden: true
   friendly_name: Usar movimiento en Salón
+  icon: mdi:bullseye
+switch.use_pir_dormitorio_rpimpd:
+  homebridge_hidden: true
+  friendly_name: Usar movimiento en Dormitorio
   icon: mdi:bullseye
 switch.use_sound_sensor_rpi2h:
   homebridge_hidden: true

@@ -27,6 +27,9 @@
     pir_estudio_rpi2h:
       friendly_name: Movimiento en Estudio
       device_class: motion
+    pir_dormitorio_rpi2mpd:
+      friendly_name: Movimiento en Dormitorio
+      device_class: motion
     vibration_sensor_rpi2h:
       friendly_name: Vibración en Estudio
       device_class: vibration

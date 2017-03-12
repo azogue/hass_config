@@ -21,6 +21,8 @@ use_pir_estudio_rpi2h:
   initial: 'on'
 use_pir_salon:
   initial: 'on'
+use_pir_dormitorio_rpi2mpd:
+  initial: 'on'
 use_sound_sensor_rpi2h:
   initial: 'on'
 use_vibration_sensor_rpi2h:

@@ -60,6 +60,13 @@ Estudio RPi2h:
     - binary_sensor.motioncam_estudio
     - binary_sensor.vibration_sensor_rpi2h
     - binary_sensor.sound_sensor_rpi2h
+    - switch.impresora
+
+device_esp8266_1:
+  name: Cocina
+  entities:
+    - sensor.esp8266_dht_temperature
+    - sensor.esp8266_dht_humidity
 
 Luces Salón:
   - light.bola_grande
@@ -79,6 +86,7 @@ Dormitorio RPI2MPD:
     - sensor.temperatura_dormitorio_rpi2mpd
     - sensor.dht22_dormitorio_temperature_rpi2mpd
     - sensor.dht22_dormitorio_humidity_rpi2mpd
+    - binary_sensor.pir_dormitorio_rpi2mpd
 
 Cámaras:
   - camera.picamera_salon
@@ -106,6 +114,9 @@ Enchufes:
     - switch.camara
     - switch.altavoz
     - switch.caldera
+    - switch.impresora
+    - switch.new_switch_2
+    - switch.new_switch_3
 
 Kodi:
   control: hidden
@@ -253,6 +264,7 @@ Status:
     - group.salon
     - group.estudio_rpi2h
     - group.dormitorio_rpi2mpd
+    - group.device_esp8266_1
     - group.galeria
     - group.caldera
 #    - group.camaras
@@ -315,6 +327,7 @@ Alarm Control:
   - switch.use_vibration_sensor_rpi2h
   - switch.use_pir_estudio_rpi2h
   - switch.motioncam_estudio
+  - switch.use_pir_dormitorio_rpi2mpd
 
 Home Network:
   name: Red local del hogar

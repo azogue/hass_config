@@ -135,6 +135,14 @@
         entity_id: input_boolean.use_pir_estudio_rpi2h
         service: input_boolean.turn_on
       value_template: '{{ states.input_boolean.use_pir_estudio_rpi2h.state == "on"}}'
+    use_pir_dormitorio_rpi2mpd:
+      turn_off:
+        entity_id: input_boolean.use_pir_dormitorio_rpi2mpd
+        service: input_boolean.turn_off
+      turn_on:
+        entity_id: input_boolean.use_pir_dormitorio_rpi2mpd
+        service: input_boolean.turn_on
+      value_template: '{{ states.input_boolean.use_pir_dormitorio_rpi2mpd.state == "on"}}'
     use_pir_salon:
       turn_off:
         entity_id: input_boolean.use_pir_salon
