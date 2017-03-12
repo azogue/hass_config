@@ -29,3 +29,5 @@ exclude_patterns.txt
 getremotedb.sh
 catlog.sh
 testing_gen.yaml
+log_service_status.json
+known_devices.yaml
