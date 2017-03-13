@@ -147,7 +147,7 @@ class CECSwitch(SwitchDevice):
         _LOGGER.debug('CMD ON: run_kodi_cec("activate")')
         self._run_kodi_cec("activate")
         self._state = True
-        self.update_ha_state()
+        self.schedule_update_ha_state()
         _LOGGER.info('SWITCH TURN ON')
 
     def turn_off(self):
@@ -177,7 +177,7 @@ class CECSwitch(SwitchDevice):
             # _LOGGER.debug('CMD OFF: _run_kodi_cec("standby")')
             # self._run_kodi_cec("standby")
         self._state = False
-        self.update_ha_state()
+        self.schedule_update_ha_state()
         _LOGGER.info('SWITCH TURN OFF')
 
     def update(self):
