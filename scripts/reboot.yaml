@@ -2,7 +2,7 @@ alias: Reiniciar RPI
 sequence:
   - service: notify.ios
     data:
-      title: 'Reiniciando sistema de vigilancia'
+      title: 'Reiniciando sistema domótico'
       message: "En unos minutos estará funcionando de nuevo"
       target: !secret ios_target
       data:
