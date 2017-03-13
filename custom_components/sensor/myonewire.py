@@ -158,5 +158,6 @@ class MyOneWire(Entity):
                                 self._device_file)
 
         if temp < self._minimum or temp > self._maximum:
+            _LOGGER.info('Invalid temperature value read from {} --> {:.3f}'.format(self._device_file, temp))
             return
         self._state = round(temp, 2)

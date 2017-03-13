@@ -2,6 +2,8 @@
 """
 Mail (SMTP) notification service.
 
+Custom mod for sending rich HTML emails with images integrated and attached.
+
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/notify.smtp/
 """

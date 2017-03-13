@@ -4,35 +4,23 @@
 running *enerpi* + *enerpiweb* in some local host.
 
 Derived from the general REST sensor (https://home-assistant.io/components/sensor.rest/), it connects via GET requests
-to the local working enerpi web server and populates new hass sensors, which are updated through a single conexion to
-the enerPI real-time stream.
-In addition, it generates local PNG files from the remote SVG tiles with the last 24 hours evolution of each sensor,
-which can be used as `local_file` hass cameras to show color plots in Home Assistant frontend. (in a too-twisted way
-that depends on the cairosvg library).
+to the local working enerpi web server and populates new hass sensors,
+which are updated through a single conexion to the enerPI real-time stream.
+In addition, it generates local PNG files with the last 24 hours evolution of each sensor,
+used as `local_file` HA cameras to show color plots in Home Assistant frontend.
 These special `local_file` cameras refresh are updated every `pngtiles_refresh` seconds.
-It's a very simple, and very bad (imho), way to integrate enerpi in Hass, until I learn to create an html component
-that can integrate the svg background mosaics...
 
 The setup does a few things:
 - First, it gets the enerpi sensor configuration at `http://ENERPI_IP/enerpi/api/filedownload/sensors`.
 - With the existent enerpi sensor config, it extracts the last produced sensor data at
-  `http://ENERPI_IP/enerpi/api/last` and populates new sensors with the defined `monitored_variables` or
-  with all sensors in the enerpiweb server.
-- Also, it creates 2 input_slider's and one input_boolean for automating an alert when main power goes over a
-  custom limit and when it downs to a safe level again.
-- Then, it generates the first local PNG files, requesting the remote SVG tiles, with urls like:
-    `http://ENERPI_IP/enerpi/static/img/generated/tile_enerpi_data_{sensor_name}_last_24h.svg`
-  Sets absolute size and color background (no css here) in the svg content, and renders it in PNG with cairosvg.
-- Finally, it extracts the last produced sensor data at `http://ENERPI_IP/enerpi/api/last` and populates new sensors
-  with the defined `monitored_variables` or with all sensors in the enerpiweb server.
-
-### Requirements
-
-Since converting SVG to PNG requires the **`cairosvg`** library, you will probably need to install the following:
-```
-apt-get install python3-dev python3-lxml python3-cffi libffi-dev libxml2-dev libxslt-dev libcairo2-dev
-pip3 install cairosvg
-```
+`http://ENERPI_IP/enerpi/api/last` and the last week total consumption at
+`http://ENERPI_IP/enerpi/api/consumption/from/{:%Y-%m-%d}?daily=true&round=1`; and populates new sensors with
+the defined `monitored_variables` or with all sensors in the enerpiweb server.
+- Also, it creates 2 input_slider's and one input_boolean for automating an alert when main power goes over
+a custom limit and when it downs to a safe level again.
+- Then, it generates local file cameras with the mirrors of the enerPI tiles in PNG format, with urls like:
+`http://ENERPI_IP/enerpi/static/img/generated/tile_enerpi_data_{sensor_name}_last_24h.png`.
+- Finally, it connects to the real-time stream and updates HA states when it is convenient.
 
 ### YAML HASS configuration:
 
@@ -43,11 +31,11 @@ enerpi:
     host: 192.168.1.44
     name: enerPI
     scan_interval: 10
+    delta_refresh: 1000  # Watt.
     monitored_variables:
       - power
       - ldr
     pngtiles_refresh: 300
-    dpi: 200
 ```
 Only the `host` variable is required. To establish the frequency for updating the enerpi state, use the variable
 `scan_interval`, and for the enerPI tiles, user `pngtiles_refresh`, both variables in seconds.
@@ -433,7 +421,7 @@ class EnerpiTileCam(LocalFile):
     def update_local_png_tiles(self, *args):
         """Re-generates LOCAL PNG Files from enerpi remote SVG tiles."""
         if self._last_tile_generation is None:  # 1st tile generation
-            LOGGER.info('ENERPI png tiles 1st generation for --> {}'.format(os.path.basename(self._file_path)))
+            LOGGER.info('ENERPI 1º png tile for --> {}'.format(os.path.basename(self._file_path)))
         tic = time()
         new_tile = yield from _get_remote_png_tile(self._host, self._port, self._prefix, self._mag)
         if new_tile is not None:

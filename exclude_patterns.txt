@@ -24,6 +24,7 @@ dist
 **/*.h5
 **/*.csv
 **/*Copia en conflicto*
+screenshots
 transfer.sh
 exclude_patterns.txt
 getremotedb.sh
