@@ -18,11 +18,17 @@ Eugenio:
   entities:
     - device_tracker.iphone
     - device_tracker.iphone_bt
+    - device_tracker.apple_watch
 
 Mary:
   entities:
     - device_tracker.iphone_se
     - device_tracker.iphone_se_bt
+
+iPad:
+  entities:
+    - device_tracker.ipad_carmen
+    - device_tracker.ipad_carmen_bt
 
 Family:
   - group.eugenio
@@ -154,7 +160,7 @@ Links:
   - weblink.rpi_caldera
   - weblink.rpi_3_osmc_salon
 
-Host RPi3:
+Host RPI3:
   - sensor.cpu_use
   - sensor.ram_free
   - sensor.last_boot
@@ -163,13 +169,13 @@ Host RPi3:
 #  - sensor.since_last_boot
 #  - sensor.since_last_boot_templated
 
-Host RPi2Hat:
+Host RPI2 Hat:
   - sensor.cpu_use_rpi2h
   - sensor.ram_free_rpi2h
   - sensor.last_boot_rpi2h
   - sensor.disk_use__rpi2h
 
-Host RPi2 MPD:
+Host RPI2 MPD:
   - sensor.cpu_use_rpi2mpd
   - sensor.ram_free_rpi2mpd
   - sensor.last_boot_rpi2mpd
@@ -192,9 +198,7 @@ Red e Internet:
 Cacharros:
   - sensor.iphone_battery_level
   - sensor.iphone_battery_state
-  - device_tracker.apple_watch
-  - device_tracker.ipad_carmen
-  - device_tracker.ipad_carmen_bt
+  - group.ipad
   - device_tracker.jo01
   - device_tracker.rpi_wifi
   - device_tracker.rpi2hat
@@ -337,7 +341,7 @@ Home Network:
     - group.links
 #    - group.family
     - group.host_rpi3
-    - group.host_rpi2hat
+    - group.host_rpi2_hat
     - group.host_rpi2_mpd
     - group.cacharros
     - group.red_e_internet

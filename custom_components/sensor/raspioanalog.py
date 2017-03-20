@@ -20,7 +20,6 @@ sensor:
         negate: yes  # use 'negate' for invert the percentage value (x_% = 100 - x_%)
     scan_interval: 10
 ```
-
 """
 import asyncio
 import logging
@@ -64,7 +63,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
                                     conf_analog_s.get(CONF_UNIT_OF_MEASUREMENT),
                                     conf_analog_s.get(CONF_DEVICE_CLASS),
                                     conf_analog_s.get(CONF_NEGATE)))
-    yield from async_add_devices(sensors)
+    async_add_devices(sensors)
 
 
 class AnalogSensor(Entity):

@@ -12,5 +12,5 @@ sequence:
 #          sound: "US-EN-Morgan-Freeman-Welcome-Home.wav"
           category: "CONFIRM" # Needs to match the top level identifier you used in the ios configuration
   - delay:
-      seconds: 120
+      seconds: 180
   - service: script.restart_homebridge
