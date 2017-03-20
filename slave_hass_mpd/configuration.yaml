@@ -13,37 +13,43 @@ logger:
   default: warn
   logs:
     homeassistant.loader: info
+    homeassistant.bootstrap: info
     requests: error
     homeassistant.components.http: warn
     homeassistant.components.binary_sensor: info
-#    homeassistant.components.switch: info
+    homeassistant.components.media_player: debug
     custom_components.sensor.myonewire: info
 
 http:
   api_password: !secret hass_pw
   ip_ban_enabled: True
-  login_attempts_threshold: 5
+  login_attempts_threshold: 10
 
 browser:
 frontend:
+
 history:
-  exclude:
+  include:
     domains:
-     - scripts
-     - automation
-     - weblink
-     - updater
-     - group
-     - camera
+      - binary_sensor
+      - media_player
+      - switch
     entities:
-     - sensor.last_boot
-     - sensor.disk_use_
+      - sensor.dht22_dormitorio_temperature
+      - sensor.dht22_dormitorio_humidity
+      - sensor.temperatura_dormitorio
 
 logbook:
+  include:
+    domains:
+      - switch
+      - media_player
+      - script
+
 updater:
 recorder:
   purge_days: !secret recorder_purge_days
-  # db_url: !secret recorder_db_url
+  db_url: !secret recorder_db_url
 
 switch:
 - platform: command_line
@@ -67,24 +73,12 @@ switch:
       command_state: '/home/homeassistant/.homeassistant/switch_systemd_service.sh mpd status'
       friendly_name: MPD service
       value_template: '{{ value_json == 1 }}'
-    systemd_upmpdcli:
-      command_on: '/home/homeassistant/.homeassistant/switch_systemd_service.sh upmpdcli start'
-      command_off: '/home/homeassistant/.homeassistant/switch_systemd_service.sh upmpdcli stop'
-      command_state: '/home/homeassistant/.homeassistant/switch_systemd_service.sh upmpdcli status'
-      friendly_name: upmpdcli service
-      value_template: '{{ value_json == 1 }}'
     systemd_mopidy:
       command_on: '/home/homeassistant/.homeassistant/switch_systemd_service.sh mopidy start'
       command_off: '/home/homeassistant/.homeassistant/switch_systemd_service.sh mopidy stop'
       command_state: '/home/homeassistant/.homeassistant/switch_systemd_service.sh mopidy status'
       friendly_name: Mopidy service
       value_template: '{{ value_json == 1 }}'
-#    systemd_motioneye:
-#      command_on: '/home/homeassistant/.homeassistant/switch_systemd_service.sh motioneye start'
-#      command_off: '/home/homeassistant/.homeassistant/switch_systemd_service.sh motioneye stop'
-#      command_state: '/home/homeassistant/.homeassistant/switch_systemd_service.sh motioneye status'
-#      friendly_name: MotionEye service
-#      value_template: '{{ value_json == 1 }}'
 
 binary_sensor:
 - platform: rpi_gpio
@@ -130,19 +124,25 @@ sensor:
 
 media_player:
   - platform: mpd
-    host: 127.0.0.1
+    host: !secret mpd_host
+    port: !secret mpd_port
     location: Mopidy
+
+# Text to speech
+tts:
+  platform: google
+  language: 'es'
 
 weblink:
   entities:
     - name: Master Hass
-      url: http://192.168.1.13:8123/
+      url: !secret link_master_hass
     - name: Hass Estudio
-      url: http://192.168.1.46:8123/
+      url: !secret link_hass_estudio
     - name: enerPI
-      url: http://192.168.1.44/enerpi/
+      url: !secret link_enerpi
     - name: Mopidy
-      url: http://192.168.1.52:6680/musicbox_webclient
+      url: !secret link_mopidy
 
 shell_command:
   restart_hass: 'sudo systemctl restart home-assistant@homeassistant'
@@ -166,7 +166,7 @@ script:
     sequence:
       - service: persistent_notification.create
         data:
-          title: 'Reiniciando sistema de vigilancia'
+          title: 'Reiniciando RPI'
           message: "En unos minutos estará funcionando de nuevo"
       - delay:
           seconds: 3
@@ -176,11 +176,22 @@ script:
     sequence:
       - service: persistent_notification.create
         data:
-          title: 'Apagando sistema de vigilancia'
+          title: 'Apagando RPI'
           message: "Espera al menos 30 segundos para desenchufar"
       - delay:
           seconds: 3
       - service: shell_command.cmd_shutdown
+  tell_me_ambient_data:
+    alias: Léeme las condiciones ambientales
+    sequence:
+      - service: persistent_notification.create
+        data:
+          title: 'Condiciones ambientales:'
+          message: "La Tª es de {{(states('sensor.temperatura_dormitorio')|float / 2 + states('sensor.dht22_dormitorio_temperature')|float / 2)|round(1)}} ºC y la HR es del {{states('sensor.dht22_dormitorio_humidity')}} %."
+      - service: tts.google_say
+        entity_id: media_player.mopidy
+        data:
+          message: "La temperatura es de {{(states('sensor.temperatura_dormitorio')|float / 2 + states('sensor.dht22_dormitorio_temperature')|float / 2)|round(1)}} grados y la humedad relativa es del {{states('sensor.dht22_dormitorio_humidity')}} por ciento."
 
 group:
   Dormitorio:
@@ -189,9 +200,9 @@ group:
     - sensor.dht22_dormitorio_humidity
     - binary_sensor.pir_dormitorio
 #    - binary_sensor.vibration_sensor
-    - binary_sensor.sound_sensor_dormitorio
+#    - binary_sensor.sound_sensor_dormitorio
 #    - binary_sensor.vibration_sensor_raw
-    - binary_sensor.sound_sensor_dormitorio_raw
+#    - binary_sensor.sound_sensor_dormitorio_raw
     - media_player.mopidy
 
   RPi 2 monitor:
@@ -204,18 +215,16 @@ group:
       - switch.systemd_appdaemon
       - switch.systemd_mpd
       - switch.systemd_mopidy
-      - switch.systemd_upmpdcli
       - switch.systemd_shairport_sync
-  #    - switch.systemd_motioneye
       - script.restart_hass
       - script.reboot
       - script.shutdown
+      - script.tell_me_ambient_data
 
   Links:
     - weblink.master_hass
     - weblink.hass_estudio
     - weblink.mopidy
-#    - weblink.motioneye
     - weblink.enerpi
 
   Status:
@@ -231,5 +240,4 @@ group:
     view: yes
     entities:
       - group.rpi_2_monitor
-#      - group.rgbled
       - group.links
