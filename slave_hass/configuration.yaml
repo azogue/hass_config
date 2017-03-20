@@ -12,39 +12,41 @@ config:
 logger:
   default: warn
   logs:
-#    homeassistant.loader: info
+    homeassistant.loader: info
+    homeassistant.bootstrap: info
     requests: error
-    homeassistant.components.http: warn
-#    homeassistant.components.binary_sensor: info
-#    homeassistant.components.switch: info
-    custom_components.sensor.mysensehat: info
-#    custom_components.sensor.myonewire: info
 
 http:
   api_password: !secret hass_pw
   ip_ban_enabled: True
-  login_attempts_threshold: 5
+  login_attempts_threshold: 10
 
 browser:
 frontend:
 history:
-  exclude:
+  include:
     domains:
-     - scripts
-     - automation
-     - weblink
-     - updater
-     - group
-     - camera
+      - binary_sensor
+      - switch
     entities:
-     - sensor.last_boot
-     - sensor.disk_use_
+      - sensor.temperatura_estudio
+      - sensor.dht22_temperature
+      - sensor.dht22_humidity
+      - sensor.temperature
+      - sensor.humidity
+      - sensor.pressure
 
 logbook:
+  include:
+    domains:
+      - input_boolean
+      - switch
+      - script
+
 updater:
 recorder:
   purge_days: !secret recorder_purge_days
-  # db_url: !secret recorder_db_url
+  db_url: !secret recorder_db_url
 
 switch:
 #- platform: rpi_gpio
@@ -102,13 +104,13 @@ sensor:
     sensor: DHT22
     pin: 22
     name: dht22
-    scan_interval: 20
+    scan_interval: 30
     monitored_conditions:
       - temperature
       - humidity
 
   - platform: mysensehat
-    scan_interval: 20
+    scan_interval: 30
     round: 2
     display_options:
       - temperature
@@ -177,8 +179,6 @@ group:
     - sensor.temperatura_estudio
     - sensor.dht22_temperature
     - sensor.dht22_humidity
-#    - sensor.dht11_temperature
-#    - sensor.dht11_humidity
     - sensor.temperature
     - sensor.humidity
     - sensor.pressure
@@ -225,5 +225,4 @@ group:
     entities:
       - group.rpi_2_sensehat_monitor
       - group.sensehat
-#      - group.rgbled
       - group.links
