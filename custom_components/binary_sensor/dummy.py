@@ -26,8 +26,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 # noinspection PyUnusedLocal
 def setup_platform(hass, config, add_devices, discovery_info=None):
-    """Setup the Command line Binary Sensor."""
-    # _LOGGER.info('Dummy Sensor setup_platform: {}'.format(config))
+    """Setup the Dummy Binary Sensor."""
     sensors = []
     for device, device_config in config[CONF_SENSORS].items():
         fn = device_config.get(CONF_FRIENDLY_NAME)
@@ -47,8 +46,7 @@ class DummyBinarySensor(BinarySensorDevice):
         self._friendly_name = friendly_name
         # self._icon = icon
         self._state = False
-        _LOGGER.info('Created Dummy Sensor "{}"'.format(name))
-        self.update()
+        _LOGGER.info('Created Dummy Binary Sensor "{}"'.format(name))
 
     @property
     def name(self):
@@ -79,8 +77,3 @@ class DummyBinarySensor(BinarySensorDevice):
     # def icon(self):
     #     """Return the icon of the binary sensor."""
     #     return self._icon
-
-    def update(self):
-        """Get the latest data and updates the state."""
-        # _LOGGER.info('DEBUG update dummy "{}" --> {}'.format(self._name, self._state))
-        pass

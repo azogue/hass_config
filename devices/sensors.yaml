@@ -1,7 +1,6 @@
 # RPI hardware-present sensors:
 - platform: myonewire
   names:
-#    28-800000015326: T_Salón
     28-8000000152ed: T_Salón
   scan_interval: 30
   maximum: 45
@@ -32,6 +31,36 @@
     - dht22:
         temp: Temperature
         hum: Humidity
+
+- platform: dummy
+  sensors:
+    humidity_rpi2h:
+      friendly_name: Humedad SenseHat
+      unit_of_measurement: '%'
+    pressure_rpi2h:
+      friendly_name: Presión SenseHat
+      unit_of_measurement: 'mb'
+    temperature_rpi2h:
+      friendly_name: Temperatura SenseHat
+      unit_of_measurement: '°C'
+    temperatura_estudio_rpi2h:
+      friendly_name: Temperatura estudio
+      unit_of_measurement: '°C'
+    dht22_temperature_rpi2h:
+      friendly_name: Temperatura estudio dht
+      unit_of_measurement: '°C'
+    dht22_humidity_rpi2h:
+      friendly_name: Humedad estudio dht
+      unit_of_measurement: '%'
+    temperatura_dormitorio_rpi2mpd:
+      friendly_name: Temperatura Dormitorio
+      unit_of_measurement: '°C'
+    dht22_dormitorio_temperature_rpi2mpd:
+      friendly_name: Temperatura Dormitorio (dht22)
+      unit_of_measurement: '°C'
+    dht22_dormitorio_humidity_rpi2mpd:
+      friendly_name: Humedad Dormitorio
+      unit_of_measurement: '%'
 
 # Weather sensors:
 - platform: openweathermap
@@ -79,22 +108,3 @@
       value_template: '{{ states("input_slider.alarm_clock_minute") | round(0) }}'
     alarm_clock_time:
       value_template: '{{ states("sensor.alarm_clock_hour") }}:{% if states("sensor.alarm_clock_minute")|length == 1 %}0{% endif %}{{ states("sensor.alarm_clock_minute") }}'
-
-#- platform: command_line
-#  name: badlogin
-#  command: '/bin/grep -c invalidpassword /home/homeassistant/.homeassistant/home-assistant.log'
-
-# Stats sensors:
-#- platform: statistics
-#  entity_id: sensor.enerpi_power
-#  name: Power stats
-#  sampling_size: 24
-
-#- platform: statistics
-#  entity_id: sensor.t_salon
-#  name: Temp stats
-#  sampling_size: 10
-
-#- platform: statistics
-#  entity_id: binary_sensor.pir_salon
-#  name: Mov nº

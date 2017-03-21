@@ -238,6 +238,35 @@ binary_sensor.sound_sensor_rpi2h:
   device_class: sound
   homebridge_hidden: true
 
+#- sensor.temperatura_dormitorio_rpi2mpd
+#- sensor.dht22_dormitorio_humidity_rpi2mpd
+#- sensor.dht22_dormitorio_temperature_rpi2mpd
+#- sensor.temperatura_estudio_rpi2h
+#- sensor.dht22_temperature_rpi2h
+#- sensor.dht22_humidity_rpi2h
+
+sensor.temperature_rpi2h:
+  homebridge_hidden: True
+sensor.humidity_rpi2h:
+  homebridge_hidden: True
+sensor.pressure_rpi2h:
+  homebridge_hidden: True
+
+sensor.ram_free_rpi2h:
+  homebridge_hidden: True
+sensor.ram_free_rpi2mpd:
+  homebridge_hidden: True
+sensor.cpu_use_rpi2h:
+  homebridge_hidden: True
+sensor.cpu_use_rpi2mpd:
+  homebridge_hidden: True
+sensor.disk_use__rpi2h:
+  homebridge_hidden: True
+sensor.disk_use__rpi2mpd:
+  homebridge_hidden: True
+sensor.last_boot_rpi2h:
+  homebridge_hidden: True
+
 # enerweb sensors
 sensor.calefaccion:
   friendly_name: Calefacción
@@ -394,6 +423,8 @@ device_tracker.rpi_wifi:
 device_tracker.rpi3w:
   icon: mdi:raspberrypi
 device_tracker.rpi2hat:
+  icon: mdi:raspberrypi
+device_tracker.rpi2:
   icon: mdi:raspberrypi
 device_tracker.rpi2_wifi:
   icon: mdi:raspberrypi
