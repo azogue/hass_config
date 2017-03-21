@@ -68,12 +68,6 @@ Estudio RPi2h:
     - binary_sensor.sound_sensor_rpi2h
     - switch.impresora
 
-device_esp8266_1:
-  name: Cocina
-  entities:
-    - sensor.esp8266_dht_temperature
-    - sensor.esp8266_dht_humidity
-
 Luces Salón:
   - light.bola_grande
   - light.bola_pequena
@@ -123,6 +117,12 @@ Enchufes:
     - switch.impresora
     - switch.new_switch_2
     - switch.new_switch_3
+
+esp8266:
+  name: módulo ESP8266
+  entities:
+    - sensor.esp1_Humidity
+    - sensor.esp1_Temperature
 
 Kodi:
   control: hidden
@@ -268,9 +268,9 @@ Status:
     - group.salon
     - group.estudio_rpi2h
     - group.dormitorio_rpi2mpd
-    - group.device_esp8266_1
     - group.galeria
     - group.caldera
+    - group.esp8266
 #    - group.camaras
 #    - group.tiempo_en_villena
 
