@@ -1,10 +1,11 @@
-# Home Assistant
+# Home Assistant configuration
+
 My personal [Home Assistant](https://home-assistant.io) configuration. Used for automate my home devices:
  - 9 Hue lights in three rooms
  - 8 Etekcity RF outlets
- - 1 custom electrical current probe ([enerPI](https://github.com/azogue/enerpi) pet project), which is working in HA as as `custom_component` ([code](https://github.com/azogue/hass_config/tree/master/custom_components))
+ - 1 custom electrical current probe (**[enerPI](https://github.com/azogue/enerpi)** pet project), which is working in HA as as `custom_component` ([code](https://github.com/azogue/hass_config/tree/master/custom_components))
  - KODI RPI3 (OSMC) with a TV turner, access to the local Media Collection, and Hyperion controlling some Hue lights.
- - Multiple RPI's (1x RPI rev B, 2x RPI_2, 3x RPI_3) running KODI, other instances of HA, multiple sensors and more nerd stuff
+ - Multiple RPI's (1x RPI rev B, 2x RPI_2, 3x RPI_3) running KODI, MPD, other instances of HA, multiple sensors and more nerd stuff.
  - ...
 
 The `hass` instance runs in one dedicated, ethernet-connected, **Raspberry PI 3**, with some sensors attached:
@@ -21,11 +22,11 @@ This RPI has the last version of raspbian jessie, and it's running these marvell
 
 There are other 2 RPI2's running HA ('slave' ones) in my *little* system, with PIR sensors, DHT22 sensors and a SenseHat. One RPI also runs [MotionEye](https://github.com/ccrisan/motioneye), handling a local video stream (PI camera) and other video stream from a cheap chinesse IP camera (ESCAM QF001); and the other RPI2 has a pHAT DAC with a speaker attached, and runs MPD and shairport-sync.
 
-In addition, recently I have been creating [some automations](https://github.com/azogue/hass_appdaemon_apps) under the new **[AppDaemon](https://home-assistant.io/ecosystem/appdaemon/) system** of apps, and I find it a bewitching method that doing anything in HA.
+In addition, recently I have been creating **[some automations](https://github.com/azogue/hass_appdaemon_apps)** under the new **[AppDaemon](https://home-assistant.io/ecosystem/appdaemon/) system** of apps, and I find it a bewitching method that doing anything in HA.
 
 Some info about what's here:
- * **Notifications** by: email, pushbullet account, KODI notifications and iOS Home Assistant app (in private beta for now)
- * **Device tracking** by: `nmap_tracker` and `bluetooth_tracker` (with internal BT module of RPI 3)
+ * **Notifications** by: email, pushbullet account, KODI notifications and the [iOS notify component](https://home-assistant.io/docs/ecosystem/ios/notifications/actions/), with video streams, attachments, and actionable notifications) ([Home Assistant iOS App](https://github.com/home-assistant/home-assistant-iOS) in private beta for now)
+ * **Device tracking** by: `nmap_tracker`, `bluetooth_tracker` (with internal BT module of RPI 3), and `icloud` trackers.
  * **Cameras**: One local NO-IR PI Camera and two more MotionEye streams from other RPI on LAN.
  * **Lights**: Phillips HUE System, excluded from homebridge (I have a 2º gen Hue bridge which is HomeKit compatible).
  * **Switches**: 5x/2remote + 3x/2remote RF outlet packs from Etekcity which were extremely cheap and work like a charm sending commands with the RF emitter installed in the RPI. Also, more 'software' switches to do automations and manipulate correctly HA input_booleans with HomeKit (the `input_boolean`s don't update the initial state in the homebrige plugin, bug?), including:
@@ -33,7 +34,8 @@ Some info about what's here:
     - A WOL switch for my Synology NAS.
     - `command_line` switches for turning ON|OFF and getting status for [Hyperion](https://github.com/hyperion-project/hyperion) in KODI RPI and [Motion](https://motion-project.github.io) detection on video streams.
  * **KODI**: Control the KODI instance which is running 24/7 in another dedicated RPI 3, connected to the TV+HomeCinema kit, and making as AirPlay receiver, DVBT tuner & recorder, and main media player for movies and tv shows.
- * Now I'm playing along with some ESP8266 dev kits to place some sensors in small spaces and talk with HASS directly or with a mosquitto server...
+ * **MPD**: MPD + [Mopidy](https://github.com/mopidy/mopidy) player in one RPI2 in the bedroom, also working as AirPlay receiver with [shairport-sync](https://github.com/mikebrady/shairport-sync).
+ * Now I'm playing along with some ESP8266 dev kits to place some sensors in small spaces and talk with HASS via MQTT Mosquitto...
  * Multiple scripts and automations for make my life easier...
 
 The *data center* of all of these little smart machines is a Synology DS213j NAS with 4TB+3TB storage running 24/7 and serving media to all devices. The MySQL KODI database is in there, so any consumer device views the same. 
