@@ -14,3 +14,8 @@
 - platform: bluetooth_tracker
   home_interval: 30
   track_new_devices: no
+
+- platform: icloud
+  username: !secret icloud_user
+  password: !secret icloud_pwd
+  account_name: icloud
