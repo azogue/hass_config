@@ -1,12 +1,14 @@
 - platform: kodi
-  host: 192.168.1.56
-  port: 8080
+  host: !secret kodi_host
+  port: !secret kodi_port
   name: Kodi
   username: !secret kodi_user
   password: !secret kodi_pw
+  enable_websocket: false
   turn_off_action: quit
 
 - platform: mpd
-#  host: 192.168.1.51  # wifi
-  host: 192.168.1.52
+  host: !secret mpd_host
+  port: !secret mpd_port
   location: Dormitorio (Mopidy)
+#  scan_interval: 60

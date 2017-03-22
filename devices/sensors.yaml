@@ -15,6 +15,16 @@
     - temperature
     - humidity
 
+- platform: mqtt
+  state_topic: "sensor/hum_a020a605b007"
+  name: 'esp1_Humidity'
+  unit_of_measurement: '%'
+
+- platform: mqtt
+  state_topic: "sensor/temp_a020a605b007"
+  name: 'esp1_Temperature'
+  unit_of_measurement: 'ºC'
+
 - platform: enerweb
   name: Galería
   host: !secret host_galeria

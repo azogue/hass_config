@@ -24,3 +24,8 @@
   port: 8080
   username: !secret kodi_user
   password: !secret kodi_pw
+
+- platform: telegram
+  name: telegram_bot
+  api_key: !secret telegram_bot_api_key
+  chat_id: !secret telegram_bot_chat_id

@@ -7,9 +7,30 @@ homeassistant:
   time_zone: Europe/Madrid
   customize: !include frontend/customize.yaml
 
+# This will override the default home zone
+zone:
+  name: Home
+  latitude: !secret latitude
+  longitude: !secret longitude
+  radius: 125
+  icon: mdi:castle
+zone 2:
+  name: !secret z2_name
+  latitude: !secret z2_latitude
+  longitude: !secret z2_longitude
+  radius: !secret z2_radius
+  icon: !secret z2_icon
+zone 3:
+  name: !secret z3_name
+  latitude: !secret z3_latitude
+  longitude: !secret z3_longitude
+  radius: !secret z3_radius
+  icon: !secret z3_icon
+
 http:
   base_url: !secret base_url
   api_password: !secret hass_pw
+  use_x_forwarded_for: True
   ip_ban_enabled: True
   login_attempts_threshold: 5
   # SSL certs working in NGINX config
@@ -45,7 +66,7 @@ config:
 ####################################################
 enerpi:
   enerpi_rpi3:
-    host: 192.168.1.44
+    host: !secret enerpi_host
     name: enerPI
     scan_interval: 30
     delta_refresh: 1000
@@ -54,6 +75,37 @@ enerpi:
       - ldr
     pngtiles_refresh: 300
 
+########################################
+# MQTT
+########################################
+mqtt:
+  broker: !secret mqtt_broker
+  port: !secret mqtt_port
+  client_id: !secret mqtt_client_id
+  keepalive: 60
+  username: !secret mqtt_username
+  password: !secret mqtt_password
+  birth_message:
+    topic: 'hass/status'
+    payload: 'online'
+  will_message:
+    topic: 'hass/status'
+    payload: 'offline'
+  protocol: 3.1
+
+####################################################
+#                     Telegram webhooks            #
+####################################################
+telegram_webhooks:
+#  trusted_networks:
+#    - 149.154.167.197/32
+#    - 149.154.167.198/31
+  api_key: !secret telegram_bot_api_key
+  user_id:
+    user1: !secret telegram_bot_chat_id
+#    user2: !secret telegram_bot_user_id
+#    user2: USER_ID
+
 ####################################################
 #                     Enables                      #
 ####################################################
@@ -61,15 +113,18 @@ logger:
   default: warn
   logs:
     netdisco: error
-    homeassistant.bootstrap: error
+    homeassistant.bootstrap: info
     homeassistant.components.camera: error
     homeassistant.components.netdisco: error
     homeassistant.services.notify: info
-    homeassistant.components.notify.ios: debug
+    homeassistant.components.script: info
+    homeassistant.components.notify.ios: info
+    homeassistant.components.media_player: info
+    homeassistant.components.tts: debug
     # custom_components.binary_sensor: debug
     custom_components.notify.richsmtp: debug
     # custom_components.sensor.enerweb: info
-    # custom_components.enerpi: info
+#    custom_components.enerpi: info
     # custom_components.switch: error
 
 browser:
@@ -79,22 +134,81 @@ frontend:
 sun:
 updater:
 
+# Text to speech
+tts:
+  platform: google
+  language: 'es'
+
 history:
   include:
     domains:
       - sun
-      - device_tracker
       - binary_sensor
-      - switch
       - light
+      - media_player
     entities:
-      - sensor.villena_temperature
-      - sensor.villena_humidity
+      - sensor.calefaccion
+#      - sensor.cpu_use
+#      - sensor.cpu_use_rpi2h
+#      - sensor.cpu_use_rpi2mpd
+      - sensor.dht22_dormitorio_humidity_rpi2mpd
+      - sensor.dht22_dormitorio_temperature_rpi2mpd
+      - sensor.dht22_humidity_rpi2h
+      - sensor.dht22_temperature_rpi2h
+#      - sensor.disk_use__rpi2h
+#      - sensor.disk_use__rpi2mpd
+#      - sensor.disk_use_home
+#      - sensor.enerpi
+#      - sensor.enerpi_ldr
+#      - sensor.enerpi_power
+      - sensor.galeria_dht22_humidity
+      - sensor.galeria_dht22_temperature
+      - sensor.galeria_acs
+      - sensor.galeria_impulsion_calefaccion
+      - sensor.galeria_retorno_calefaccion
+#      - sensor.iphone_battery_level
+#      - sensor.iphone_battery_state
+#      - sensor.temperature_rpi2h
+#      - sensor.humidity_rpi2h
+      - sensor.pressure_rpi2h
+      - sensor.ram_free
+      - sensor.ram_free_rpi2h
+      - sensor.ram_free_rpi2mpd
       - sensor.salon_humidity
       - sensor.salon_temperature
       - sensor.t_salon
-      - sensor.temp_stats_mean
-      - sensor.yr
+      - sensor.temperatura_dormitorio_rpi2mpd
+      - sensor.temperatura_estudio_rpi2h
+#      - sensor.villena_cloud_coverage
+#      - sensor.villena_condition
+#      - sensor.villena_forecast
+      - sensor.villena_humidity
+      - sensor.villena_pressure
+      - sensor.villena_rain
+      - sensor.villena_temperature
+#      - sensor.villena_wind_speed
+      - sensor.yr_symbol
+      - sensor.speedtest_download
+      - sensor.speedtest_ping
+      - sensor.speedtest_upload
+      - switch.altavoz
+      - switch.caldera
+      - switch.calefactor
+      - switch.camara
+      - switch.cocina
+      - switch.impresora
+      - switch.kodi_tv_salon
+      - switch.switch_master_alarm
+      - switch.alarm_clock_status
+      - switch.toggle_config_kodi_ambilight
+      - switch.toggle_kodi_ambilight
+      - group.eugenio
+      - group.family
+      - group.mary
+      - device_tracker.iphone
+      - device_tracker.iphone_bt
+      - device_tracker.iphone_se
+      - device_tracker.iphone_se_bt
 
 logbook:
   include:
@@ -102,11 +216,13 @@ logbook:
       - switch
       - media_player
       - sun
-#      - binary_sensor
-#      - device_tracker
+      - script
     entities:
       - sensor.heating
       - sensor.calefaccion
+      - group.eugenio
+      - group.family
+      - group.mary
 
 recorder:
   purge_days: !secret recorder_purge_days

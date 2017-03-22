@@ -318,6 +318,16 @@ sensor.villena_rain:
 sensor.villena_forecast:
   friendly_name: Previsión
 
+# MQTT sensors:
+sensor.esp1_Humidity:
+  friendly_name: Humedad (esp)
+  homebridge_hidden: true
+  icon: mdi:water-percent
+sensor.esp1_Temperature:
+  friendly_name: Temperatura (esp)
+  homebridge_hidden: true
+  icon: mdi:thermometer
+
 ####################################################################################
 #                                WEB LINKS                                         #
 ####################################################################################
@@ -400,17 +410,17 @@ device_tracker.nas:
   icon: mdi:desktop-tower
 device_tracker.bridge_hue:
   icon: mdi:white-balance-incandescent
-device_tracker.apple_watch:
+device_tracker.apple_watchdeeugenio:
   icon: mdi:watch
 device_tracker.iphone:
   icon: mdi:cellphone-iphone
 device_tracker.iphone_bt:
   icon: mdi:cellphone-iphone
-device_tracker.iphone_se:
+device_tracker.iphonedemariadelcarmen:
   icon: mdi:cellphone-iphone
-device_tracker.iphone_se_bt:
+device_tracker.iphonedemariadelcarmen_bt:
   icon: mdi:cellphone-iphone
-device_tracker.ipad_carmen:
+device_tracker.ipaddemariadelcarmen:
   icon: mdi:tablet-ipad
 device_tracker.imac:
   icon: mdi:desktop-mac

@@ -15,7 +15,9 @@ User=%i
 # ExecStart=/srv/homeassistant/bin/hass -c "/home/homeassistant/.homeassistant"
 ExecStartPre=source /home/homeassistant/.pyenv/versions/hass36/bin/activate
 ExecStart=/home/homeassistant/.pyenv/versions/3.6.0/envs/hass36/bin/hass -c "/home/homeassistant/.homeassistant"
-SendSIGKILL=no
+# SendSIGKILL=no
+RestartSec=20
+Restart=on-failure
 
 [Install]
 WantedBy=multi-user.target
