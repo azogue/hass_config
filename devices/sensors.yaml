@@ -25,6 +25,12 @@
   name: 'esp1_Temperature'
   unit_of_measurement: 'ºC'
 
+- platform: mqtt
+  state_topic: "owntracks/hass/iphone"
+  name: 'Batería iPhone 6s'
+  unit_of_measurement: '%'
+  value_template: '{{ value_json.batt }}'
+
 - platform: enerweb
   name: Galería
   host: !secret host_galeria
@@ -118,6 +124,10 @@
       value_template: '{{ states("input_slider.alarm_clock_minute") | round(0) }}'
     alarm_clock_time:
       value_template: '{{ states("sensor.alarm_clock_hour") }}:{% if states("sensor.alarm_clock_minute")|length == 1 %}0{% endif %}{{ states("sensor.alarm_clock_minute") }}'
+
+- platform: command_line
+  name: CORE Error counter
+  command: "/home/homeassistant/.homeassistant/shell/check_notifiers.sh"
 
 - platform: command_line
   name: Error counter (notifiers)

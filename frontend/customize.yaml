@@ -251,6 +251,9 @@ sensor.warning_counter_core:
   homebridge_hidden: true
   friendly_name: "# Warnings"
   icon: mdi:alert-outline
+sensor.core_error_counter:
+  homebridge_hidden: true
+  icon: mdi:alert-outline
 binary_sensor.internet_online:
   friendly_name: ¿Hay conexión a internet?
   homebridge_hidden: true
@@ -360,6 +363,9 @@ sensor.esp1_Temperature:
   friendly_name: Temperatura (esp)
   homebridge_hidden: true
   icon: mdi:thermometer
+sensor.bateria_iphone_6s:
+  homebridge_hidden: true
+  icon: mdi:battery
 
 ####################################################################################
 #                                WEB LINKS                                         #
@@ -445,7 +451,7 @@ device_tracker.bridge_hue:
   icon: mdi:white-balance-incandescent
 device_tracker.apple_watchdeeugenio:
   icon: mdi:watch
-device_tracker.iphone:
+device_tracker.hass_iphone:
   icon: mdi:cellphone-iphone
 device_tracker.iphone_bt:
   icon: mdi:cellphone-iphone
@@ -479,6 +485,8 @@ device_tracker.impresora_brother:
   icon: mdi:printer
 device_tracker.jo01:
   icon: mdi:music-note-bluetooth
+group.ipad:
+  icon: mdi:tablet-ipad
 
 
 switch.use_pir_estudio_rpi2h:

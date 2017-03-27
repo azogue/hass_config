@@ -15,7 +15,14 @@
   home_interval: 30
   track_new_devices: no
 
-- platform: icloud
-  username: !secret icloud_user
-  password: !secret icloud_pwd
-  account_name: icloud
+- platform: owntracks
+  max_gps_accuracy: 200
+  waypoints: True
+#  waypoint_whitelist:
+#    - ...
+
+# Battery burner --> disconnected
+#- platform: icloud
+#  username: !secret icloud_user
+#  password: !secret icloud_pwd
+#  account_name: icloud

@@ -16,7 +16,7 @@ Inputs Alarm:
 
 Eugenio:
   entities:
-    - device_tracker.iphone
+    - device_tracker.hass_iphone
     - device_tracker.iphone_bt
     - device_tracker.apple_watchdeeugenio
 
@@ -198,6 +198,7 @@ Red e Internet:
 Cacharros:
   - sensor.iphone_battery_level
   - sensor.iphone_battery_state
+  - sensor.bateria_iphone_6s
   - group.ipad
   - device_tracker.jo01
   - device_tracker.rpi_wifi
@@ -273,6 +274,7 @@ Conectivity:
   - binary_sensor.ios_online
   - binary_sensor.kodi_online
   - sensor.error_counter_notifiers
+  - sensor.core_error_counter
   - sensor.warning_counter_core
 
 Status:
