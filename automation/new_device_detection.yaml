@@ -1,0 +1,24 @@
+# LAN/BT discover --> event device_tracker_new_device
+- alias: New BT device notifier
+  trigger:
+    platform: event
+    event_type: device_tracker_new_device
+  action:
+  - service: notify.ios
+    alias: Notify new BT device
+    data_template:
+      title: "Nuevo dispositivo detectado"
+      message: "entity_id:\n* {{ trigger.event.as_dict()['data']['entity_id'] }}. Hostname: {{ trigger.event.as_dict()['data']['host_name'] }}"
+      target: !secret ios_target
+      data:
+        push:
+          badge: 1
+          sound: "US-EN-Alexa-Motion-Detected-Generic.wav"
+          category: "CAMERA" # Needs to match the top level identifier you used in the ios configuration
+          action_data: # Anything passed in action_data will get echoed back to Home Assistant.
+            entity_id: light.cuenco
+            event: event
+  - service: notify.gmail
+    data_template:
+      title: "HASS - Nuevo dispositivo detectado"
+      message: "entity_id: {{ trigger.event.as_dict()['data']['entity_id'] }}. Hostname: {{ trigger.event.as_dict()['data']['host_name'] }} [EVENT: {{ trigger.event.as_dict()['event_type'] }}]\n\nRAW: {{ trigger.event.as_dict() }}"
