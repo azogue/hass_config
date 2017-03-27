@@ -19,7 +19,7 @@
     platform: state
     entity_id: input_slider.light_main_slider_salon
   action:
-    - service: light.turn_on
+    - service: homeassistant.turn_on
       data:
         entity_id:
           - group.luces_salon
