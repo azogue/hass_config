@@ -1,0 +1,19 @@
+# This is a simple service file for systems with systemd to tun HA as user.
+#
+# For details please check https://home-assistant.io/getting-started/autostart/
+#
+# COPY IN /etc/systemd/system/home-assistant@homeassistant.timer
+#
+
+[Unit]
+Description=Runs HASS after some time
+
+[Timer]
+# Time to wait after booting before we run first time
+OnBootSec=60
+# Time between running each consecutive time
+#OnUnitActiveSec=1h
+Unit=home-assistant@homeassistant.service
+
+[Install]
+WantedBy=multi-user.target

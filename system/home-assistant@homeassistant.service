@@ -20,4 +20,5 @@ RestartSec=20
 Restart=on-failure
 
 [Install]
-WantedBy=multi-user.target
+#WantedBy=multi-user.target
+WantedBy=home-assistant@homeassistant.timer
