@@ -4,11 +4,11 @@
   name: Kodi
   username: !secret kodi_user
   password: !secret kodi_pw
-  enable_websocket: false
+  enable_websocket: true
   turn_off_action: quit
 
 - platform: mpd
   host: !secret mpd_host
   port: !secret mpd_port
-  location: Dormitorio (Mopidy)
+  name: Dormitorio (Mopidy)
 #  scan_interval: 60
