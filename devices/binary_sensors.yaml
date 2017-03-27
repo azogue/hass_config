@@ -7,6 +7,69 @@
   pull_mode: "UP"
 #  invert_logic: true
 
+#- platform: mqtt
+#  state_topic: "hass/status"
+#  name: 'HA Status'
+#  payload_on: "online"
+#  payload_off: "offline"
+#  device_class: connectivity
+
+- platform: command_line
+  name: Internet Online
+  command: ping -W 1 -c 1 8.8.8.8 > /dev/null 2>&1 && echo success || echo fail
+  device_class: connectivity
+  payload_on: "success"
+  payload_off: "fail"
+  scan_interval: 120
+
+- platform: command_line
+  name: Router ON
+  command: ping -W 1 -c 1 192.168.1.1 > /dev/null 2>&1 && echo success || echo fail
+  device_class: connectivity
+  payload_on: "success"
+  payload_off: "fail"
+  scan_interval: 240
+
+- platform: command_line
+  name: Pushbullet Online
+  command: "/home/homeassistant/.homeassistant/shell/check_notifiers.sh pushbullet"
+  device_class: connectivity
+  payload_on: "success"
+  payload_off: "fail"
+  scan_interval: 240
+
+- platform: command_line
+  name: Email Online
+  command: "/home/homeassistant/.homeassistant/shell/check_notifiers.sh richsmtp"
+  device_class: connectivity
+  payload_on: "success"
+  payload_off: "fail"
+  scan_interval: 240
+
+- platform: command_line
+  name: Telegram Online
+  command: "/home/homeassistant/.homeassistant/shell/check_notifiers.sh mytelegram"
+  device_class: connectivity
+  payload_on: "success"
+  payload_off: "fail"
+  scan_interval: 240
+
+- platform: command_line
+  name: iOS Online
+  command: "/home/homeassistant/.homeassistant/shell/check_notifiers.sh ios"
+  device_class: connectivity
+  payload_on: "success"
+  payload_off: "fail"
+  scan_interval: 240
+
+- platform: command_line
+  name: Kodi Online
+  command: "/home/homeassistant/.homeassistant/shell/check_notifiers.sh kodi"
+  device_class: connectivity
+  payload_on: "success"
+  payload_off: "fail"
+  scan_interval: 240
+
 - platform: template
   sensors:
     heating:
@@ -15,6 +78,33 @@
       value_template: "{{states.sensor.calefaccion.state != 'off'}}"
       entity_id:
         - sensor.calefaccion
+    services_notok:
+      friendly_name: Problemas
+      device_class: safety
+      value_template: >
+        {{
+         (states.binary_sensor.kodi_online.state == 'off') or
+         (states.binary_sensor.pushbullet_online.state == 'off') or
+         (states.binary_sensor.email_online.state == 'off') or
+         (states.binary_sensor.ios_online.state == 'off') or
+         (states.binary_sensor.telegram_online.state == 'off') or
+         (states.binary_sensor.router_on.state == 'off') or
+         (states.binary_sensor.internet_online.state == 'off') or
+         (states.sensor.ip_externa.state != '185.97.169.163') or
+         (states.switch.systemd_appdaemon.state == 'off') or
+         (states.switch.systemd_homebridge.state == 'off')
+         }}
+      entity_id:
+        - binary_sensor.kodi_online
+        - binary_sensor.pushbullet_online
+        - binary_sensor.email_online
+        - binary_sensor.ios_online
+        - binary_sensor.telegram_online
+        - binary_sensor.router_on
+        - binary_sensor.internet_online
+        - sensor.ip_externa
+        - switch.systemd_appdaemon
+        - switch.systemd_homebridge
 
 - platform: dummy
   sensors:

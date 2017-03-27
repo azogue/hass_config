@@ -238,6 +238,39 @@ binary_sensor.sound_sensor_rpi2h:
   device_class: sound
   homebridge_hidden: true
 
+# Conectivity sensors:
+sensor.ip_externa:
+  homebridge_hidden: true
+  friendly_name: IP externa
+  icon: mdi:sim
+sensor.error_counter_notifiers:
+  homebridge_hidden: true
+  friendly_name: Errores de notificación
+  icon: mdi:alert
+sensor.warning_counter_core:
+  homebridge_hidden: true
+  friendly_name: "# Warnings"
+  icon: mdi:alert-outline
+binary_sensor.internet_online:
+  friendly_name: ¿Hay conexión a internet?
+  homebridge_hidden: true
+binary_sensor.nas_online:
+  homebridge_hidden: true
+binary_sensor.pushbullet_online:
+  friendly_name: ¿Hay notificaciones PushBullet?
+  homebridge_hidden: true
+binary_sensor.email_online:
+  friendly_name: ¿Hay notificaciones por email?
+  homebridge_hidden: true
+binary_sensor.telegram_online:
+  homebridge_hidden: true
+binary_sensor.ios_online:
+  homebridge_hidden: true
+binary_sensor.kodi_online:
+  homebridge_hidden: true
+binary_sensor.services_notok:
+  homebridge_hidden: true
+
 #- sensor.temperatura_dormitorio_rpi2mpd
 #- sensor.dht22_dormitorio_humidity_rpi2mpd
 #- sensor.dht22_dormitorio_temperature_rpi2mpd

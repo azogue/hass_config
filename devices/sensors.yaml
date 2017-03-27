@@ -118,3 +118,16 @@
       value_template: '{{ states("input_slider.alarm_clock_minute") | round(0) }}'
     alarm_clock_time:
       value_template: '{{ states("sensor.alarm_clock_hour") }}:{% if states("sensor.alarm_clock_minute")|length == 1 %}0{% endif %}{{ states("sensor.alarm_clock_minute") }}'
+
+- platform: command_line
+  name: Error counter (notifiers)
+  command: "/home/homeassistant/.homeassistant/shell/check_notifiers.sh"
+
+- platform: command_line
+  name: Warning counter (core)
+  command: "/home/homeassistant/.homeassistant/shell/check_notifiers.sh core_warning"
+
+- platform: command_line
+  name: IP externa
+#  command: python3 -c "import requests; print(requests.get('http://remote-host/sensor_data.txt').text)"
+  command: cat /home/homeassistant/.homeassistant/external_ip.txt

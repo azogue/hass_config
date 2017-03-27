@@ -262,6 +262,19 @@ Hass control:
     - script.shutdown
     - script.flash_cuenco
 
+Conectivity:
+  - binary_sensor.services_notok
+  - sensor.ip_externa
+  - binary_sensor.internet_online
+  - binary_sensor.nas_online
+  - binary_sensor.pushbullet_online
+  - binary_sensor.email_online
+  - binary_sensor.telegram_online
+  - binary_sensor.ios_online
+  - binary_sensor.kodi_online
+  - sensor.error_counter_notifiers
+  - sensor.warning_counter_core
+
 Status:
   name: Home Status
   icon: mdi:castle
@@ -365,6 +378,7 @@ Master conf:
   entities:
     - group.alarma
     - group.hass_control
+    - group.conectivity
     - group.all_automations
     - group.all_scripts
     - group.all_devices
