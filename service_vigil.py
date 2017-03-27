@@ -1,15 +1,28 @@
 # -*- coding: utf-8 -*-
 
 """
-Script para observar el status de los servicios en uso y anotar los cambios en un fichero CSV
+Script para observar el status de los servicios en uso y anotar los cambios en un fichero JSON, para notificar
+al admin via email y/o Pushbullet de los cambios acontecidos.
 
+Diseñado para ejecutarse como tarea CRON cada X minutos.
+Uso:
 ```
-    sudo /srv/homeassistant/bin/python /home/homeassistant/vigilconf/hass_conf/service_vigil.py old_pwd new_pwd
+    sudo /srv/homeassistant/bin/python /home/homeassistant/vigilconf/hass_conf/service_vigil.py
 
-#  /10 * * * * sudo /srv/homeassistant/bin/python3.6 /home/homeassistant/.homeassistant/service_vigil.py
+    # CRON TASK
+    /10 * * * * sudo /srv/homeassistant/bin/python3.6 /home/homeassistant/.homeassistant/service_vigil.py
+```
+
+El fichero JSON tiene la siguiente estructura:
+```
+LOG_JSONFILE = { machine: { serv_1: { state: True, ts_ini: dt.datetime,
+                                      last_state: True, last_ts_ini: dt.datetime, changed: False},
+                            serv_2: { state: True, ts_ini: dt.datetime,
+                                      last_state: True, last_ts_ini: dt.datetime, changed: False}}
 ```
 """
 from dateutil.parser import parse
+import json
 import os
 import re
 import socket
@@ -27,19 +40,18 @@ import yaml
 
 
 MASK_STATUS_SERV = '/bin/systemctl status {}'
+MASK_TS = '{:%Y-%m-%d %H:%M:%S}'
 SERVICES_CHECK = {
     'localhost': {'mask': MASK_STATUS_SERV,
-                  'services': ['nginx', 'noip', 'appdaemon', 'home-assistant@homeassistant', 'homebridge']},
+                  'services': ['nginx', 'noip2', 'appdaemon', 'home-assistant@homeassistant', 'homebridge']},
     # 'rpi33': {'mask': 'ssh pi@192.168.1.13 ' + MASK_STATUS_SERV,
     #           'services': ['nginx', 'noip', 'appdaemon', 'home-assistant@homeassistant', 'homebridge']},
     'rpi2h': {'mask': 'ssh pi@192.168.1.46 ' + MASK_STATUS_SERV,
               'services': ['appdaemon', 'home-assistant@homeassistant', 'motioneye']},
     'rpi2': {'mask': 'ssh pi@192.168.1.52 ' + MASK_STATUS_SERV,
-             'services': ['mpd', 'mopidy', 'shairport-sync', 'upmpdcli', 'appdaemon', 'home-assistant@homeassistant']}
+             'services': ['mpd', 'mopidy', 'shairport-sync', 'appdaemon', 'home-assistant@homeassistant']}
 }
-LOG_CSVFILE = os.path.join(basedir, 'log_service_status.csv')
-# os.chdir(basedir)
-
+LOG_JSONFILE = os.path.join(basedir, 'log_service_status.json')
 PATH_SECRETS = os.path.join(basedir, 'secrets.yaml')
 EXT_IP_FILE = os.path.join(basedir, 'external_ip.txt')
 try:
@@ -105,63 +117,75 @@ def check_service_status(machine, mask_cmd, service, data_services, verbose=Fals
         out = check_output(cmd.split(), stderr=STDOUT).decode()
     except CalledProcessError as e:
         out = e.output.decode()
-    key = '{}_{}'.format(machine, service)
-    # print(out)
     active_status = list(filter(lambda x: 'Active:' in x, out.splitlines()))
     if active_status:
         act = active_status[0]
-        # print(act)
+        state = 'active (running)' in act
         try:
-            date = parse(rg_date.findall(act)[0])
+            date = MASK_TS.format(parse(rg_date.findall(act)[0]))
         except IndexError:
             date = None
         # print(date)
-        data_services[key] = ('active (running)' in act, date, act)
+        if ('ts_ini' not in data_services[machine][service]) or data_services[machine][service]['ts_ini'] != date:
+            data_services[machine][service]['changed'] = True
+            if 'ts_ini' in data_services[machine][service]:  # not first sample
+                data_services[machine][service]['last_state'] = data_services[machine][service]['state']
+                data_services[machine][service]['last_ts_ini'] = data_services[machine][service]['ts_ini']
+            else:
+                data_services[machine][service]['last_state'] = state
+                data_services[machine][service]['last_ts_ini'] = date
+            data_services[machine][service]['state'] = state
+            data_services[machine][service]['ts_ini'] = date
+        else:
+            data_services[machine][service]['changed'] = False
         if verbose:
-            print('  * {:30} Active={} FROM: {}'.format(service + ':', data_services[key][0], data_services[key][1]))
-        return data_services[key][0]
-    data_services[key] = (False, None, out)
+            print('  * {0:30} Changed? {changed} --> ACT:{state}; SINCE {ts_ini}. Last st:{last_state} [{last_ts_ini}]'
+                  .format(service + ':', **data_services[machine][service]))
+        return data_services[machine][service]['state']
+    else:
+        data_services[machine][service] = {'state': False,
+                                           'ts_ini': None,
+                                           'last_state': data_services[machine][service].get('state', False),
+                                           'last_ts_ini': data_services[machine][service].get('ts_ini', None),
+                                           'changed': data_services[machine][service].get('state', False) is True}
     print('ERROR in {}->{}:\n{}'.format(machine, service, out))
     return False
 
 
-def _update_csv_log(data_services):
+def _update_json_log(data_services):
     """
-    Check changes in services status, and, if so, updates a csv file. Returns True if any changes.
+    Check changes in services status, and, if so, updates a json file. Returns changes.
     :param data_services: dict with service status data
-    :return: changed
-    :rtype: bool
+    :return: changed_services
+    :rtype: dict
     """
-    write_col_index = write_new_row = False
-
-    col_index = ';'.join(['{0}_{1}_ok;{0}_{1}_start'.format(m, s)
-                          for m, d in sorted(SERVICES_CHECK.items()) for s in d['services']])
-    col_index += ';\n'
-    # print(col_index)
-    row_status = ';'.join(['{};{}'.format(*data_services['{}_{}'.format(m, s)])
-                           for m, d in sorted(SERVICES_CHECK.items()) for s in d['services']])
-    row_status += ';\n'
-    # print(row_status)
-
-    if not os.path.exists(LOG_CSVFILE):
-        write_col_index = True
-        write_new_row = True
+    write = False
+    if not os.path.exists(LOG_JSONFILE):
+        write = True
+        serv_changes = data_services
     else:
-        with open(LOG_CSVFILE) as f:
-            last_row = f.readlines()[-1]
-        if last_row != row_status:
-            write_new_row = True
-    if write_col_index or write_new_row:
-        if write_col_index:
-            rows = [col_index, row_status]
-        else:
-            rows = [row_status]
-        with open(LOG_CSVFILE, 'a') as f:
-            f.writelines(rows)
-        print('** SERVICE STATUS UPDATED:\n{}'.format(open(LOG_CSVFILE).read()))
-        data_services['new_logdata'] = rows
-        return True
-    return False
+        serv_changes = {}
+        with open(LOG_JSONFILE) as _f:
+            last_data_services = json.loads(_f.read())
+        for m in data_services.keys():
+            if m not in last_data_services:
+                serv_changes[m] = data_services[m]
+                write = True
+            else:
+                for s in data_services[m].keys():
+                    if ((s not in last_data_services[m]) or
+                            (data_services[m][s]['state'] != last_data_services[m][s]['state']) or
+                            (data_services[m][s]['ts_ini'] != last_data_services[m][s]['ts_ini'])):
+                        if m in serv_changes.keys():
+                            serv_changes[m][s] = data_services[m][s]
+                        else:
+                            serv_changes[m] = {s: data_services[m][s]}
+                        write = True
+    if write:
+        with open(LOG_JSONFILE, 'w') as _f:
+            _f.write(json.dumps(data_services))
+        print('\n\n** SERVICE STATUS UPDATED:\n\n{}'.format(json.loads(open(LOG_JSONFILE).read())))
+    return serv_changes
 
 
 if __name__ == '__main__':
@@ -171,33 +195,50 @@ if __name__ == '__main__':
         if sys.argv[1] == 'send':
             force_send = True
 
-    d_serv = {}
+    # Prev state in disk
+    if os.path.exists(LOG_JSONFILE):
+        with open(LOG_JSONFILE) as f:
+            d_serv = json.loads(f.read())
+    else:
+        d_serv = {machine_id: {service_i: {'changed': True} for service_i in data['services']}
+                  for machine_id, data in SERVICES_CHECK.items()}
+
+    # Check services
     for machine_id, data in SERVICES_CHECK.items():
-        mask = data['mask']
         if verbose_mode:
             print('\n---> SERVICE STATUS IN {}:'.format(machine_id.upper()))
         for service_i in data['services']:
-            check_service_status(machine_id, mask, service_i, d_serv, verbose_mode)
+            check_service_status(machine_id, data['mask'], service_i, d_serv, verbose_mode)
 
-    if _update_csv_log(d_serv) or force_send:
-
-        subject = '*** {} [{}] - SERVICES STATUS'.format(BASE_URL, EXT_IP)
-        msg = ''
-        for machine_id, data in sorted(SERVICES_CHECK.items()):
-            mask = data['mask']
-            msg += '\n---> SERVICE STATUS OF {}:\n'.format(machine_id.upper())
-            for service_i in data['services']:
-                key = '{}_{}'.format(machine_id, service_i)
-                msg += '  * {:30} Active={} FROM: {}\n\t Raw: "{}"\n'.format(service_i + ':', *d_serv[key])
-        if 'new_logdata' in d_serv:
-            subject += ' CHANGED!'
-            msg += '\n\nNEW_LOGDATA:\n{}'.format(d_serv['new_logdata'])
+    # Notify changes & update JSON in disk
+    changes = _update_json_log(d_serv)
+    if changes or force_send:
+        if not changes:
+            changes = d_serv
+        # Msg generation:
+        subject = 'Systemd Status changed in {}'.format(', '.join(sorted(changes.keys())))
+        msg = 'Service vigil in {} [{}]\n'.format(EXT_IP, BASE_URL)
+        msg_extra, with_extra = '\n\n* Services with no change in status:\n', False
+        for machine_id, data_mi in sorted(changes.items()):
+            machine_title = '\n-> Status of {}:\n'.format(machine_id.upper())
+            if any([changes[machine_id][service_i]['changed'] for service_i in data_mi.keys()]):
+                msg += machine_title
+            if any([not changes[machine_id][service_i]['changed'] for service_i in data_mi.keys()]):
+                msg_extra += machine_title
+                with_extra = True
+            for service_i in data_mi.keys():
+                if changes[machine_id][service_i]['changed']:
+                    mask = '  * {0:30}  ----> ACT:{state}; SINCE {ts_ini}. Last st:{last_state} [{last_ts_ini}]\n'
+                    msg += mask.format(service_i + ':', **changes[machine_id][service_i])
+                else:
+                    mask = '  * {0:30}   ==   ACT:{state}; SINCE {ts_ini}. Last st:{last_state} [{last_ts_ini}]\n'
+                    msg_extra += mask.format(service_i + ':', **changes[machine_id][service_i])
 
         # Notificación:
         if verbose_mode:
-            print(msg)
+            print(msg + msg_extra)
         _send_push_notification(PB_TOKEN, subject, msg, EMAIL_TARGET)
-        _send_email(subject, msg, EMAIL_TARGET)
-        if EMAIL_DEBUG is not None:
-            _send_email(subject, msg, EMAIL_DEBUG)
+        _send_email(subject, msg + msg_extra if with_extra else msg, EMAIL_TARGET)
+        # if EMAIL_DEBUG is not None:
+        #     _send_email(subject, msg, EMAIL_DEBUG)
     sys.exit(0)
