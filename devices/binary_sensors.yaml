@@ -127,19 +127,9 @@
 #      friendly_name: Sonido en Estudio
 #      device_class: sound
 
-# **Motion detection on MotionEye streams**
-
-# These are created with Motion running on the slave HASS RPI, adding these custom actions on event_start|_end:
-# In /etc/motioneye/thread-1.conf:
-# on_event_start /usr/local/lib/python2.7/dist-packages/motioneye/scripts/relayevent.sh "/etc/motioneye/motioneye.conf" start %t;
-#     curl -X POST -H "x-ha-access: XXX" -H "Content-Type: application/json" -d '{"state": "on", "attributes": {"device_class": "motion", "friendly_name": "Movimiento Cam ESCAM"}}' http://192.168.1.13:8123/api/states/binary_sensor.motioncam_salon
-# on_event_end /usr/local/lib/python2.7/dist-packages/motioneye/scripts/relayevent.sh "/etc/motioneye/motioneye.conf" stop %t;
-#     curl -X POST -H "x-ha-access: XXX" -H "Content-Type: application/json" -d '{"state": "off", "attributes": {"device_class": "motion", "friendly_name": "Movimiento Cam ESCAM"}}' http://192.168.1.13:8123/api/states/binary_sensor.motioncam_salon
-# event_gap 5
-
-# In /etc/motioneye/thread-2.conf:
-# on_event_start /usr/local/lib/python2.7/dist-packages/motioneye/scripts/relayevent.sh "/etc/motioneye/motioneye.conf" start %t;
-#     curl -X POST -H "x-ha-access: XXX" -H "Content-Type: application/json" -d '{"state": "on", "attributes": {"device_class": "motion", "friendly_name": "Movimiento Cam Estudio"}}' http://192.168.1.13:8123/api/states/binary_sensor.motioncam_estudio
-# on_event_end /usr/local/lib/python2.7/dist-packages/motioneye/scripts/relayevent.sh "/etc/motioneye/motioneye.conf" stop %t;
-#     curl -X POST -H "x-ha-access: XXX" -H "Content-Type: application/json" -d '{"state": "off", "attributes": {"device_class": "motion", "friendly_name": "Movimiento Cam Estudio"}}' http://192.168.1.13:8123/api/states/binary_sensor.motioncam_estudio
-# event_gap 5
+# binary_sensor.workday_sensor
+- platform: workday
+  country: !secret country_code
+  province: !secret province_code
+#  workdays: List of workdays (defaults to mon, tue, wed, thu, fri).
+#  excludes: List of workday excludes (defaults to sat, sun, holiday).
