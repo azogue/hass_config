@@ -1,8 +1,17 @@
+# -*- coding: utf-8 -*-
 """
 Allows utilizing telegram webhooks.
 
 See https://core.telegram.org/bots/webhooks for details
  about webhooks.
+
+Changes:
+- Fire `telegram_callback` events when a `callback_query` is received instead
+of a normal `message`.
+Data in these events has `data`, `message`, `id`, `chat_instance` and
+`user_id` attributes.
+- When a `message` starts with '/' fire a `telegram_command` event, but don't
+fire another `telegram_text` event.
 
 """
 import asyncio
@@ -18,7 +27,8 @@ from homeassistant.components.http import HomeAssistantView
 from homeassistant.const import CONF_API_KEY
 from homeassistant.components.http.util import get_real_ip
 
-DOMAIN = 'telegram_webhooks'
+
+DOMAIN = 'mytelegram_webhooks'
 DEPENDENCIES = ['http']
 REQUIREMENTS = ['python-telegram-bot==5.3.0']
 
@@ -26,6 +36,7 @@ _LOGGER = logging.getLogger(__name__)
 
 EVENT_TELEGRAM_COMMAND = 'telegram_command'
 EVENT_TELEGRAM_TEXT = 'telegram_text'
+EVENT_TELEGRAM_CALLBACK = 'telegram_callback'
 
 TELEGRAM_HANDLER_URL = '/api/telegram_webhooks'
 
@@ -44,6 +55,8 @@ ATTR_COMMAND = 'command'
 ATTR_TEXT = 'text'
 ATTR_USER_ID = 'user_id'
 ATTR_ARGS = 'args'
+ATTR_DATA = 'data'
+ATTR_MSG = 'message'
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
@@ -107,37 +120,58 @@ class BotPushReceiver(HomeAssistantView):
         try:
             data = yield from request.json()
         except ValueError:
-            _LOGGER.error("Received telegram data: %s", data)
+            _LOGGER.error("Received telegram data: %s", request)
             return self.json_message('Invalid JSON', HTTP_BAD_REQUEST)
 
         # check for basic message rules
-        data = data.get('message')
-        if not data or 'from' not in data or 'text' not in data:
-            return self.json({})
+        if 'message' in data:
+            data = data.get('message')
+            if not data or 'from' not in data or 'text' not in data:
+                return self.json({})
 
-        if data['from'].get('id') not in self.users:
-            _LOGGER.warning("User not allowed")
-            return self.json_message('Invalid user', HTTP_BAD_REQUEST)
+            if data['from'].get('id') not in self.users:
+                _LOGGER.warning("User not allowed (ID: {}) -> {}"
+                                .format(data['from'].get('id'), data))
+                return self.json_message('Invalid user', HTTP_BAD_REQUEST)
 
-        _LOGGER.debug("Received telegram data: %s", data)
-        if not data['text']:
-            _LOGGER.warning('no text')
-            return self.json({})
+            _LOGGER.debug("Received telegram data: %s", data)
+            if not data['text']:
+                _LOGGER.warning('no text')
+                return self.json({})
 
-        if data['text'][:1] == '/':
-            # telegram command "/blabla arg1 arg2 ..."
-            pieces = data['text'].split(' ')
+            if data['text'][:1] == '/':
+                # telegram command "/blabla arg1 arg2 ..."
+                pieces = data['text'].split(' ')
 
-            request.app['hass'].bus.async_fire(EVENT_TELEGRAM_COMMAND, {
-                ATTR_COMMAND: pieces[0],
-                ATTR_ARGS: " ".join(pieces[1:]),
-                ATTR_USER_ID: data['from']['id'],
-                })
+                request.app['hass'].bus.async_fire(EVENT_TELEGRAM_COMMAND, {
+                    ATTR_COMMAND: pieces[0],
+                    ATTR_ARGS: " ".join(pieces[1:]),
+                    ATTR_USER_ID: data['from']['id'],
+                    })
+            else:
+                # telegram text "bla bla"
+                request.app['hass'].bus.async_fire(EVENT_TELEGRAM_TEXT, {
+                    ATTR_TEXT: data['text'],
+                    ATTR_USER_ID: data['from']['id'],
+                    })
+        elif 'callback_query' in data:
+            data = data.get('callback_query')
+            if not data or 'from' not in data:
+                return self.json({})
 
-        # telegram text "bla bla"
-        request.app['hass'].bus.async_fire(EVENT_TELEGRAM_TEXT, {
-            ATTR_TEXT: data['text'],
-            ATTR_USER_ID: data['from']['id'],
-            })
+            if data['from'].get('id') not in self.users:
+                _LOGGER.warning("User not allowed")
+                return self.json_message('Invalid user', HTTP_BAD_REQUEST)
+
+            request.app['hass'].bus.async_fire(EVENT_TELEGRAM_CALLBACK, {
+                    ATTR_DATA: data['data'],
+                    ATTR_MSG: data['message'],
+                    "chat_instance": data['chat_instance'],
+                    "id": data['id'],
+                    ATTR_USER_ID: data['from']['id'],
+                    })
+        else:
+            # Some other thing...
+            _LOGGER.warning('SOME OTHER THING RECEIVED --> "{}"'.format(data))
 
         return self.json({})

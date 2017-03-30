@@ -20,12 +20,15 @@
 
 - platform: kodi
   name: kodi
-  host: http://192.168.1.56
-  port: 8080
+  host: !secret kodi_host
+  port: !secret kodi_port
   username: !secret kodi_user
   password: !secret kodi_pw
 
-- platform: telegram
+- platform: mytelegram
   name: telegram_bot
   api_key: !secret telegram_bot_api_key
-  chat_id: !secret telegram_bot_chat_id
+  user_id:
+    user1: !secret telegram_bot_chat_id_admin
+    user2: !secret telegram_bot_chat_id_2
+#  chat_id: !secret telegram_bot_chat_id_admin

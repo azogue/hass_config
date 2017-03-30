@@ -96,15 +96,14 @@ mqtt:
 ####################################################
 #                     Telegram webhooks            #
 ####################################################
-telegram_webhooks:
+mytelegram_webhooks:
 #  trusted_networks:
 #    - 149.154.167.197/32
 #    - 149.154.167.198/31
   api_key: !secret telegram_bot_api_key
   user_id:
-    user1: !secret telegram_bot_chat_id
-#    user2: !secret telegram_bot_user_id
-#    user2: USER_ID
+    user1: !secret telegram_bot_chat_id_admin
+    user2: !secret telegram_bot_chat_id_2
 
 ####################################################
 #                     Enables                      #
@@ -116,20 +115,19 @@ logger:
     homeassistant.bootstrap: info
     homeassistant.components.camera: error
     homeassistant.components.netdisco: error
-    homeassistant.services.notify: info
     homeassistant.components.script: info
-    homeassistant.components.notify.ios: info
     homeassistant.components.media_player: info
     homeassistant.components.tts: debug
-    # custom_components.binary_sensor: debug
     custom_components.notify.richsmtp: debug
+    custom_components.notify.mytelegram: info
+    custom_components.mytelegram_webhooks: info
     # custom_components.sensor.enerweb: info
-#    custom_components.enerpi: info
+    # custom_components.enerpi: info
     # custom_components.switch: error
 
 browser:
 #conversation:
-#discovery:
+discovery:
 frontend:
 sun:
 updater:
