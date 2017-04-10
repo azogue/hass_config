@@ -1,0 +1,19 @@
+# /home/homeassistant/picamera/image.jpg
+alias: Script de buenas noches
+sequence:
+  - alias: Apagado de TV, Ambilight, Caldera, Altavoz, Cocina, Calefactor e impresora
+    service: switch.turn_off
+    entity_id: switch.kodi_tv_salon,switch.toggle_kodi_ambilight,switch.caldera,switch.altavoz,switch.cocina,switch.calefactor,switch.impresora
+
+  - alias: Encendido de CAM Salón
+    service: switch.turn_on
+    entity_id: switch.camara
+
+  - alias: Notificación de buenas noches
+    service: notify.telegram_bot
+    data:
+      title: '*Good night*'
+      target: !secret telegram_bot_chat_id_admin
+      message: 'Apagado de interruptores y encendido de cámaras de seguridad.'
+      data:
+        disable_notification: true
