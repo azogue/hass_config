@@ -31,7 +31,7 @@ import homeassistant.helpers.config_validation as cv
 
 
 _LOGGER = logging.getLogger(__name__)
-REQUIREMENTS = ['gpiozero==1.3.1']
+REQUIREMENTS = ['gpiozero==1.3.2']
 
 CONF_CHANNEL = 'channels'
 CONF_TYPE = 'analog'
