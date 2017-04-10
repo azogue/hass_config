@@ -12,13 +12,14 @@ config:
 logger:
   default: warn
   logs:
-    homeassistant.loader: info
+#    homeassistant.loader: info
     homeassistant.bootstrap: info
     requests: error
     homeassistant.components.http: warn
     homeassistant.components.binary_sensor: info
     homeassistant.components.media_player: debug
     custom_components.sensor.myonewire: info
+    homeassistant.components.automation: info
 
 http:
   api_password: !secret hass_pw
@@ -101,7 +102,7 @@ sensor:
   - platform: myonewire
     names:
       28-80000001595e: Temperatura Dormitorio
-    scan_interval: 30
+    scan_interval: 40
     maximum: 50
     minimum: 5
 
@@ -109,7 +110,7 @@ sensor:
     sensor: DHT22
     pin: 24
     name: dht22_dormitorio
-    scan_interval: 20
+    scan_interval: 40
     monitored_conditions:
       - temperature
       - humidity

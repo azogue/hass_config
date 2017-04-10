@@ -13,16 +13,18 @@ Inputs Alarm:
     - binary_sensor.sound_sensor_rpi2h
     - binary_sensor.vibration_sensor_raw_rpi2h
     - binary_sensor.sound_sensor_raw_rpi2h
+    - binary_sensor.esp1_pir
+    - binary_sensor.esp1_vibro
 
 Eugenio:
   entities:
     - device_tracker.hass_iphone
     - device_tracker.iphone_bt
-    - device_tracker.apple_watchdeeugenio
+    - device_tracker.applewatch
 
 Mary:
   entities:
-    - device_tracker.iphonedemariadelcarmen
+    - device_tracker.hass_iphonese
     - device_tracker.iphonedemariadelcarmen_bt
 
 iPad:
@@ -121,8 +123,10 @@ Enchufes:
 esp8266:
   name: módulo ESP8266
   entities:
-    - sensor.esp1_Humidity
-    - sensor.esp1_Temperature
+    - sensor.esp1_humidity
+    - sensor.esp1_temperature
+    - binary_sensor.esp1_pir
+    - binary_sensor.esp1_vibro
 
 Kodi:
   control: hidden
@@ -199,6 +203,7 @@ Cacharros:
   - sensor.iphone_battery_level
   - sensor.iphone_battery_state
   - sensor.bateria_iphone_6s
+  - sensor.bateria_iphone_se
   - group.ipad
   - device_tracker.jo01
   - device_tracker.rpi_wifi
@@ -212,14 +217,6 @@ Cacharros:
 #Escenas:
 #  - scene.cuenco_red
 #  - scene.cuenco_blue
-
-Scripts:
-  control: hidden
-  entities:
-    - script.test_notify
-    - script.test_notify_pb
-    - script.notify_hass_start
-    - script.flash_cuenco
 
 enerPI:
   - sensor.enerpi
@@ -261,11 +258,11 @@ Hass control:
     - script.restart_hass
     - script.reboot
     - script.shutdown
-    - script.flash_cuenco
 
 Conectivity:
   - binary_sensor.services_notok
   - sensor.ip_externa
+  - binary_sensor.database_ok
   - binary_sensor.internet_online
   - binary_sensor.nas_online
   - binary_sensor.pushbullet_online
@@ -277,6 +274,21 @@ Conectivity:
   - sensor.core_error_counter
   - sensor.warning_counter_core
 
+Scripts:
+  control: hidden
+  entities:
+    - script.good_night
+    - script.flash_cuenco
+    - script.notify_hass_start
+    - script.test_notify
+    - script.test_notify_pb
+    - script.tts_tell_me_ambient_data
+    - scene.cuenco_red
+    - scene.cuenco_blue
+
+#############################################
+# VIEWS
+#############################################
 Status:
   name: Home Status
   icon: mdi:castle
@@ -349,6 +361,8 @@ Alarm Control:
   - switch.use_pir_estudio_rpi2h
   - switch.motioncam_estudio
   - switch.use_pir_dormitorio_rpi2mpd
+  - switch.use_esp1_pir
+  - switch.use_esp1_vibro
 
 Home Network:
   name: Red local del hogar
@@ -381,9 +395,9 @@ Master conf:
     - group.alarma
     - group.hass_control
     - group.conectivity
-    - group.all_automations
-    - group.all_scripts
-    - group.all_devices
+#    - group.all_automations
+    - group.scripts
+#    - group.all_devices
 
 default_view:
 #  name: Piso

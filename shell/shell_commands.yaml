@@ -12,3 +12,6 @@ stop_appdaemon: 'sudo systemctl stop appdaemon'
 # Use with caution
 cmd_reboot: 'sudo reboot now'
 cmd_shutdown: 'sudo shutdown now'
+
+# MySQL Database flush hosts
+cmd_recorder_flush_hosts: !secret recorder_flush_cmd

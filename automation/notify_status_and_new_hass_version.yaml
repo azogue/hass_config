@@ -1,8 +1,8 @@
 # Startup notifications & new version notify
 - alias: Startup Notification
   trigger:
-    platform: event
-    event_type: homeassistant_start
+    platform: homeassistant
+    event: start
   action:
   - service: switch.turn_on
     entity_id: switch.camara
@@ -30,3 +30,27 @@
         push:
           badge: 1
           category: "CONFIRM"
+
+# Flush MySQL database if not ok & notify:
+- alias: Database flush
+  trigger:
+    platform: state
+    entity_id: binary_sensor.database_ok
+    to: 'off'
+    for:
+      minutes: 2
+  action:
+    - service: notify.telegram_bot
+      data:
+        title: '*MySQL flush*'
+        target: !secret telegram_bot_chat_id_admin
+        message: !secret msg_recorder_flush
+        data:
+          #inline_keyboard: TELEGRAM_INLINE_KEYBOARD,
+          disable_notification: false
+          disable_web_page_preview: true
+#          inline_keyboard:
+#            -
+    - delay:
+        seconds: 5
+    - service: shell_command.cmd_recorder_flush_hosts

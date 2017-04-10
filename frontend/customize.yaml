@@ -257,6 +257,9 @@ sensor.core_error_counter:
 binary_sensor.internet_online:
   friendly_name: ¿Hay conexión a internet?
   homebridge_hidden: true
+binary_sensor.database_ok:
+  friendly_name: ¿Base de datos OK?
+  homebridge_hidden: true
 binary_sensor.nas_online:
   homebridge_hidden: true
 binary_sensor.pushbullet_online:
@@ -363,7 +366,17 @@ sensor.esp1_Temperature:
   friendly_name: Temperatura (esp)
   homebridge_hidden: true
   icon: mdi:thermometer
+sensor.esp1_PIR:
+  friendly_name: Movimiento (esp)
+  homebridge_hidden: true
+sensor.esp1_Vibro:
+  friendly_name: Vibración (esp)
+  homebridge_hidden: true
+
 sensor.bateria_iphone_6s:
+  homebridge_hidden: true
+  icon: mdi:battery
+sensor.bateria_iphone_se:
   homebridge_hidden: true
   icon: mdi:battery
 
@@ -455,7 +468,7 @@ device_tracker.hass_iphone:
   icon: mdi:cellphone-iphone
 device_tracker.iphone_bt:
   icon: mdi:cellphone-iphone
-device_tracker.iphonedemariadelcarmen:
+device_tracker.hass_iphonese:
   icon: mdi:cellphone-iphone
 device_tracker.iphonedemariadelcarmen_bt:
   icon: mdi:cellphone-iphone
@@ -508,6 +521,15 @@ switch.use_sound_sensor_rpi2h:
 switch.use_vibration_sensor_rpi2h:
   homebridge_hidden: true
   friendly_name: Usar vibración en Estudio
+  icon: mdi:vibrate
+
+switch.use_esp1_pir:
+  homebridge_hidden: true
+  friendly_name: Usar PIR de ESP1
+  icon: mdi:vibrate
+switch.use_esp1_vibro:
+  homebridge_hidden: true
+  friendly_name: Usar vibración de ESP1
   icon: mdi:vibrate
 
 switch.motioncam_estudio:

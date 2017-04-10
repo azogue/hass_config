@@ -4,7 +4,7 @@ homeassistant:
   longitude: !secret longitude
   unit_system: metric
   elevation: !secret elevation
-  time_zone: Europe/Madrid
+  time_zone: !secret time_zone
   customize: !include frontend/customize.yaml
 
 # This will override the default home zone
@@ -60,7 +60,6 @@ panel_iframe: !include frontend/iframe_panels.yaml
 weblink: !include frontend/web_links.yaml
 group: !include frontend/groups.yaml
 
-config:
 ####################################################
 #                 Custom platforms                 #
 ####################################################
@@ -102,8 +101,8 @@ mytelegram_webhooks:
 #    - 149.154.167.198/31
   api_key: !secret telegram_bot_api_key
   user_id:
-    user1: !secret telegram_bot_chat_id_admin
-    user2: !secret telegram_bot_chat_id_2
+    Eugenio: !secret telegram_bot_chat_id_admin
+    Carmen: !secret telegram_bot_chat_id_2
 
 ####################################################
 #                     Enables                      #
@@ -113,6 +112,7 @@ logger:
   logs:
     netdisco: error
     homeassistant.bootstrap: info
+    homeassistant.components.automation: info
     homeassistant.components.camera: error
     homeassistant.components.netdisco: error
     homeassistant.components.script: info
@@ -131,6 +131,7 @@ discovery:
 frontend:
 sun:
 updater:
+config:
 
 # Text to speech
 tts:
@@ -203,6 +204,8 @@ history:
       - group.eugenio
       - group.family
       - group.mary
+      - device_tracker.hass_iphone
+      - device_tracker.hass_iphonese
       - device_tracker.iphone
       - device_tracker.iphone_bt
       - device_tracker.iphone_se
@@ -215,6 +218,7 @@ logbook:
       - media_player
       - sun
       - script
+      - automation
     entities:
       - sensor.heating
       - sensor.calefaccion

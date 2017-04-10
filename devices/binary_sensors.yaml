@@ -14,6 +14,22 @@
 #  payload_off: "offline"
 #  device_class: connectivity
 
+- platform: mqtt
+  state_topic: "sensor/pir_a020a605b007"
+  name: esp1_PIR
+#  qos (Optional): The maximum QoS level of the state topic. Default is 0.
+  payload_on: "on"
+  payload_off: "off"
+  device_class: motion
+
+- platform: mqtt
+  state_topic: "sensor/extra_a020a605b007"
+  name: esp1_Vibro
+#  qos (Optional): The maximum QoS level of the state topic. Default is 0.
+  payload_on: "on"
+  payload_off: "off"
+  device_class: vibration
+
 - platform: command_line
   name: Internet Online
   command: ping -W 1 -c 1 8.8.8.8 > /dev/null 2>&1 && echo success || echo fail
@@ -70,6 +86,14 @@
   payload_off: "fail"
   scan_interval: 240
 
+- platform: command_line
+  name: Database OK
+  command: "/home/homeassistant/.homeassistant/shell/check_notifiers.sh recorder"
+  device_class: connectivity
+  payload_on: "success"
+  payload_off: "fail"
+  scan_interval: 180
+
 - platform: template
   sensors:
     heating:
@@ -88,6 +112,7 @@
          (states.binary_sensor.email_online.state == 'off') or
          (states.binary_sensor.ios_online.state == 'off') or
          (states.binary_sensor.telegram_online.state == 'off') or
+         (states.binary_sensor.database_ok.state == 'off') or
          (states.binary_sensor.router_on.state == 'off') or
          (states.binary_sensor.internet_online.state == 'off') or
          (states.sensor.ip_externa.state != '185.97.169.163') or
@@ -100,6 +125,7 @@
         - binary_sensor.email_online
         - binary_sensor.ios_online
         - binary_sensor.telegram_online
+        - binary_sensor.database_ok
         - binary_sensor.router_on
         - binary_sensor.internet_online
         - sensor.ip_externa

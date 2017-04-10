@@ -19,17 +19,27 @@
   state_topic: "sensor/hum_a020a605b007"
   name: 'esp1_Humidity'
   unit_of_measurement: '%'
+  expire_after: 600
 
 - platform: mqtt
   state_topic: "sensor/temp_a020a605b007"
   name: 'esp1_Temperature'
   unit_of_measurement: 'ºC'
+  expire_after: 600
 
 - platform: mqtt
   state_topic: "owntracks/hass/iphone"
   name: 'Batería iPhone 6s'
   unit_of_measurement: '%'
   value_template: '{{ value_json.batt }}'
+  expire_after: 3600
+
+- platform: mqtt
+  state_topic: "owntracks/hass/iphonese"
+  name: 'Batería iPhone SE'
+  unit_of_measurement: '%'
+  value_template: '{{ value_json.batt }}'
+  expire_after: 3600
 
 - platform: enerweb
   name: Galería

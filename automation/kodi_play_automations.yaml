@@ -1,0 +1,49 @@
+- alias: Encendido de TV si apagada y KODI play
+  trigger:
+    platform: state
+    entity_id: media_player.kodi
+    from: 'idle'
+    to: 'playing'
+  condition:
+    condition: state
+    entity_id: switch.kodi_tv_salon
+    state: 'off'
+    for:
+      minutes: 2
+  action:
+  - service: switch.turn_on
+    entity_id: switch.kodi_tv_salon
+  - service: notify.telegram_bot
+    data:
+      title: '*TV ON*'
+      target: !secret telegram_bot_chat_id_admin
+      message: 'Encendido de TV automático en Kodi PLAY'
+      data:
+        disable_notification: true
+#          inline_keyboard:
+
+- alias: Apagado de CAM salón en Kodi PLAY nocturno
+  trigger:
+    platform: state
+    entity_id: media_player.kodi
+    from: 'idle'
+    to: 'playing'
+  condition:
+    - condition: sun
+      after: sunset
+      after_offset: "-0:30:00"
+    - condition: state
+      entity_id: switch.camara
+      state: 'off'
+  action:
+  - service: switch.turn_off
+    entity_id: switch.camara
+  - service: notify.telegram_bot
+    data:
+      title: '*CAM Salón OFF*'
+      target: !secret telegram_bot_chat_id_admin
+      message: 'Apagado de cámara de Salón en Kodi PLAY nocturno.'
+      data:
+        disable_notification: true
+#          inline_keyboard:
+

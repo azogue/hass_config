@@ -168,13 +168,30 @@
         service: input_boolean.turn_on
       value_template: '{{ states.input_boolean.use_vibration_sensor_rpi2h.state == "on" }}'
 
+    use_esp1_pir:
+      turn_off:
+        entity_id: input_boolean.use_esp1_pir
+        service: input_boolean.turn_off
+      turn_on:
+        entity_id: input_boolean.use_esp1_pir
+        service: input_boolean.turn_on
+      value_template: '{{ states.input_boolean.use_esp1_pir.state == "on" }}'
+    use_esp1_vibro:
+      turn_off:
+        entity_id: input_boolean.use_esp1_vibro
+        service: input_boolean.turn_off
+      turn_on:
+        entity_id: input_boolean.use_esp1_vibro
+        service: input_boolean.turn_on
+      value_template: '{{ states.input_boolean.use_esp1_vibro.state == "on" }}'
+
 #- platform: rpi_gpio
 #  ports:
 #    13: RPI LED
 
 - platform: cecswitch
   name: kodi_tv_salon
-  host: "192.168.1.56"
-  port: 8080
-  username: "osmc"
-  password: "osmc"
+  host: !secret kodi_host
+  port: !secret kodi_port
+  username: !secret kodi_user
+  password: !secret kodi_pw

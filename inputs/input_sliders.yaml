@@ -1,18 +1,18 @@
 # Sliders para setting de alarma despertador
 alarm_clock_hour:
-  initial: 8
+#  initial: 8
   min: 0
   max: 23
   step: 1
 alarm_clock_minute:
-  initial: 30
+#  initial: 30
   min: 0
   max: 55
   step: 5
 
 # Lights ON on motion
 light_duration_after_motion:
-  initial: 15
+#  initial: 15
   min: 5
   max: 60
   step: 5
@@ -20,13 +20,13 @@ light_duration_after_motion:
 # Master Sliders Salón (brillo y Tª color)
 light_main_slider_salon:
   name: Brillo salón
-  initial: 0
+#  initial: 0
   min: 0
   max: 255
   step: 1
 light_temp_slider_salon:
   name: Blanco Salón
-  initial: 10
+#  initial: 10
   min: 0
   max: 100
   step: 1

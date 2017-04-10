@@ -20,6 +20,10 @@ elif [ "$1" = "kodi" ]
 then
     RESNUM=$(/bin/grep ERROR /home/homeassistant/.homeassistant/home-assistant.log | /bin/grep -c "Error setting up platform kodi")
     [ "$RESNUM" -lt "1" ]  && echo "success"||echo "fail"
+elif [ "$1" = "recorder" ]
+then
+    RESNUM=$(/bin/grep ERROR /home/homeassistant/.homeassistant/home-assistant.log | /bin/grep -c "ERROR (Recorder)")
+    [ "$RESNUM" -lt "1" ]  && echo "success"||echo "fail"
 elif [ "$1" = "core_error" ]
 then
     /bin/grep ERROR /home/homeassistant/.homeassistant/home-assistant.log | /bin/grep -c homeassistant.core

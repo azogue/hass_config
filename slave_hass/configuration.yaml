@@ -12,7 +12,7 @@ config:
 logger:
   default: warn
   logs:
-    homeassistant.loader: info
+#    homeassistant.loader: info
     homeassistant.bootstrap: info
     requests: error
 
@@ -90,13 +90,13 @@ binary_sensor:
 
 input_boolean:
   switch_matrix_display:
-    initial: on
+#    initial: on
 
 sensor:
   - platform: myonewire
     names:
       28-800000015326: Temperatura Estudio
-    scan_interval: 30
+    scan_interval: 40
     maximum: 50
     minimum: 5
 
@@ -104,13 +104,13 @@ sensor:
     sensor: DHT22
     pin: 22
     name: dht22
-    scan_interval: 30
+    scan_interval: 40
     monitored_conditions:
       - temperature
       - humidity
 
   - platform: mysensehat
-    scan_interval: 30
+    scan_interval: 40
     round: 2
     display_options:
       - temperature
