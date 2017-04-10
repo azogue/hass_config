@@ -29,6 +29,6 @@
   name: telegram_bot
   api_key: !secret telegram_bot_api_key
   user_id:
-    user1: !secret telegram_bot_chat_id_admin
-    user2: !secret telegram_bot_chat_id_2
+    Eugenio: !secret telegram_bot_chat_id_admin
+    Carmen: !secret telegram_bot_chat_id_2
 #  chat_id: !secret telegram_bot_chat_id_admin
