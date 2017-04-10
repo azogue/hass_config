@@ -81,7 +81,14 @@ def setup(hass, config):
     if CONF_API_KEY in conf:
         bot = telegram.Bot(conf[CONF_API_KEY])
         current_status = bot.getWebhookInfo()
-        _LOGGER.debug("telegram webhook status: %s", current_status)
+        last_error_date = getattr(current_status, 'last_error_date', None)
+        if (last_error_date is not None) and (type(last_error_date) is int):
+            import datetime as dt
+            last_error_date = dt.datetime.fromtimestamp(last_error_date)
+            _LOGGER.info("telegram webhook last_error_date: {}. Status: {}"
+                         .format(last_error_date, current_status))
+        else:
+            _LOGGER.debug("telegram webhook Status: {}".format(current_status))
         handler_url = "{0}{1}".format(hass.config.api.base_url,
                                       TELEGRAM_HANDLER_URL)
         if current_status and current_status['url'] != handler_url:
@@ -107,7 +114,7 @@ class BotPushReceiver(HomeAssistantView):
         self.trusted_networks = trusted_networks
         self.users = {user_id: dev_id for dev_id, user_id in
                       user_id_array.items()}
-        _LOGGER.debug("users allowed: %s", self.users)
+        _LOGGER.info("telegram webhook users allowed: {}".format(self.users))
 
     @asyncio.coroutine
     def post(self, request):
