@@ -1,10 +1,16 @@
 # SENSORS
 sensor.temperatura_estudio:
-  friendly_name: Temperatura
-  homebridge_name: Temperatura estudio
-
+  friendly_name: Temperatura (DS)
+  icon: mdi:thermometer
+sensor.dht22_temperature:
+  friendly_name: Temperatura (DHT)
+  icon: mdi:thermometer
+sensor.dht22_humidity:
+  friendly_name: Humedad
+  icon: mdi:water-percent
 sensor.temperature:
   friendly_name: Temperatura SenseHat
+  icon: mdi:thermometer
   homebridge_hidden: true
 sensor.humidity:
   icon: mdi:water-percent
@@ -13,36 +19,19 @@ sensor.humidity:
 sensor.pressure:
   friendly_name: Presión
   icon: mdi:weather-cloudy
-
-sensor.dht22_temperature:
-  friendly_name: Temperatura Estudio (dht22)
-sensor.dht22_humidity:
-  friendly_name: Humedad Estudio
-  icon: mdi:water-percent
-#sensor.dht11_temperature:
-#  friendly_name: Temperatura (dht11)
-#sensor.dht11_humidity:
-#  friendly_name: Humedad (dht11)
-#  icon: mdi:water-percent
+  homebridge_hidden: true
 
 binary_sensor.pir_estudio:
-  friendly_name: Movimiento en Estudio
+  friendly_name: Movimiento (estudio)
   device_class: motion
   homebridge_hidden: true
 binary_sensor.vibration_sensor_raw:
-  friendly_name: Vibración en Estudio
+  friendly_name: Vibración (estudio)
   device_class: vibration
   homebridge_hidden: true
 binary_sensor.sound_sensor_raw:
-  friendly_name: Sonido en Estudio
+  friendly_name: Sonido (estudio)
   device_class: sound
-  homebridge_hidden: true
-
-
-# (testing)
-input_boolean.switch_matrix_display:
-  friendly_name: SenseHat display
-  icon: mdi:led-off
   homebridge_hidden: true
 
 # LINKS

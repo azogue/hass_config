@@ -15,7 +15,7 @@
 #  device_class: connectivity
 
 - platform: mqtt
-  state_topic: "sensor/pir_a020a605b007"
+  state_topic: !secret mqtt_topic_esp1_pir
   name: esp1_PIR
 #  qos (Optional): The maximum QoS level of the state topic. Default is 0.
   payload_on: "on"
@@ -23,12 +23,20 @@
   device_class: motion
 
 - platform: mqtt
-  state_topic: "sensor/extra_a020a605b007"
+  state_topic: !secret mqtt_topic_esp1_vibro
   name: esp1_Vibro
 #  qos (Optional): The maximum QoS level of the state topic. Default is 0.
   payload_on: "on"
   payload_off: "off"
   device_class: vibration
+
+- platform: mqtt
+  state_topic: !secret mqtt_topic_esp1_light
+  name: esp1_Light
+#  qos (Optional): The maximum QoS level of the state topic. Default is 0.
+  payload_on: "on"
+  payload_off: "off"
+  device_class: light
 
 - platform: command_line
   name: Internet Online

@@ -15,6 +15,7 @@ Inputs Alarm:
     - binary_sensor.sound_sensor_raw_rpi2h
     - binary_sensor.esp1_pir
     - binary_sensor.esp1_vibro
+    - binary_sensor.esp1_light
 
 Eugenio:
   entities:
@@ -29,8 +30,8 @@ Mary:
 
 iPad:
   entities:
-    - device_tracker.ipaddemariadelcarmen
-    - device_tracker.ipaddemariadelcarmen_bt
+    - device_tracker.ipaddeeugenio
+    - device_tracker.ipaddeeugenio_bt
 
 Family:
   - group.eugenio
@@ -42,13 +43,25 @@ Master luces del salón:
   - input_select.salon_light_scene
 
 Salón:
-  - sensor.main_power
-  - sensor.consumo_cocina
-  - sensor.t_salon
-  - sensor.salon_temperature
-  - sensor.salon_humidity
-  - binary_sensor.pir_salon
-  - binary_sensor.motioncam_salon
+  control: hidden
+  entities:
+    - sensor.t_salon
+    - sensor.salon_temperature
+    - sensor.salon_humidity
+    - binary_sensor.pir_salon
+    - binary_sensor.motioncam_salon
+    - switch.camara
+    - switch.kodi_tv_salon
+
+Salón_simple:
+  name: Salón
+  control: hidden
+  entities:
+    - sensor.t_salon
+    - sensor.salon_temperature
+    - sensor.salon_humidity
+    - switch.camara
+    - switch.kodi_tv_salon
 
 Luces Estudio:
   control: hidden
@@ -57,6 +70,7 @@ Luces Estudio:
 
 Estudio RPi2h:
   name: Estudio
+  control: hidden
   entities:
     - sensor.temperatura_estudio_rpi2h
     - sensor.dht22_temperature_rpi2h
@@ -68,6 +82,15 @@ Estudio RPi2h:
     - binary_sensor.motioncam_estudio
     - binary_sensor.vibration_sensor_rpi2h
     - binary_sensor.sound_sensor_rpi2h
+    - switch.impresora
+
+Estudio RPi2h_simple:
+  name: Estudio
+  control: hidden
+  entities:
+    - sensor.temperatura_estudio_rpi2h
+    - sensor.dht22_temperature_rpi2h
+    - sensor.dht22_humidity_rpi2h
     - switch.impresora
 
 Luces Salón:
@@ -84,11 +107,45 @@ Luces Dormitorio:
 
 Dormitorio RPI2MPD:
   name: Dormitorio
+  control: hidden
   entities:
     - sensor.temperatura_dormitorio_rpi2mpd
     - sensor.dht22_dormitorio_temperature_rpi2mpd
     - sensor.dht22_dormitorio_humidity_rpi2mpd
     - binary_sensor.pir_dormitorio_rpi2mpd
+    - switch.altavoz
+    - switch.calefactor
+
+Dormitorio RPI2MPD_simple:
+  name: Dormitorio
+  control: hidden
+  entities:
+    - sensor.temperatura_dormitorio_rpi2mpd
+    - sensor.dht22_dormitorio_temperature_rpi2mpd
+    - sensor.dht22_dormitorio_humidity_rpi2mpd
+    - switch.altavoz
+    - switch.calefactor
+
+Cocina:
+  name: Cocina
+  control: hidden
+  entities:
+    - sensor.esp1_temperature
+    - sensor.esp1_humidity
+    - sensor.esp1_light
+    - binary_sensor.esp1_light
+    - binary_sensor.esp1_pir
+    - binary_sensor.esp1_vibro
+    - switch.cocina
+
+Cocina_simple:
+  name: Cocina
+  control: hidden
+  entities:
+    - sensor.esp1_temperature
+    - sensor.esp1_humidity
+    - sensor.esp1_light
+    - switch.cocina
 
 Cámaras:
   - camera.picamera_salon
@@ -98,15 +155,23 @@ Cámaras:
 Galería:
   - sensor.galeria_dht22_temperature
   - sensor.galeria_dht22_humidity
-  - sensor.galeria_rpi2_rpi_cpu_temp
 
 Caldera:
-  - binary_sensor.heating
-  - sensor.calefaccion
-  - sensor.galeria_impulsion_calefaccion
-  - sensor.galeria_retorno_calefaccion
-  - sensor.galeria_acs
-  - switch.caldera
+  control: hidden
+  entities:
+    - binary_sensor.heating
+    - sensor.calefaccion
+    - sensor.galeria_impulsion_calefaccion
+    - sensor.galeria_retorno_calefaccion
+    - sensor.galeria_acs
+    - switch.caldera
+
+Caldera_simple:
+  name: Caldera
+  control: hidden
+  entities:
+    - sensor.calefaccion
+    - switch.caldera
 
 Enchufes:
   control: hidden
@@ -120,14 +185,6 @@ Enchufes:
     - switch.new_switch_2
     - switch.new_switch_3
 
-esp8266:
-  name: módulo ESP8266
-  entities:
-    - sensor.esp1_humidity
-    - sensor.esp1_temperature
-    - binary_sensor.esp1_pir
-    - binary_sensor.esp1_vibro
-
 Kodi:
   control: hidden
   entities:
@@ -138,16 +195,24 @@ Kodi:
 
 Tiempo en Villena:
   - sun.sun
-  - sensor.villena_weather
   - sensor.villena_temperature
-  - sensor.villena_wind_speed
   - sensor.villena_humidity
+  - sensor.villena_wind_speed
   - sensor.villena_pressure
   - sensor.villena_condition
   - sensor.villena_cloud_coverage
   - sensor.villena_rain
   - sensor.villena_forecast
   - sensor.yr_symbol
+
+Tiempo en Villena_simple:
+  name: Tiempo en Villena
+  entities:
+    - sensor.villena_temperature
+    - sensor.villena_humidity
+    - sensor.villena_cloud_coverage
+    - sensor.villena_rain
+    - sensor.villena_forecast
 
 Links:
   - weblink.slave_hass
@@ -163,6 +228,17 @@ Links:
   - weblink.wifi_extender_ap
   - weblink.rpi_caldera
   - weblink.rpi_3_osmc_salon
+
+Links_simple:
+  name: Links
+  entities:
+    - weblink.enerpi
+    - weblink.motioneye
+    - weblink.kodi_web_interface
+    - weblink.tv_headend
+    - weblink.mopidy
+    - weblink.slave_hass
+    - weblink.slave_hass_mpd
 
 Host RPI3:
   - sensor.cpu_use
@@ -189,13 +265,13 @@ Red e Internet:
   - sensor.speedtest_ping
   - sensor.speedtest_download
   - sensor.speedtest_upload
-  - device_tracker.router_interfibra
-  - device_tracker.bridge_hue
+#  - device_tracker.router_interfibra
+#  - device_tracker.bridge_hue
   - device_tracker.nas
-  - device_tracker.airport_extreme
-  - device_tracker.wifi_ext
-  - device_tracker.airport
-  - device_tracker.imac
+#  - device_tracker.airport_extreme
+#  - device_tracker.wifi_ext
+#  - device_tracker.airport
+#  - device_tracker.imac
   - device_tracker.mbp
   - switch.wol_nas
 
@@ -213,6 +289,18 @@ Cacharros:
   - device_tracker.rpi3w
   - device_tracker.rpi3osmc
   - device_tracker.esp8266_1
+
+Cacharros_simple:
+  name: Cacharros
+  entities:
+    - group.ipad
+    - device_tracker.jo01
+    - device_tracker.rpi_wifi
+    - device_tracker.rpi2hat
+    - device_tracker.rpi2
+    - device_tracker.rpi3w
+    - device_tracker.rpi3osmc
+    - device_tracker.esp8266_1
 
 #Escenas:
 #  - scene.cuenco_red
@@ -249,6 +337,7 @@ enerPI Max Power Control:
 Hass control:
   control: hidden
   entities:
+    - switch.show_expert_mode
     - input_boolean.switch_motion_lights
     - input_slider.light_duration_after_motion
     - switch.systemd_appdaemon
@@ -258,6 +347,17 @@ Hass control:
     - script.restart_hass
     - script.reboot
     - script.shutdown
+
+Hass control_simple:
+  name: Hass control
+  control: hidden
+  entities:
+    - switch.show_expert_mode
+    - input_boolean.switch_motion_lights
+    - binary_sensor.services_notok
+    - script.good_night
+    - script.tts_tell_me_ambient_data
+    - script.reboot
 
 Conectivity:
   - binary_sensor.services_notok
@@ -295,11 +395,16 @@ Status:
   view: yes
   entities:
     - group.salon
+    - group.salon_simple
     - group.estudio_rpi2h
+    - group.estudio_rpi2h_simple
     - group.dormitorio_rpi2mpd
+    - group.dormitorio_rpi2mpd_simple
+    - group.cocina
+    - group.cocina_simple
     - group.galeria
     - group.caldera
-    - group.esp8266
+    - group.caldera_simple
 #    - group.camaras
 #    - group.tiempo_en_villena
 
@@ -369,12 +474,14 @@ Home Network:
   view: yes
   icon: mdi:sitemap
   entities:
+    - group.family
     - group.links
-#    - group.family
+    - group.links_simple
     - group.host_rpi3
     - group.host_rpi2_hat
     - group.host_rpi2_mpd
     - group.cacharros
+    - group.cacharros_simple
     - group.red_e_internet
 
 Alarm Panel:
@@ -392,8 +499,8 @@ Master conf:
   icon: mdi:settings
   view: yes
   entities:
-    - group.alarma
     - group.hass_control
+    - group.hass_control_simple
     - group.conectivity
 #    - group.all_automations
     - group.scripts
@@ -407,16 +514,21 @@ default_view:
     - group.family
     - group.master_luces_del_salon
     - group.salon
+    - group.salon_simple
     - group.luces_estudio
     - group.estudio_rpi2h
+    - group.estudio_rpi2h_simple
     - group.luces_dormitorio
     - group.dormitorio_rpi2mpd
+    - group.dormitorio_rpi2mpd_simple
+    - group.cocina
+    - group.cocina_simple
     - group.galeria
     - group.caldera
+    - group.caldera_simple
     - group.camaras
 #    - group.luces_salon
-    - group.enchufes
     - media_player.kodi
     - group.tiempo_en_villena
+    - group.tiempo_en_villena_simple
     - media_player.dormitorio_mopidy
-    - group.esp8266

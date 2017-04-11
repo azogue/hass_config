@@ -16,15 +16,21 @@
     - humidity
 
 - platform: mqtt
-  state_topic: "sensor/hum_a020a605b007"
+  state_topic: !secret mqtt_topic_esp1_hum
   name: 'esp1_Humidity'
   unit_of_measurement: '%'
   expire_after: 600
 
 - platform: mqtt
-  state_topic: "sensor/temp_a020a605b007"
+  state_topic: !secret mqtt_topic_esp1_temp
   name: 'esp1_Temperature'
   unit_of_measurement: 'ºC'
+  expire_after: 600
+
+- platform: mqtt
+  state_topic: !secret mqtt_topic_esp1_light_analog
+  name: 'esp1_Light'
+  unit_of_measurement: '%'
   expire_after: 600
 
 - platform: mqtt
@@ -64,28 +70,28 @@
       friendly_name: Humedad SenseHat
       unit_of_measurement: '%'
     pressure_rpi2h:
-      friendly_name: Presión SenseHat
+      friendly_name: Presión
       unit_of_measurement: 'mb'
     temperature_rpi2h:
       friendly_name: Temperatura SenseHat
       unit_of_measurement: '°C'
     temperatura_estudio_rpi2h:
-      friendly_name: Temperatura estudio
+      friendly_name: Temperatura (DS)
       unit_of_measurement: '°C'
     dht22_temperature_rpi2h:
-      friendly_name: Temperatura estudio dht
+      friendly_name: Temperatura (DHT)
       unit_of_measurement: '°C'
     dht22_humidity_rpi2h:
-      friendly_name: Humedad estudio dht
+      friendly_name: Humedad
       unit_of_measurement: '%'
     temperatura_dormitorio_rpi2mpd:
-      friendly_name: Temperatura Dormitorio
+      friendly_name: Temperatura (DS)
       unit_of_measurement: '°C'
     dht22_dormitorio_temperature_rpi2mpd:
-      friendly_name: Temperatura Dormitorio (dht22)
+      friendly_name: Temperatura (DHT)
       unit_of_measurement: '°C'
     dht22_dormitorio_humidity_rpi2mpd:
-      friendly_name: Humedad Dormitorio
+      friendly_name: Humedad
       unit_of_measurement: '%'
 
 # Weather sensors:

@@ -1,24 +1,24 @@
 # SENSORS
 sensor.temperatura_dormitorio:
-  friendly_name: Temperatura
-  homebridge_name: Temperatura Dormitorio
-
+  friendly_name: Temperatura (DS)
+  icon: mdi:thermometer
 sensor.dht22_dormitorio_temperature:
-  friendly_name: Temperatura Dormitorio (dht22)
+  friendly_name: Temperatura (DHT)
+  icon: mdi:thermometer
 sensor.dht22_dormitorio_humidity:
-  friendly_name: Humedad Dormitorio
+  friendly_name: Humedad
   icon: mdi:water-percent
 
 binary_sensor.pir_dormitorio:
-  friendly_name: Movimiento en Dormitorio
+  friendly_name: Movimiento (dormitorio)
   device_class: motion
   homebridge_hidden: true
 binary_sensor.vibration_sensor_raw:
-  friendly_name: Vibración en Dormitorio
+  friendly_name: Vibración (dormitorio)
   device_class: vibration
   homebridge_hidden: true
 binary_sensor.sound_sensor_raw:
-  friendly_name: Sonido en Dormitorio
+  friendly_name: Sonido (dormitorio)
   device_class: sound
   homebridge_hidden: true
 

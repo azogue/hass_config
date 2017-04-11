@@ -11,7 +11,7 @@ media_player.kodi:
 ####################################################################################
 # Despertador
 input_boolean.alarm_clock_status:
-  hidden: true
+  homebridge_hidden: true
 switch.alarm_clock_status:
   homebridge_name: Despertador LaCafetera
   icon: mdi:toggle-switch
@@ -35,7 +35,8 @@ input_boolean.manual_trigger_lacafetera:
   icon: mdi:play-circle
 
 input_boolean.switch_master_alarm:
-  hidden: true
+  homebridge_hidden: true
+#  hidden: true
 switch.switch_master_alarm:
   homebridge_name: Alarma general
 #  icon: mdi:shield-half-full
@@ -154,6 +155,11 @@ switch.systemd_appdaemon:
 switch.systemd_homebridge:
   homebridge_hidden: true
   icon: mdi:settings
+
+switch.show_expert_mode:
+  friendly_name: Modo experto
+  icon: mdi:glasses
+
 ####################################################################################
 #                                SENSORS                                           #
 ####################################################################################
@@ -169,22 +175,6 @@ sensor.enerpi_ldr:
 camera.enerpi_ldr:
   friendly_name: Hall illuminance (24h)
 
-sensor.enerpi_2x_power_1:
-  icon: mdi:flash
-  friendly_name: Main power RPI2
-camera.enerpi_2x_power_1:
-  friendly_name: Main power RPI2 (24h)
-sensor.enerpi_2x_power_2:
-  icon: mdi:power-plug
-  friendly_name: Kitchen appliances
-camera.enerpi_2x_power_2:
-  friendly_name: Kitchen appliances (24h)
-sensor.enerpi_2x_ldr:
-  icon: mdi:lightbulb-outline
-  friendly_name: Hall illuminance 2
-camera.enerpi_2x_ldr:
-  friendly_name: Hall illuminance 2 (24h)
-
 # Speedtest sensors
 sensor.speedtest_ping:
   icon: mdi:speedometer
@@ -198,17 +188,20 @@ sensor.speedtest_upload:
 
 # Local sensors
 sensor.T_salon:
-  friendly_name: Temp. salón
-  homebridge_name: Temperatura (2)
+  friendly_name: Temperatura (DS)
+  homebridge_hidden: True
+#  homebridge_name: Temperatura (DS)
 sensor.salon_temperature:
-  friendly_name: Temp. salón (1)
-  homebridge_name: Temperatura (dht)
+  friendly_name: Temperatura (DHT)
+  homebridge_hidden: True
+#  homebridge_name: Temperatura (DHT)
 sensor.salon_humidity:
   friendly_name: Humedad salón
-  homebridge_name: Humedad interior
+  homebridge_name: Humedad
   icon: mdi:water-percent
+
 binary_sensor.pir_salon:
-  friendly_name: Movimiento en Salón
+  friendly_name: Movimiento (salón)
   device_class: motion
   homebridge_hidden: true
 
@@ -222,19 +215,19 @@ binary_sensor.motioncam_salon:
   homebridge_hidden: true
 
 binary_sensor.pir_dormitorio_rpi2mpd:
-  friendly_name: Movimiento en Dormitorio
+  friendly_name: Movimiento (dormitorio)
   device_class: motion
   homebridge_hidden: true
 binary_sensor.pir_estudio_rpi2h:
-  friendly_name: Movimiento en Estudio
+  friendly_name: Movimiento (estudio)
   device_class: motion
   homebridge_hidden: true
 binary_sensor.vibration_sensor_rpi2h:
-  friendly_name: Vibración en Estudio
+  friendly_name: Vibración (estudio)
   device_class: vibration
   homebridge_hidden: true
 binary_sensor.sound_sensor_rpi2h:
-  friendly_name: Sonido en Estudio
+  friendly_name: Sonido (estudio)
   device_class: sound
   homebridge_hidden: true
 
@@ -323,12 +316,12 @@ sensor.galeria_retorno_calefaccion:
   icon: mdi:temperature-celsius
   friendly_name: Tª del retorno de calefacción
   homebridge_hidden: True
-sensor.galeria_dht22_humidity:
-  friendly_name: Humedad en Galería
-  icon: mdi:water-percent
 sensor.galeria_dht22_temperature:
-  friendly_name: Temperatura en Galería
+  friendly_name: Temperatura
   icon: mdi:thermometer
+sensor.galeria_dht22_humidity:
+  friendly_name: Humedad
+  icon: mdi:water-percent
 sensor.galeria_rpi2_rpi_cpu_temp:
   icon: mdi:raspberrypi
   friendly_name: Tª CPU RPI
@@ -358,20 +351,27 @@ sensor.villena_forecast:
   friendly_name: Previsión
 
 # MQTT sensors:
-sensor.esp1_Humidity:
-  friendly_name: Humedad (esp)
-  homebridge_hidden: true
+sensor.esp1_humidity:
+  friendly_name: Humedad
   icon: mdi:water-percent
-sensor.esp1_Temperature:
-  friendly_name: Temperatura (esp)
-  homebridge_hidden: true
+#  homebridge_hidden: true
+sensor.esp1_temperature:
+  friendly_name: Temperatura
   icon: mdi:thermometer
-sensor.esp1_PIR:
-  friendly_name: Movimiento (esp)
+#  homebridge_hidden: true
+binary_sensor.esp1_pir:
+  friendly_name: Movimiento (cocina)
   homebridge_hidden: true
-sensor.esp1_Vibro:
-  friendly_name: Vibración (esp)
+binary_sensor.esp1_vibro:
+  friendly_name: Vibración (cocina)
   homebridge_hidden: true
+binary_sensor.esp1_light:
+  friendly_name: Luz (cocina)
+  homebridge_hidden: true
+sensor.esp1_light:
+  friendly_name: Iluminación
+  homebridge_hidden: true
+  icon: mdi:lightbulb-on
 
 sensor.bateria_iphone_6s:
   homebridge_hidden: true
@@ -498,39 +498,41 @@ device_tracker.impresora_brother:
   icon: mdi:printer
 device_tracker.jo01:
   icon: mdi:music-note-bluetooth
+device_tracker.esp8266_1:
+  icon: mdi:raspberrypi
 group.ipad:
   icon: mdi:tablet-ipad
 
 
 switch.use_pir_estudio_rpi2h:
   homebridge_hidden: true
-  friendly_name: Usar movimiento en Estudio
+  friendly_name: Usar movimiento en estudio
   icon: mdi:bullseye
 switch.use_pir_salon:
   homebridge_hidden: true
-  friendly_name: Usar movimiento en Salón
+  friendly_name: Usar movimiento en salón
   icon: mdi:bullseye
 switch.use_pir_dormitorio_rpi2mpd:
   homebridge_hidden: true
-  friendly_name: Usar movimiento en Dormitorio
+  friendly_name: Usar movimiento en dormitorio
   icon: mdi:bullseye
 switch.use_sound_sensor_rpi2h:
   homebridge_hidden: true
-  friendly_name: Usar sonido en Estudio
+  friendly_name: Usar sonido en estudio
   icon: mdi:surround-sound
 switch.use_vibration_sensor_rpi2h:
   homebridge_hidden: true
-  friendly_name: Usar vibración en Estudio
+  friendly_name: Usar vibración en estudio
   icon: mdi:vibrate
-
 switch.use_esp1_pir:
   homebridge_hidden: true
-  friendly_name: Usar PIR de ESP1
-  icon: mdi:vibrate
+  friendly_name: Usar movimiento en cocina
+  icon: mdi:bullseye
 switch.use_esp1_vibro:
   homebridge_hidden: true
-  friendly_name: Usar vibración de ESP1
+  friendly_name: Usar vibración en cocina
   icon: mdi:vibrate
+#switch.use_esp1_light:
 
 switch.motioncam_estudio:
   homebridge_hidden: true

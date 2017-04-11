@@ -111,14 +111,15 @@ logger:
   default: warn
   logs:
     netdisco: error
+    homeassistant.setup: error
     homeassistant.bootstrap: info
-    homeassistant.components.automation: info
+#    homeassistant.components.automation: info
     homeassistant.components.camera: error
     homeassistant.components.netdisco: error
     homeassistant.components.script: info
-    homeassistant.components.media_player: info
+#    homeassistant.components.media_player: info
     homeassistant.components.tts: debug
-    custom_components.notify.richsmtp: debug
+    custom_components.notify.richsmtp: info
     custom_components.notify.mytelegram: info
     custom_components.mytelegram_webhooks: info
     # custom_components.sensor.enerweb: info
