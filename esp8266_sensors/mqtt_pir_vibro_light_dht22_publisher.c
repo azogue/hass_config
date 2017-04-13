@@ -6,14 +6,14 @@ que comunica los valores detectados a un servidor MQTT (like `mosquitto`). Útil
 pero con acceso a wifi en integraciones de domótica.
 
 De funcionamiento muy sencillo, se conecta a la wifi local, y de ahí al servidor MQTT, donde publica los valores
-de temperatura, humedad y porcentaje de iluminación cada X segundos
+de temperatura, humedad y porcentaje de iluminación cada X segundos. También escucha para recibir órdenes en JSON.
 (`MQTT_POSTINTERVAL_LIGHT_SEC` & `MQTT_POSTINTERVAL_DHT22_SEC`).
 Los sensores binarios (movimiento, vibración e iluminación) se tratan mediante interrupciones (vs polling)
 y publican estados de 'on'/'off' en cuanto se produce un evento de activación.
 
 Componentes:
   - ESP8266 mcu 1.0 dev kit / ESP32 Dev Kit
-  - DHT22 sensor
+  - DHT22 / DHT11 sensor
   - PIR sensor
   - Vibration sensor
   - Light sensor (with AO + DO)
@@ -66,13 +66,16 @@ necesidad de cambiar el programa para cada uno.
 
   CPU halted.
 ```
+- v1.3: MQTT subscribe at `control/module_MAC`/ `control/out_module_MAC`, JSON payload,
+        set RGB color with `{"color": [100, 0, 255]}`; Auto reboot if no wifi or many dht errors;
+        mqtt error descriptions; some fixes. PINOUT with esp8266_breadboard & dht11.
 
-*
 
 ### Librerías:
 
 - ESP8266WiFi v1.0 || WiFiEsp v2.1.2
 - PubSubClient v2.6
+- ArduinoJson v5.8.4
 - elapsedMillis v1.0.3
 - Adafruit_Unified_Sensor v1.0.2
 - DHT_sensor_library v1.3.0
@@ -89,12 +92,20 @@ necesidad de cambiar el programa para cada uno.
 #define MQTT_PASSWORD                       [REDACTED_MQTT_PASSWD]
 #define MQTT_USERID                         "ESP8266Client"
 
+#define MQTT_WILLTOPIC                      "control/will_"
+#define MQTT_WILLQOS                        0
+#define MQTT_WILLRETAIN                     HIGH
+#define MQTT_WILLMESSAGE                    "{\"state\":\"off\"}"
+
 #define mqtt_temp_topic                     "sensor/temp_"
 #define mqtt_humid_topic                    "sensor/hum_"
 #define mqtt_movement_topic                 "sensor/pir_"
 #define mqtt_vibro_topic                    "sensor/extra_"
 #define mqtt_light_topic                    "sensor/light_"
 #define mqtt_light_analog_topic             "sensor/light_analog_"
+
+#define mqtt_control_topic                  "control/module_"
+#define mqtt_control_topic_out              "control/out_module_"
 
 // WiFi Settings
 #define WiFiSSID                            [REDACTED_WIFI_SSID]
@@ -104,14 +115,14 @@ necesidad de cambiar el programa para cada uno.
 //** PINOUT ************************
 //** comment to deactivate        **
 //**********************************
-#define USE_ESP32
+//#define USE_ESP32
 #define DHTTYPE                               DHT11  // DHT22 (AM2302) / DHT11
 
 #ifdef USE_ESP32
   #define DHTPIN                              17     //IO17
 
-  //#define LED_BLUE_PIR                      X
-  //#define LED_YELLOW_VIBRO                  X
+  //#define LED_PIR                           X
+  //#define LED_VIBRO                         X
   #define LED_RGB_RED                         2      //IO02
   #define LED_RGB_GREEN                       4      //IO04
   #define LED_RGB_BLUE                        16     //IO16
@@ -123,15 +134,15 @@ necesidad de cambiar el programa para cada uno.
 #else  // use esp8266
   #define DHTPIN                              2      //D4 (DHT sensor)
 
-  //#define LED_BLUE_PIR                        14     //D5
-  //#define LED_YELLOW_VIBRO                    0      //D3
+  #define LED_PIR                             4     //D2
+  #define LED_VIBRO                           3      //RX
 
   #define LED_RGB_RED                         12     //D6
   #define LED_RGB_GREEN                       13     //D7
   #define LED_RGB_BLUE                        15     //D8
 
   #define PIN_PIR                             5      //D1
-  #define PIN_VIBRO                           4      //D2
+  #define PIN_VIBRO                           0      //D3
   #define PIN_LIGHT_SENSOR_DIGITAL            14     //D5
   #define PIN_LIGHT_SENSOR_ANALOG             A0     //A0
 #endif
@@ -155,6 +166,7 @@ necesidad de cambiar el programa para cada uno.
 //Settings for recording samples
 #define RESULTS_SAMPLE_RATE                 8            // # seconds between samples
 #define SENSOR_HISTORY_RECORDS              10           // # records to keep
+#define NUM_MAX_ERRORS_DHT                  20           // Abort on max
 
 //**********************************
 //** Librerías *********************
@@ -165,6 +177,7 @@ necesidad de cambiar el programa para cada uno.
   #include <ESP8266WiFi.h>
 #endif
 #include <PubSubClient.h>
+#include <ArduinoJson.h>
 #include <elapsedMillis.h>
 #ifdef DHTPIN
   #include <list>
@@ -176,18 +189,20 @@ necesidad de cambiar el programa para cada uno.
 //**********************************
 //** Variables *********************
 //**********************************
-#ifdef USE_ESP32
-  WiFiEspClient espClient;                       //For the MQTT client
-#else
-  WiFiClient espClient;                       //For the MQTT client
-#endif
-PubSubClient client(espClient);             //MQTT client
-char MAC_char[18];                          //MAC address in ascii
 #define DELAY_MS_BETWEEN_RETRIES            250
+char MAC_char[18];                          //MAC address in ascii
+//Wifi client
+#ifdef USE_ESP32
+  WiFiEspClient wifiClient;
+#else
+  WiFiClient wifiClient;
+#endif
+//MQTT client
+void callback_mqtt_message_received(char* topic, byte* payload, unsigned int length);
+PubSubClient client(MQTT_SERVER, MQTT_PORT, callback_mqtt_message_received, wifiClient);
 
 #ifdef DHTPIN                               // DHT22/DHT11 sensor settings.
 DHT_Unified dht(DHTPIN, DHTTYPE);
-
 // Variables for recording samples of the DHT22 sensor.
 std::list<double> tempSamples;   //Collected results per interval
 std::list<double> humidSamples;  //Collected results per interval
@@ -204,18 +219,18 @@ int error_counter_dht;
 
 int last_dht22_post;            // Init value to wait some time before the 1st publish.
 int last_light_post;            // Init value to wait some time before the 1st publish.
-
 int last_state_change;
 
 // Estados (para el output LED RGB)
 #define STATE_ERROR            1
 #define STATE_WARN             2
-#define STATE_OK_MEASURE       3
-#define STATE_OK_PUBLISH       4
-#define STATE_INIT             5
+#define STATE_BIN_PUBLISH      3
+#define STATE_OK_MEASURE       4
+#define STATE_OK_PUBLISH       5
+#define STATE_INIT             6
 #define STATE_STANDBY          7
 #define STATE_CRITICAL         8
-int current_sensor_state;
+int current_state;
 
 // Binary sensors variables for control them within interrupts
 volatile int last_pir_trigered = 0;
@@ -234,6 +249,59 @@ volatile bool flag_publish_light = LOW;
 //**********************************
 //** SETUP
 //**********************************
+
+bool read_json(byte *payload, unsigned int payload_length)
+{
+  StaticJsonBuffer<500> jsonBuffer;
+  char *json = (char*)payload;
+  JsonObject& root = jsonBuffer.parseObject(json);
+
+  // Test if parsing succeeds.
+  if (!root.success())
+  {
+    Serial.println("parseObject() failed");
+    return false;
+  }
+  else if (root.containsKey("color"))
+  {
+    // Fetch values.
+    uint16_t R, G, B;
+    R = root["color"][0];
+    G = root["color"][1];
+    B = root["color"][2];
+    Serial.print("RGB RECEIVED: (");
+    Serial.print(R);
+    Serial.print(", ");
+    Serial.print(G);
+    Serial.print(", ");
+    Serial.print(B);
+    Serial.println(")");
+    set_color_rgb(4 * R, 4 * G, 4 * B);
+    return client.publish((mqtt_control_topic_out + String(MAC_char)).c_str(), "COLOR SET");
+  }
+//# TODO Implementar ++ mqtt_control_topic: "control/module_"
+//  else if ()
+//  {
+//  }
+  return client.publish((mqtt_control_topic_out + String(MAC_char)).c_str(), payload, payload_length);
+}
+
+void callback_mqtt_message_received(char* topic, byte* payload, unsigned int payload_length)
+{
+  byte *p = (byte*)malloc(payload_length);
+  bool result;
+  memcpy(p, payload, payload_length);
+
+  Serial.println("MQTT MSG ARRIVED:");
+  Serial.print(" --> topic=");
+  Serial.println(topic);
+  Serial.print(" --> payload=");
+  Serial.println((char*)p);
+
+  result = read_json(p, payload_length);
+  free(p);
+}
+
 void setup()
 {
   uint8_t MAC_array[6];
@@ -241,12 +309,9 @@ void setup()
   Serial.begin(9600);
   setup_timers();
   setup_leds();
+//  test_colors_rgb();
   set_state(STATE_INIT);
   connectWiFi();
-#ifdef DHTPIN
-  setup_temp_sensor();
-#endif
-  setup_boolean_sensors();
 
   //Get the mac and convert it to a string.
   WiFi.macAddress(MAC_array);
@@ -255,6 +320,11 @@ void setup()
     sprintf(MAC_char, "%s%02x", MAC_char, MAC_array[i]);
   }
 
+#ifdef DHTPIN
+  setup_temp_sensor();
+#endif
+  setup_boolean_sensors();
+
 #ifdef VERBOSE
   Serial.print("MAC ADRESS: ");
   Serial.println(MAC_char);
@@ -262,14 +332,98 @@ void setup()
   set_state(STATE_CRITICAL);
 }
 
+void test_colors_rgb()
+{
+#ifdef VERBOSE
+#ifdef LED_RGB_RED
+  Serial.println("RGB TEST");
+
+  Serial.println("STATE_INIT: (1023, 1023, 1023)");
+  set_color_rgb(1023, 1023, 1023);
+  delay(1000);
+
+  Serial.println("STATE_ERROR: (1023, 0, 0)");
+  set_color_rgb(1023, 0, 0);
+  delay(1000);
+
+  Serial.println("STATE_WARN: (1023, 512, 0)");
+  set_color_rgb(1023, 512, 0);
+  delay(1000);
+
+  Serial.println("STATE_CRITICAL: (0, 1023, 1023)");
+  set_color_rgb(0, 1023, 1023);
+  delay(1000);
+
+  Serial.println("STATE_OK_MEASURE: (0, 0, 1023)");
+  set_color_rgb(0, 0, 1023);
+  delay(1000);
+
+  Serial.println("STATE_OK_PUBLISH: (0, 1023, 0)");
+  set_color_rgb(0, 1023, 0);
+  delay(1000);
+
+  Serial.println("STATE_other: (512, 512, 0)");
+  set_color_rgb(512, 512, 0);
+  delay(1000);
+
+  Serial.println("STATE_other_2: (0, 1023, 512)");
+  set_color_rgb(0, 1023, 512);
+  delay(1000);
+
+  Serial.println("STATE_other_3: (1023, 0, 1023)");
+  set_color_rgb(1023, 0, 1023);
+  delay(1000);
+
+  Serial.println("STATE_other_4: (1023, 0, 512)");
+  set_color_rgb(1023, 0, 512);
+  delay(1000);
+
+  Serial.println("STATE_STANDBY: (0, 0, 0)");
+  set_color_rgb(0, 0, 0);
+  delay(1000);
+#endif
+#endif
+}
+
+
 //**********************************
 //** LOOP
 //**********************************
+const char *i_text_state_pubsubclient(int state)
+{
+  //Returns the current state of the client. If a connection attempt fails, this can be used to get more information about the failure.
+  switch (state)
+  {
+    case -4:
+      return "MQTT_CONNECTION_TIMEOUT - the server didn't respond within the keepalive time";
+    case -3:
+      return "MQTT_CONNECTION_LOST - the network connection was broken";
+    case -2:
+      return "MQTT_CONNECT_FAILED - the network connection failed";
+    case -1:
+      return "MQTT_DISCONNECTED - the client is disconnected cleanly";
+    case 0:
+      return "MQTT_CONNECTED - the cient is connected";
+    case 1:
+      return "MQTT_CONNECT_BAD_PROTOCOL - the server doesn't support the requested version of MQTT";
+    case 2:
+      return "MQTT_CONNECT_BAD_CLIENT_ID - the server rejected the client identifier";
+    case 3:
+      return "MQTT_CONNECT_UNAVAILABLE - the server was unable to accept the connection";
+    case 4:
+      return "MQTT_CONNECT_BAD_CREDENTIALS - the username/password were rejected";
+    case 5:
+      return "MQTT_CONNECT_UNAUTHORIZED - the client was not authorized to connect";
+  }
+  return "MQTT_STATE ????";
+}
 
 void loop()
 {
   bool sensor_ok = false;
   bool sensed_data = false;
+  bool bin_publish = false;
+  int mqtt_retries = 0;
 
   //Reconnect if disconnected.
   if(WiFi.status() != WL_CONNECTED)
@@ -279,16 +433,28 @@ void loop()
   }
 
   //Check the MQTT connection and process it
-  while (!client.connected())
+  if (!client.connected())
   {
-    set_state(STATE_ERROR);
-    client.connect(MQTT_USERID, MQTT_USER, MQTT_PASSWORD);
-    delay(DELAY_MS_BETWEEN_RETRIES * 2);
+    while (!client.connected())
+    {
+      if (!client.connect(MQTT_USERID, MQTT_USER, MQTT_PASSWORD,
+                          (MQTT_WILLTOPIC + String(MAC_char)).c_str(), MQTT_WILLQOS,
+                          MQTT_WILLRETAIN, MQTT_WILLMESSAGE))
+      {
+        set_state(STATE_ERROR);
+        Serial.print(i_text_state_pubsubclient(client.state()));
+        Serial.print("MQTT retry # ");
+        Serial.println(mqtt_retries);
+        delay(DELAY_MS_BETWEEN_RETRIES);
+      }
+      mqtt_retries += 1;
+    }
+    client.subscribe((mqtt_control_topic + String(MAC_char)).c_str()); // , 1);
   }
   client.loop();
 
   turn_off_motion_sensors_after_delay();
-  publish_motion_and_light_sensors_if_flag_or_delta();
+  bin_publish = publish_motion_and_light_sensors_if_flag_or_delta();
 #ifdef DHTPIN
   sample_dht22_sensor_data(&sensed_data, &sensor_ok);
 #endif
@@ -304,6 +470,10 @@ void loop()
   {
     set_state(STATE_WARN);
   }
+  else if (bin_publish)
+  {
+    set_state(STATE_BIN_PUBLISH);
+  }
   else
   {
     auto_standby();
@@ -317,7 +487,7 @@ void loop()
 void auto_standby()
 {
   if ((sinceStart - last_state_change > PERSISTENT_STATE_MS_UNTIL_STANDBY)
-      && current_sensor_state != STATE_STANDBY && !i_state_critical())
+      && current_state != STATE_STANDBY && !i_state_critical())
   {
     set_state(STATE_STANDBY);
   }
@@ -344,17 +514,18 @@ void turn_off_motion_sensors_after_delay()
 #endif
 }
 
-void publish_motion_and_light_sensors_if_flag_or_delta()
+bool publish_motion_and_light_sensors_if_flag_or_delta()
 {
+  bool any_publish = false;
 #ifdef PIN_PIR
   // Update PIR state:
   if (flag_publish_pir)
   {
-#ifdef LED_BLUE_PIR
-    digitalWrite(LED_BLUE_PIR, pir_state);
+#ifdef LED_PIR
+    digitalWrite(LED_PIR, pir_state);
 #endif
-    flag_publish_pir = !publish_mqtt_binary_sensor("MOVEMENT", "MOVEMENT OFF", pir_state,
-                                                   (mqtt_movement_topic+String(MAC_char)).c_str());
+    flag_publish_pir = !publish_mqtt_binary_sensor("MOVEMENT", "MOVEMENT OFF", pir_state, mqtt_movement_topic);
+    any_publish = !flag_publish_pir;
   }
 #endif
 
@@ -362,11 +533,11 @@ void publish_motion_and_light_sensors_if_flag_or_delta()
   // Update vibro sensor state:
   if (flag_publish_vibro)
   {
-#ifdef LED_YELLOW_VIBRO
-    digitalWrite(LED_YELLOW_VIBRO, vibro_state);
+#ifdef LED_VIBRO
+    digitalWrite(LED_VIBRO, vibro_state);
 #endif
-    flag_publish_vibro = !publish_mqtt_binary_sensor("VIBRATION", "VIBRATION OFF", vibro_state,
-                                                     (mqtt_vibro_topic+String(MAC_char)).c_str());
+    flag_publish_vibro = !publish_mqtt_binary_sensor("VIBRATION", "VIBRATION OFF", vibro_state, mqtt_vibro_topic);
+    any_publish = !flag_publish_vibro || any_publish;
   }
 #endif
 
@@ -382,25 +553,28 @@ void publish_motion_and_light_sensors_if_flag_or_delta()
       if (light_state != last_light_post_state)
       {
         last_light_post_state = light_state;
-        flag_publish_light = !publish_mqtt_binary_sensor("LIGHT", "LIGHT OFF", !light_state,
-                                                         (mqtt_light_topic+String(MAC_char)).c_str());
+        flag_publish_light = !publish_mqtt_binary_sensor("LIGHT", "LIGHT OFF", !light_state, mqtt_light_topic);
+        any_publish = !flag_publish_light || any_publish;
       }
     }
     else
     {
       last_light_post_state = light_state;
-      flag_publish_light = !publish_mqtt_binary_sensor("LIGHT", "LIGHT OFF", !light_state,
-                                                       (mqtt_light_topic+String(MAC_char)).c_str());
+      flag_publish_light = !publish_mqtt_binary_sensor("LIGHT", "LIGHT OFF", !light_state, mqtt_light_topic);
+      any_publish = !flag_publish_light || any_publish;
     }
 
 #ifdef PIN_LIGHT_SENSOR_ANALOG
     light_percentage = read_analog_light_percentage();
-    flag_publish_light = !publish_mqtt_data("LIGHT", (mqtt_light_analog_topic+String(MAC_char)).c_str(),
+    flag_publish_light = !publish_mqtt_data("LIGHT", mqtt_light_analog_topic,
                                             String(light_percentage).c_str(), false);
+    any_publish = !flag_publish_light || any_publish;
 #endif
 
     if (!flag_publish_light)
       last_light_post = sinceStart;
+
+    return any_publish;
   }
 #endif
 }
@@ -416,14 +590,14 @@ bool publish_dht22_sensor_data()
     calc_sensor_stats(&tempSamples, &tempHistory);
     if(tempHistory.size() > 0)
     {
-      publishing = publish_mqtt_data("TEMP", (mqtt_temp_topic+String(MAC_char)).c_str(),
+      publishing = publish_mqtt_data("TEMP", mqtt_temp_topic,
                                      String(tempHistory.front()).c_str(), false);
     }
 
     calc_sensor_stats(&humidSamples, &humidHistory);
     if(humidHistory.size() > 0)
     {
-      publishing = publish_mqtt_data("HUMID", (mqtt_humid_topic+String(MAC_char)).c_str(),
+      publishing = publish_mqtt_data("HUMID", mqtt_humid_topic,
                                      String(humidHistory.front()).c_str(), false);
     }
 
@@ -437,17 +611,17 @@ bool publish_dht22_sensor_data()
   return false;
 }
 
-bool publish_mqtt_data(const char* type_publish, const char* topic, const char* payload, boolean retained)
+bool publish_mqtt_data(const char* type_publish, const char* topic_prefix, const char* payload, boolean retained)
 {
 #ifdef VERBOSE
   Serial.print("PUBLISH ");
   Serial.print(type_publish);
   Serial.print(": topic=");
-  Serial.print(topic);
+  Serial.print((topic_prefix + String(MAC_char)).c_str());
   Serial.print(" -> ");
   Serial.println(payload);
 #endif
-  return client.publish(topic, payload, retained);
+  return client.publish((topic_prefix + String(MAC_char)).c_str(), payload, retained);
 }
 
 bool publish_mqtt_binary_sensor(const char* name_on, const char* name_off,
@@ -478,11 +652,12 @@ void set_color_rgb(uint16_t red, uint16_t green, uint16_t blue)
 
 bool i_state_critical()
 {
-  switch (current_sensor_state)
+  switch (current_state)
   {
     case STATE_INIT:
     case STATE_OK_MEASURE:
     case STATE_OK_PUBLISH:
+    case STATE_BIN_PUBLISH:
     case STATE_STANDBY:
     {
       return false;
@@ -499,11 +674,12 @@ bool i_state_critical()
 
 void set_state(int new_state)
 {
-  current_sensor_state = new_state;
+  bool state_changed = current_state != new_state;
+  current_state = new_state;
   last_state_change = sinceStart;
 
   // Set RGB LED state:
-  switch (current_sensor_state)
+  switch (current_state)
   {
     case STATE_INIT:
     {
@@ -513,7 +689,8 @@ void set_state(int new_state)
     case STATE_ERROR:
     {
 #ifdef VERBOSE
-      Serial.println("ERROR STATE (red)");
+      if (state_changed)
+        Serial.println("ERROR STATE (red)");
 #endif
       set_color_rgb(1023, 0, 0);
       break;
@@ -521,7 +698,8 @@ void set_state(int new_state)
     case STATE_WARN:
     {
 #ifdef VERBOSE
-      Serial.println("WARNING STATE (R+.5G)");
+      if (state_changed)
+        Serial.println("WARNING STATE (R+.5G)");
 #endif
       set_color_rgb(1023, 512, 0);
       break;
@@ -529,9 +707,10 @@ void set_state(int new_state)
     case STATE_CRITICAL:
     {
 #ifdef VERBOSE
-      Serial.println("CRITICAL STATE (violet)");
+      if (state_changed)
+        Serial.println("CRITICAL STATE (violet)");
 #endif
-      set_color_rgb(0, 1023, 1023);
+      set_color_rgb(1023, 0, 1023);
       break;
     }
     case STATE_OK_MEASURE:
@@ -543,6 +722,12 @@ void set_state(int new_state)
     {
 //      Serial.println("OK PUBLISH");
       set_color_rgb(0, 1023, 0);
+      break;
+    }
+    case STATE_BIN_PUBLISH:
+    {
+//      Serial.println("OK PUBLISH");
+      set_color_rgb(0, 255, 512);
       break;
     }
     case STATE_STANDBY:
@@ -624,7 +809,9 @@ void sample_dht22_sensor_data(bool *sampled, bool *sample_ok)
     {
       temp = event.temperature;
 #ifdef VERBOSE
-      Serial.print("Temp: " + String(temp) + " ^C, ");
+      Serial.print("Temp: ");
+      Serial.print(temp);
+      Serial.print(" ^C, ");
 #endif
     }
     // Get humidity event and print its value.
@@ -633,7 +820,9 @@ void sample_dht22_sensor_data(bool *sampled, bool *sample_ok)
     {
       humid = event.relative_humidity;
 #ifdef VERBOSE
-      Serial.println("Humidity: " + String(humid) + " %");
+      Serial.print("Humidity: ");
+      Serial.print(humid);
+      Serial.println(" %");
 #endif
     }
 
@@ -641,13 +830,21 @@ void sample_dht22_sensor_data(bool *sampled, bool *sample_ok)
     {
       sensor_t sensor;
 #ifdef VERBOSE
-      Serial.println("ERROR! " + String(temp) + " / " + String(humid));
+      Serial.print("DHT ERROR # ");
+      Serial.print(error_counter_dht);
+      Serial.print(": ");
+      Serial.print(temp);
+      Serial.print(" / ");
+      Serial.println(humid);
 #endif
       dht.begin();
       dht.temperature().getSensor(&sensor);
       last_sensor_error = sinceStart;
       error_counter_dht += 1;
       *sample_ok = false;
+
+      if (error_counter_dht > NUM_MAX_ERRORS_DHT)
+        reset_exec();
     }
     else
     {
@@ -713,11 +910,11 @@ void setup_timers()
 
 void setup_leds()
 {
-#ifdef LED_BLUE_PIR
-  pinMode(LED_BLUE_PIR, OUTPUT);
+#ifdef LED_PIR
+  pinMode(LED_PIR, OUTPUT);
 #endif
-#ifdef LED_YELLOW_VIBRO
-  pinMode(LED_YELLOW_VIBRO, OUTPUT);
+#ifdef LED_VIBRO
+  pinMode(LED_VIBRO, OUTPUT);
 #endif
 
 #ifdef LED_RGB_RED
@@ -797,36 +994,37 @@ void setup_boolean_sensors()
 
 void connectWiFi()
 {
+  elapsedMillis wifi_try = 0;
+#ifdef USE_ESP32
   //char *pass = (char*) malloc(strlen(WiFiPSK));
   //strcpy(pass, WiFiPSK);
-
-  //WiFi.mode(WIFI_STA);
-  //WiFi.begin(WiFiSSID, pass);
   WiFi.begin((char *)WiFiSSID, (const char *)WiFiPSK);
-
+#else
+  WiFi.mode(WIFI_STA);
+  WiFi.begin(WiFiSSID, WiFiPSK);
+#endif
 
 #ifdef VERBOSE
   Serial.print("Attempting to connect to WPA SSID: ");
   Serial.print(WiFiSSID);
 #endif
 
+  set_state(STATE_CRITICAL);
   while (WiFi.status() != WL_CONNECTED)
   {
-    set_color_rgb(1023, 0, 1023);
-    //Delay until connected.
-    delay(DELAY_MS_BETWEEN_RETRIES);
 #ifdef VERBOSE
     Serial.print (".");
 #endif
+    //Delay until connected.
+    delay(DELAY_MS_BETWEEN_RETRIES);
+    if (wifi_try > 60000)
+      reset_exec();
   }
-  set_color_rgb(0, 1023, 0);
 #ifdef VERBOSE
   Serial.println("You're connected to the network");
   printWifiStatus();
 #endif
 
-  //Connect to the mqtt server
-  client.setServer(MQTT_SERVER, MQTT_PORT);
   set_state(STATE_STANDBY);
 }
 
@@ -851,3 +1049,11 @@ void printWifiStatus()
 #endif
 }
 #endif
+
+void reset_exec()
+{
+  Serial.println("ABORTING ...");
+  set_color_rgb(1023, 200, 200);
+  delay(30000);
+  ESP.restart();
+}
