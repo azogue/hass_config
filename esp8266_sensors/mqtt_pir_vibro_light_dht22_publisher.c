@@ -12,7 +12,7 @@ Los sensores binarios (movimiento, vibración e iluminación) se tratan mediante
 y publican estados de 'on'/'off' en cuanto se produce un evento de activación.
 
 Componentes:
-  - ESP8266 mcu 1.0 dev kit
+  - ESP8266 mcu 1.0 dev kit / ESP32 Dev Kit
   - DHT22 sensor
   - PIR sensor
   - Vibration sensor
@@ -51,6 +51,23 @@ necesidad de cambiar el programa para cada uno.
 - v1.0: PIR+Vibration+Light(AO+DO)+DHT22 sensors publishing values to a local mosquitto server.
 - v1.1: Fixed some errors, Better error handling with DHT22, different publish frecuency for light & DHT22,
         negate digital_light sensor, and some refactoring.
+- v1.2: Added ESP32 support with a compilation flag, Compiles OK but it's NOT WORKING:
+```
+  Guru Meditation Error of type LoadProhibited occurred on core  1. Exception was unhandled.
+  Register dump:
+  PC      : 0x400d1de8  PS      : 0x00060c30  A0      : 0x800d214a  A1      : 0x3ffc7440
+  A2      : 0x3ffc1f98  A3      : 0x000000c8  A4      : 0x3f40156f  A5      : 0x3ffc7560
+  A6      : 0x3ffc7540  A7      : 0x00000008  A8      : 0x800d83c5  A9      : 0x3ffc7390
+  A10     : 0x00000000  A11     : 0x3ffc7486  A12     : 0x00000000  A13     : 0x3f40156f
+  A14     : 0x00000000  A15     : 0x00000000  SAR     : 0x0000001f  EXCCAUSE: 0x0000001c
+  EXCVADDR: 0x00000000  LBEG    : 0x400014fd  LEND    : 0x4000150d  LCOUNT  : 0xfffffffc
+
+  Backtrace: 0x400d1de8:0x3ffc7440 0x400d214a:0x3ffc7460 0x400d21dd:0x3ffc7580 0x400d1745:0x3ffc75a0 0x400d11a2:0x3ffc75c0 0x400d1227:0x3ffc75e0 0x400de7d2:0x3ffc7610
+
+  CPU halted.
+```
+
+*
 
 ### Librerías:
 
@@ -84,31 +101,40 @@ necesidad de cambiar el programa para cada uno.
 #define WiFiPSK                             [REDACTED_WIFI_PASSWORD]
 
 //**********************************
-//** PLATFORM & PINOUT *************
+//** PINOUT ************************
 //** comment to deactivate        **
 //**********************************
 #define USE_ESP32
+#define DHTTYPE                               DHT11  // DHT22 (AM2302) / DHT11
 
-//#define DHTPIN                              2      //D4 (DHT sensor)
+#ifdef USE_ESP32
+  #define DHTPIN                              17     //IO17
 
-//#define LED_BLUE_PIR                        14     //D5
-//#define LED_YELLOW_VIBRO                    0      //D3
+  //#define LED_BLUE_PIR                      X
+  //#define LED_YELLOW_VIBRO                  X
+  #define LED_RGB_RED                         2      //IO02
+  #define LED_RGB_GREEN                       4      //IO04
+  #define LED_RGB_BLUE                        16     //IO16
 
-//#define LED_RGB_RED                         12     //D6
-//#define LED_RGB_GREEN                       13     //D7
-//#define LED_RGB_BLUE                        15     //D8
-#define LED_RGB_RED                         2     //IO02
-#define LED_RGB_GREEN                       4     //IO04
-#define LED_RGB_BLUE                        16    //IO16
+  #define PIN_PIR                             21     //IO21
+  #define PIN_VIBRO                           22     //IO22
+  #define PIN_LIGHT_SENSOR_DIGITAL            34     //IO34
+  #define PIN_LIGHT_SENSOR_ANALOG             35
+#else  // use esp8266
+  #define DHTPIN                              2      //D4 (DHT sensor)
 
-//#define PIN_PIR                             5      //D1
-//#define PIN_VIBRO                           4      //D2
-//#define PIN_LIGHT_SENSOR_DIGITAL            14     //D5
-//#define PIN_LIGHT_SENSOR_ANALOG             A0     //A0
-#define PIN_PIR                             21      //IO21
-#define PIN_VIBRO                           22      //IO22
-//#define PIN_LIGHT_SENSOR_DIGITAL            14     //D5
-//#define PIN_LIGHT_SENSOR_ANALOG             A0     //A0
+  //#define LED_BLUE_PIR                        14     //D5
+  //#define LED_YELLOW_VIBRO                    0      //D3
+
+  #define LED_RGB_RED                         12     //D6
+  #define LED_RGB_GREEN                       13     //D7
+  #define LED_RGB_BLUE                        15     //D8
+
+  #define PIN_PIR                             5      //D1
+  #define PIN_VIBRO                           4      //D2
+  #define PIN_LIGHT_SENSOR_DIGITAL            14     //D5
+  #define PIN_LIGHT_SENSOR_ANALOG             A0     //A0
+#endif
 
 //**********************************
 //** Configuración *****************
@@ -159,9 +185,7 @@ PubSubClient client(espClient);             //MQTT client
 char MAC_char[18];                          //MAC address in ascii
 #define DELAY_MS_BETWEEN_RETRIES            250
 
-#ifdef DHTPIN
-// DHT22 sensor settings.
-#define DHTTYPE DHT22                       // DHT22 (AM2302)
+#ifdef DHTPIN                               // DHT22/DHT11 sensor settings.
 DHT_Unified dht(DHTPIN, DHTTYPE);
 
 // Variables for recording samples of the DHT22 sensor.
@@ -818,10 +842,12 @@ void printWifiStatus()
   Serial.print("IP Address: ");
   Serial.println(ip);
 
-  // print the received signal strength
+#ifndef USE_ESP32
+// print the received signal strength
   long rssi = WiFi.RSSI();
   Serial.print("Signal strength (RSSI):");
   Serial.print(rssi);
   Serial.println(" dBm");
+#endif
 }
 #endif
