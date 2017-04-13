@@ -574,9 +574,10 @@ bool publish_motion_and_light_sensors_if_flag_or_delta()
     if (!flag_publish_light)
       last_light_post = sinceStart;
 
-    return any_publish;
   }
 #endif
+
+  return any_publish;
 }
 
 bool publish_dht22_sensor_data()
