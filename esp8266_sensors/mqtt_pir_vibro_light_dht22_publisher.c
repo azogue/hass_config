@@ -54,24 +54,13 @@ necesidad de cambiar el programa para cada uno.
 
 ### Librerías:
 
-- ESP8266WiFi v1.0
+- ESP8266WiFi v1.0 || WiFiEsp v2.1.2
 - PubSubClient v2.6
 - elapsedMillis v1.0.3
 - Adafruit_Unified_Sensor v1.0.2
 - DHT_sensor_library v1.3.0
 
 */
-
-//**********************************
-//** Librerías *********************
-//**********************************
-#include <ESP8266WiFi.h>
-#include <PubSubClient.h>
-#include <elapsedMillis.h>
-#include <list>
-#include <Adafruit_Sensor.h>  // - Adafruit Unified Sensor Library: https://github.com/adafruit/Adafruit_Sensor
-#include <DHT.h>              // - DHT Sensor Library: https://github.com/adafruit/DHT-sensor-library
-#include <DHT_U.h>
 
 //**********************************
 //** USER SETTINGS *****************
@@ -95,21 +84,31 @@ necesidad de cambiar el programa para cada uno.
 #define WiFiPSK                             [REDACTED_WIFI_PASSWORD]
 
 //**********************************
-//** PINOUT ************************
+//** PLATFORM & PINOUT *************
+//** comment to deactivate        **
 //**********************************
-#define DHTPIN                              2      //D4 (DHT sensor)
+#define USE_ESP32
+
+//#define DHTPIN                              2      //D4 (DHT sensor)
 
 //#define LED_BLUE_PIR                        14     //D5
 //#define LED_YELLOW_VIBRO                    0      //D3
 
-#define LED_RGB_RED                         12     //D6
-#define LED_RGB_GREEN                       13     //D7
-#define LED_RGB_BLUE                        15     //D8
+//#define LED_RGB_RED                         12     //D6
+//#define LED_RGB_GREEN                       13     //D7
+//#define LED_RGB_BLUE                        15     //D8
+#define LED_RGB_RED                         2     //IO02
+#define LED_RGB_GREEN                       4     //IO04
+#define LED_RGB_BLUE                        16    //IO16
 
-#define PIN_PIR                             5      //D1
-#define PIN_VIBRO                           4      //D2
-#define PIN_LIGHT_SENSOR_DIGITAL            14     //D5
-#define PIN_LIGHT_SENSOR_ANALOG             A0     //A0
+//#define PIN_PIR                             5      //D1
+//#define PIN_VIBRO                           4      //D2
+//#define PIN_LIGHT_SENSOR_DIGITAL            14     //D5
+//#define PIN_LIGHT_SENSOR_ANALOG             A0     //A0
+#define PIN_PIR                             21      //IO21
+#define PIN_VIBRO                           22      //IO22
+//#define PIN_LIGHT_SENSOR_DIGITAL            14     //D5
+//#define PIN_LIGHT_SENSOR_ANALOG             A0     //A0
 
 //**********************************
 //** Configuración *****************
@@ -132,13 +131,35 @@ necesidad de cambiar el programa para cada uno.
 #define SENSOR_HISTORY_RECORDS              10           // # records to keep
 
 //**********************************
+//** Librerías *********************
+//**********************************
+#ifdef USE_ESP32
+  #include "WiFiEsp.h"
+#else
+  #include <ESP8266WiFi.h>
+#endif
+#include <PubSubClient.h>
+#include <elapsedMillis.h>
+#ifdef DHTPIN
+  #include <list>
+  #include <Adafruit_Sensor.h>  // - Adafruit Unified Sensor Library: https://github.com/adafruit/Adafruit_Sensor
+  #include <DHT.h>              // - DHT Sensor Library: https://github.com/adafruit/DHT-sensor-library
+  #include <DHT_U.h>
+#endif
+
+//**********************************
 //** Variables *********************
 //**********************************
-WiFiClient espClient;                       //For the MQTT client
+#ifdef USE_ESP32
+  WiFiEspClient espClient;                       //For the MQTT client
+#else
+  WiFiClient espClient;                       //For the MQTT client
+#endif
 PubSubClient client(espClient);             //MQTT client
 char MAC_char[18];                          //MAC address in ascii
 #define DELAY_MS_BETWEEN_RETRIES            250
 
+#ifdef DHTPIN
 // DHT22 sensor settings.
 #define DHTTYPE DHT22                       // DHT22 (AM2302)
 DHT_Unified dht(DHTPIN, DHTTYPE);
@@ -148,6 +169,7 @@ std::list<double> tempSamples;   //Collected results per interval
 std::list<double> humidSamples;  //Collected results per interval
 std::list<double> tempHistory;   //History over time.
 std::list<double> humidHistory;  //History over time.
+#endif
 
 // Contadores de tiempo
 elapsedMillis sinceStart;
@@ -197,7 +219,9 @@ void setup()
   setup_leds();
   set_state(STATE_INIT);
   connectWiFi();
+#ifdef DHTPIN
   setup_temp_sensor();
+#endif
   setup_boolean_sensors();
 
   //Get the mac and convert it to a string.
@@ -241,7 +265,9 @@ void loop()
 
   turn_off_motion_sensors_after_delay();
   publish_motion_and_light_sensors_if_flag_or_delta();
+#ifdef DHTPIN
   sample_dht22_sensor_data(&sensed_data, &sensor_ok);
+#endif
   if (publish_dht22_sensor_data())
   {
     set_state(STATE_OK_PUBLISH);
@@ -275,23 +301,28 @@ void auto_standby()
 
 void turn_off_motion_sensors_after_delay()
 {
+#ifdef PIN_PIR
   // PIR binary sensor to off after a delay:
   if (pir_state && (sinceStart - last_pir_trigered > DELTA_MS_TO_TURN_OFF_MOVS))
   {
     pir_state = LOW;
     flag_publish_pir = HIGH;
   }
+#endif
 
+#ifdef PIN_VIBRO
   // Vibration binary sensor to off after a delay:
   if (vibro_state && (sinceStart - last_vibro_trigered > DELTA_MS_TO_TURN_OFF_VIBRO))
   {
     vibro_state = LOW;
     flag_publish_vibro = HIGH;
   }
+#endif
 }
 
 void publish_motion_and_light_sensors_if_flag_or_delta()
 {
+#ifdef PIN_PIR
   // Update PIR state:
   if (flag_publish_pir)
   {
@@ -301,7 +332,9 @@ void publish_motion_and_light_sensors_if_flag_or_delta()
     flag_publish_pir = !publish_mqtt_binary_sensor("MOVEMENT", "MOVEMENT OFF", pir_state,
                                                    (mqtt_movement_topic+String(MAC_char)).c_str());
   }
+#endif
 
+#ifdef PIN_VIBRO
   // Update vibro sensor state:
   if (flag_publish_vibro)
   {
@@ -311,7 +344,9 @@ void publish_motion_and_light_sensors_if_flag_or_delta()
     flag_publish_vibro = !publish_mqtt_binary_sensor("VIBRATION", "VIBRATION OFF", vibro_state,
                                                      (mqtt_vibro_topic+String(MAC_char)).c_str());
   }
+#endif
 
+#ifdef PIN_LIGHT_SENSOR_DIGITAL
   // Update LIGHT state:
   if (flag_publish_light || (sinceStart - last_light_post > MQTT_POSTINTERVAL_LIGHT_SEC * 1000))
   {
@@ -334,17 +369,21 @@ void publish_motion_and_light_sensors_if_flag_or_delta()
                                                        (mqtt_light_topic+String(MAC_char)).c_str());
     }
 
+#ifdef PIN_LIGHT_SENSOR_ANALOG
     light_percentage = read_analog_light_percentage();
     flag_publish_light = !publish_mqtt_data("LIGHT", (mqtt_light_analog_topic+String(MAC_char)).c_str(),
                                             String(light_percentage).c_str(), false);
+#endif
 
     if (!flag_publish_light)
       last_light_post = sinceStart;
   }
+#endif
 }
 
 bool publish_dht22_sensor_data()
 {
+#ifdef DHTPIN
   //post MQTT DHT22 data every X seconds
   if ((error_counter_dht == 0) && (sinceStart - last_dht22_post > MQTT_POSTINTERVAL_DHT22_SEC * 1000))
   {
@@ -369,6 +408,7 @@ bool publish_dht22_sensor_data()
 
     return publishing;
   }
+#endif
 
   return false;
 }
@@ -395,12 +435,21 @@ bool publish_mqtt_binary_sensor(const char* name_on, const char* name_off,
     return publish_mqtt_data(name_off, topic, "off", false);
 }
 
-
 void set_color_rgb(uint16_t red, uint16_t green, uint16_t blue)
 {
+#ifdef LED_RGB_RED
+#ifdef USE_ESP32
+  // hueToRGB(color, brightness);  // call function to convert hue to RGB
+  // write the RGB values to the pins
+  ledcWrite(1, (uint32_t)(red / 4)); // write red component to channel 1, etc.
+  ledcWrite(2, (uint32_t)(green / 4));
+  ledcWrite(3, (uint32_t)(blue / 4));
+#else
   analogWrite(LED_RGB_RED, red);
   analogWrite(LED_RGB_GREEN, green);
   analogWrite(LED_RGB_BLUE, blue);
+#endif
+#endif
 }
 
 bool i_state_critical()
@@ -439,19 +488,25 @@ void set_state(int new_state)
     }
     case STATE_ERROR:
     {
-      Serial.println("ERROR R");
+#ifdef VERBOSE
+      Serial.println("ERROR STATE (red)");
+#endif
       set_color_rgb(1023, 0, 0);
       break;
     }
     case STATE_WARN:
     {
-      Serial.println("WARN R+.5G");
+#ifdef VERBOSE
+      Serial.println("WARNING STATE (R+.5G)");
+#endif
       set_color_rgb(1023, 512, 0);
       break;
     }
     case STATE_CRITICAL:
     {
-      Serial.println("CRITICAL G+B");
+#ifdef VERBOSE
+      Serial.println("CRITICAL STATE (violet)");
+#endif
       set_color_rgb(0, 1023, 1023);
       break;
     }
@@ -466,12 +521,6 @@ void set_state(int new_state)
       set_color_rgb(0, 1023, 0);
       break;
     }
-//    case STATE_WEBACCESS:
-//    {
-//      Serial.println("WEB .5R,.5G");
-//      set_color_rgb(512, 512, 0);
-//      break;
-//    }
     case STATE_STANDBY:
     {
       set_color_rgb(0, 0, 0);
@@ -500,6 +549,7 @@ void isr_vibro_change()
   last_vibro_trigered = sinceStart;
 }
 
+#ifdef PIN_LIGHT_SENSOR_DIGITAL
 void isr_light_sensor_change()
 {
   if (sinceStart - last_light_trigered > DELAY_MIN_MS_ENTRE_LIGHT_SENSOR)
@@ -513,7 +563,9 @@ void isr_light_sensor_change()
   }
   last_light_trigered = sinceStart;
 }
+#endif
 
+#ifdef PIN_LIGHT_SENSOR_ANALOG
 float read_analog_light_percentage()
 {
   float light_percentage;
@@ -526,9 +578,14 @@ float read_analog_light_percentage()
 //#endif
   return light_percentage;
 }
+#endif
 
 void sample_dht22_sensor_data(bool *sampled, bool *sample_ok)
 {
+  *sampled = false;
+  *sample_ok = false;
+
+#ifdef DHTPIN
   // Collect the DHT22 sensor data
   if(sinceStart - last_dht_sensed > RESULTS_SAMPLE_RATE * 1000)
   {
@@ -584,36 +641,16 @@ void sample_dht22_sensor_data(bool *sampled, bool *sample_ok)
 
     last_dht_sensed = sinceStart;
   }
-  else
-  {
-    *sampled = false;
-    *sample_ok = false;
-  }
+#endif
 }
 
+#ifdef DHTPIN
 void calc_sensor_stats(std::list<double> *samples, std::list<double> *history)
 {
   int count = 0;
   double tempsum = 0;
   double tempaverage;
 
-//  if(samples.size() > 0)
-//  {
-//    for(std::list<double>::iterator sensiter = samples.begin(); sensiter != samples.end(); sensiter++)
-//    {
-//      count++;
-//      tempsum += *sensiter;
-//    }
-//    tempaverage = tempsum / count;
-//
-//    //Add the new data to the history.
-//    history.push_front(tempaverage);
-//    if(history.size() > SENSOR_HISTORY_RECORDS)
-//    {
-//      history.pop_back();
-//    }
-//  }
-//  samples.clear();
   if(samples->size() > 0)
   {
     for(std::list<double>::iterator sensiter = samples->begin(); sensiter != samples->end(); sensiter++)
@@ -632,6 +669,7 @@ void calc_sensor_stats(std::list<double> *samples, std::list<double> *history)
   }
   samples->clear();
 }
+#endif
 
 //**********************************
 //** Setup methods
@@ -657,11 +695,27 @@ void setup_leds()
 #ifdef LED_YELLOW_VIBRO
   pinMode(LED_YELLOW_VIBRO, OUTPUT);
 #endif
-  pinMode(LED_RGB_BLUE, OUTPUT);
-  pinMode(LED_RGB_GREEN, OUTPUT);
+
+#ifdef LED_RGB_RED
+#ifdef USE_ESP32
+  ledcAttachPin(LED_RGB_RED, 1); // assign RGB led pins to channels
+  ledcAttachPin(LED_RGB_GREEN, 2);
+  ledcAttachPin(LED_RGB_BLUE, 3);
+  // Initialize channels
+  // channels 0-15, resolution 1-16 bits, freq limits depend on resolution
+  // ledcSetup(uint8_t channel, uint32_t freq, uint8_t resolution_bits);
+  ledcSetup(1, 12000, 8); // 12 kHz PWM, 8-bit resolution
+  ledcSetup(2, 12000, 8);
+  ledcSetup(3, 12000, 8);
+#else
   pinMode(LED_RGB_RED, OUTPUT);
+  pinMode(LED_RGB_GREEN, OUTPUT);
+  pinMode(LED_RGB_BLUE, OUTPUT);
+#endif
+#endif
 }
 
+#ifdef DHTPIN
 void setup_temp_sensor()
 {
   dht.begin();
@@ -693,25 +747,39 @@ void setup_temp_sensor()
   Serial.println("------------------------------------");
 #endif
 }
+#endif
 
 void setup_boolean_sensors()
 {
+#ifdef PIN_PIR
   pinMode(PIN_PIR, INPUT);
   attachInterrupt(digitalPinToInterrupt(PIN_PIR), isr_pir_change, CHANGE);
+#endif
 
+#ifdef PIN_VIBRO
   pinMode(PIN_VIBRO, INPUT);
   attachInterrupt(digitalPinToInterrupt(PIN_VIBRO), isr_vibro_change, CHANGE);
+#endif
 
+#ifdef PIN_LIGHT_SENSOR_DIGITAL
   pinMode(PIN_LIGHT_SENSOR_DIGITAL, INPUT);
   attachInterrupt(digitalPinToInterrupt(PIN_LIGHT_SENSOR_DIGITAL), isr_light_sensor_change, CHANGE);
+#endif
 
+#ifdef PIN_LIGHT_SENSOR_ANALOG
   pinMode(PIN_LIGHT_SENSOR_ANALOG, INPUT);
+#endif
 }
 
 void connectWiFi()
 {
-  WiFi.mode(WIFI_STA);
-  WiFi.begin(WiFiSSID, WiFiPSK);
+  //char *pass = (char*) malloc(strlen(WiFiPSK));
+  //strcpy(pass, WiFiPSK);
+
+  //WiFi.mode(WIFI_STA);
+  //WiFi.begin(WiFiSSID, pass);
+  WiFi.begin((char *)WiFiSSID, (const char *)WiFiPSK);
+
 
 #ifdef VERBOSE
   Serial.print("Attempting to connect to WPA SSID: ");
