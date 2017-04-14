@@ -116,7 +116,8 @@ necesidad de cambiar el programa para cada uno.
 //** comment to deactivate        **
 //**********************************
 //#define USE_ESP32
-#define DHTTYPE                               DHT11  // DHT22 (AM2302) / DHT11
+//#define DHTTYPE                               DHT11  // DHT22 (AM2302) / DHT11
+#define DHTTYPE                               DHT22  // DHT22 (AM2302) / DHT11
 
 #ifdef USE_ESP32
   #define DHTPIN                              17     //IO17
@@ -133,16 +134,14 @@ necesidad de cambiar el programa para cada uno.
   #define PIN_LIGHT_SENSOR_ANALOG             35
 #else  // use esp8266
   #define DHTPIN                              2      //D4 (DHT sensor)
-
-  #define LED_PIR                             4     //D2
-  #define LED_VIBRO                           3      //RX
-
+//  #define LED_PIR                             4     //D2 - in dht11 breadboard
+//  #define LED_VIBRO                           3      //RX - in dht11 breadboard
   #define LED_RGB_RED                         12     //D6
   #define LED_RGB_GREEN                       13     //D7
   #define LED_RGB_BLUE                        15     //D8
-
   #define PIN_PIR                             5      //D1
-  #define PIN_VIBRO                           0      //D3
+//  #define PIN_VIBRO                           0      //D3 - dht11 breadboard
+  #define PIN_VIBRO                           4      //D2 - dht22 box
   #define PIN_LIGHT_SENSOR_DIGITAL            14     //D5
   #define PIN_LIGHT_SENSOR_ANALOG             A0     //A0
 #endif
