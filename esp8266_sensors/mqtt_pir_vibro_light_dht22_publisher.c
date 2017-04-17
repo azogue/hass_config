@@ -87,7 +87,6 @@ necesidad de cambiar el programa para cada uno.
 - DHT_sensor_library v1.3.0
 - Adafruit_BME280_Library v1.0.5
 */
-// TODO error handling of nan values!!
 //**********************************
 //** USER SETTINGS *****************
 //**********************************
@@ -98,6 +97,7 @@ necesidad de cambiar el programa para cada uno.
 #define MQTT_PASSWORD                       [REDACTED_MQTT_PASSWD]
 #define MQTT_USERID                         "ESP8266Client"
 
+// MQTT topics
 #define mqtt_temp_topic                     "sensor/temp_"
 #define mqtt_humid_topic                    "sensor/hum_"
 #define mqtt_pressure_topic                 "sensor/pres_"
@@ -107,7 +107,7 @@ necesidad de cambiar el programa para cada uno.
 #define mqtt_light_analog_topic             "sensor/light_analog_"
 
 #define MQTT_WILLTOPIC                      "control/online_"
-#define MQTT_WILLQOS                        0
+#define MQTT_WILLQOS                        2
 #define MQTT_WILLRETAIN                     HIGH
 #define MQTT_STATE_OFF                      "off"
 #define MQTT_STATE_ON                       "on"
@@ -117,8 +117,6 @@ necesidad de cambiar el programa para cada uno.
 #define mqtt_switch_leds_subtopic           "/switch_leds"
 #define mqtt_subtopic_set                   "/set"
 
-#define mqtt_control_topic_out              "control/out_module_"
-
 // WiFi Settings
 #define WiFiSSID                            [REDACTED_WIFI_SSID]
 #define WiFiPSK                             [REDACTED_WIFI_PASSWORD]
@@ -127,15 +125,14 @@ necesidad de cambiar el programa para cada uno.
 //** PINOUT ************************
 //** comment to deactivate        **
 //**********************************
+// Master switches:
+#define ESP_TEST1
+//#define ESP_COCINA
 //#define USE_ESP32
-//#define DHTTYPE                               DHT11  // DHT22 (AM2302) / DHT11
-//#define DHTTYPE                               DHT22  // DHT22 (AM2302) / DHT11
 
 #ifdef USE_ESP32
+  #define DHTTYPE                             DHT11  // DHT22 (AM2302) / DHT11
   #define DHTPIN                              17     //IO17
-
-  //#define LED_PIR                           X
-  //#define LED_VIBRO                         X
   #define LED_RGB_RED                         2      //IO02
   #define LED_RGB_GREEN                       4      //IO04
   #define LED_RGB_BLUE                        16     //IO16
@@ -144,23 +141,36 @@ necesidad de cambiar el programa para cada uno.
   #define PIN_VIBRO                           22     //IO22
   #define PIN_LIGHT_SENSOR_DIGITAL            34     //IO34
   #define PIN_LIGHT_SENSOR_ANALOG             35
-#else  // use esp8266
-//  #define DHTPIN                              2      //D4 (DHT sensor)
-//  #define LED_PIR                             4     //D2 - in dht11 breadboard
+#endif
+
+#ifdef ESP_TEST1
   #define LED_PIR                             16     //D0
   #define LED_VIBRO                           3      //RX - in dht11 breadboard
   #define LED_RGB_RED                         12     //D6
   #define LED_RGB_GREEN                       13     //D7
   #define LED_RGB_BLUE                        15     //D8
-//  #define PIN_PIR                             5      //D1
   #define PIN_PIR                             2      //D4
   #define PIN_VIBRO                           0      //D3 - dht11 breadboard
-//  #define PIN_VIBRO                           4      //D2 - dht22 box
   #define PIN_LIGHT_SENSOR_DIGITAL            14     //D5
   #define PIN_LIGHT_SENSOR_ANALOG             A0     //A0
 
   #define PIN_I2C_BME280_SDA                  4     //D2
   #define PIN_I2C_BME280_SCL                  5     //D1
+#endif
+
+#ifdef ESP_COCINA
+  #define DHTTYPE                             DHT22  // DHT22 (AM2302) / DHT11
+  #define DHTPIN                              2      //D4 (DHT sensor)
+//  #define LED_PIR                             4     //D2 - in dht11 breadboard
+  #define LED_RGB_RED                         12     //D6
+  #define LED_RGB_GREEN                       13     //D7
+  #define LED_RGB_BLUE                        15     //D8
+  #define PIN_PIR                             4      //D2 - dht22 box
+//  #define PIN_PIR                             5      //D1
+//  #define PIN_VIBRO                           4      //D2 - dht22 box
+//  #define PIN_VIBRO                           0      //D3 - dht11 breadboard
+  #define PIN_LIGHT_SENSOR_DIGITAL            14     //D5
+  #define PIN_LIGHT_SENSOR_ANALOG             A0     //A0
 #endif
 
 //**********************************
@@ -194,7 +204,7 @@ necesidad de cambiar el programa para cada uno.
   #include <ESP8266WiFi.h>
 #endif
 #include <PubSubClient.h>
-#include <ArduinoJson.h>
+//#include <ArduinoJson.h>
 #include <elapsedMillis.h>
 #include <list>
 #ifdef DHTPIN
@@ -212,6 +222,7 @@ necesidad de cambiar el programa para cada uno.
 //** Variables *********************
 //**********************************
 #define DELAY_MS_BETWEEN_RETRIES            250
+#define DELAY_MS_BETWEEN_MQTT_PUB_STATE     35000
 
 char MAC_char[18];                          //MAC address in ascii
 //Wifi client
@@ -226,7 +237,9 @@ PubSubClient client(MQTT_SERVER, MQTT_PORT, callback_mqtt_message_received, wifi
 
 // Control switches:
 bool use_leds = HIGH;
+bool in_default_state_use_leds = HIGH;
 bool use_binary_sensors = HIGH;
+bool in_default_state_binary_sensors = HIGH;
 
 #ifdef DHTPIN                               // DHT22/DHT11 sensor settings.
 DHT_Unified dht(DHTPIN, DHTTYPE);
@@ -256,10 +269,14 @@ int last_dht_sensed;         //The last time a sample was taken from the DHT22 s
 int last_bme_sensed;         //The last time a sample was taken from the BME280 sensor.
 int error_counter_dht;
 
-int last_dht22_post;            // Init value to wait some time before the 1st publish.
-int last_bme280_post;            // Init value to wait some time before the 1st publish.
-int last_light_post;            // Init value to wait some time before the 1st publish.
-int last_state_change;
+// Last OK message for each sensor/topic:
+int last_temp_post;
+int last_humid_post;
+int last_pressure_post;
+int last_light_analog_post;
+
+int last_switch_bin_state_post;
+int last_switch_leds_state_post;
 
 // Estados (para el output LED RGB)
 #define STATE_ERROR            1
@@ -271,6 +288,7 @@ int last_state_change;
 #define STATE_STANDBY          7
 #define STATE_CRITICAL         8
 int current_state;
+int last_state_change;
 
 // Binary sensors variables for control them within interrupts
 volatile int last_pir_trigered = 0;
@@ -324,35 +342,6 @@ void setup()
 //**********************************
 //** LOOP
 //**********************************
-const char *i_text_state_pubsubclient(int state)
-{
-  //Returns the current state of the client. If a connection attempt fails, this can be used to get more information about the failure.
-  switch (state)
-  {
-    case -4:
-      return "MQTT_CONNECTION_TIMEOUT - the server didn't respond within the keepalive time";
-    case -3:
-      return "MQTT_CONNECTION_LOST - the network connection was broken";
-    case -2:
-      return "MQTT_CONNECT_FAILED - the network connection failed";
-    case -1:
-      return "MQTT_DISCONNECTED - the client is disconnected cleanly";
-    case 0:
-      return "MQTT_CONNECTED - the cient is connected";
-    case 1:
-      return "MQTT_CONNECT_BAD_PROTOCOL - the server doesn't support the requested version of MQTT";
-    case 2:
-      return "MQTT_CONNECT_BAD_CLIENT_ID - the server rejected the client identifier";
-    case 3:
-      return "MQTT_CONNECT_UNAVAILABLE - the server was unable to accept the connection";
-    case 4:
-      return "MQTT_CONNECT_BAD_CREDENTIALS - the username/password were rejected";
-    case 5:
-      return "MQTT_CONNECT_UNAUTHORIZED - the client was not authorized to connect";
-  }
-  return "MQTT_STATE ????";
-}
-
 void loop()
 {
   bool sensor_ok = false;
@@ -377,33 +366,33 @@ void loop()
                           MQTT_WILLRETAIN, MQTT_STATE_OFF))
       {
         set_state(STATE_ERROR);
-        Serial.print(i_text_state_pubsubclient(client.state()));
-        Serial.print("MQTT retry # ");
-        Serial.println(mqtt_retries);
+        if (VERBOSE)
+        {
+          Serial.print(i_text_state_pubsubclient(client.state()));
+          Serial.print("MQTT retry # ");
+          Serial.println(mqtt_retries);
+        }
         delay(DELAY_MS_BETWEEN_RETRIES);
       }
       mqtt_retries += 1;
     }
-    client.publish((MQTT_WILLTOPIC + String(MAC_char)).c_str(), MQTT_STATE_ON, MQTT_WILLRETAIN);
-    client.publish((mqtt_control_topic + String(MAC_char) + mqtt_switch_bin_sensors_subtopic).c_str(),
-                   use_binary_sensors ? MQTT_STATE_ON : MQTT_STATE_OFF, HIGH);
-    client.subscribe((mqtt_control_topic + String(MAC_char) + mqtt_switch_bin_sensors_subtopic + mqtt_subtopic_set).c_str()); // , 1);
-
-    client.publish((mqtt_control_topic + String(MAC_char) + mqtt_switch_leds_subtopic).c_str(),
-                   use_leds ? MQTT_STATE_ON : MQTT_STATE_OFF, HIGH);
-    client.subscribe((mqtt_control_topic + String(MAC_char) + mqtt_switch_leds_subtopic + mqtt_subtopic_set).c_str()); // , 1);
+    client.subscribe((mqtt_control_topic + String(MAC_char) + mqtt_switch_bin_sensors_subtopic + mqtt_subtopic_set).c_str());
+    client.subscribe((mqtt_control_topic + String(MAC_char) + mqtt_switch_leds_subtopic + mqtt_subtopic_set).c_str());
+    client.subscribe((MQTT_WILLTOPIC + String(MAC_char)).c_str());
+    publish_switch_states();
   }
   client.loop();
 
   turn_off_motion_sensors_after_delay();
-  bin_publish = publish_motion_and_light_sensors_if_flag_or_delta();
+  bin_publish = publish_binary_sensors_if_flag_or_delta();
 #ifdef DHTPIN
   sample_dht22_sensor_data(&sensed_data, &sensor_ok);
 #endif
 #ifdef PIN_I2C_BME280_SDA
   sample_bme280_sensor_data(&sensed_data, &sensor_ok);
 #endif
-  if (publish_dht22_sensor_data() || publish_bme280_sensor_data())
+
+  if (publish_analog_light_at_delta() || publish_dht22_sensor_data() || publish_bme280_sensor_data())
   {
     set_state(STATE_OK_PUBLISH);
   }
@@ -428,6 +417,34 @@ void loop()
 //**********************************
 //** METHODS
 //**********************************
+const char *i_text_state_pubsubclient(int state)
+{
+  //Returns the current state of the client. If a connection attempt fails, this can be used to get more information about the failure.
+  switch (state)
+  {
+    case -4:
+      return "MQTT_CONNECTION_TIMEOUT - the server did not respond within the keepalive time";
+    case -3:
+      return "MQTT_CONNECTION_LOST - the network connection was broken";
+    case -2:
+      return "MQTT_CONNECT_FAILED - the network connection failed";
+    case -1:
+      return "MQTT_DISCONNECTED - the client is disconnected cleanly";
+    case 0:
+      return "MQTT_CONNECTED - the cient is connected";
+    case 1:
+      return "MQTT_CONNECT_BAD_PROTOCOL - the server does not support the requested version of MQTT";
+    case 2:
+      return "MQTT_CONNECT_BAD_CLIENT_ID - the server rejected the client identifier";
+    case 3:
+      return "MQTT_CONNECT_UNAVAILABLE - the server was unable to accept the connection";
+    case 4:
+      return "MQTT_CONNECT_BAD_CREDENTIALS - the username/password were rejected";
+    case 5:
+      return "MQTT_CONNECT_UNAUTHORIZED - the client was not authorized to connect";
+  }
+  return "MQTT_STATE ????";
+}
 
 void auto_standby()
 {
@@ -457,158 +474,6 @@ void turn_off_motion_sensors_after_delay()
     flag_publish_vibro = HIGH;
   }
 #endif
-}
-
-bool publish_motion_and_light_sensors_if_flag_or_delta()
-{
-  bool any_publish = false;
-#ifdef PIN_PIR
-  // Update PIR state:
-  if (flag_publish_pir)
-  {
-#ifdef LED_PIR
-    if (use_leds)
-      digitalWrite(LED_PIR, pir_state);
-#endif
-    flag_publish_pir = !publish_mqtt_binary_sensor("MOVEMENT", "MOVEMENT OFF", pir_state, mqtt_movement_topic);
-    any_publish = !flag_publish_pir;
-  }
-#endif
-
-#ifdef PIN_VIBRO
-  // Update vibro sensor state:
-  if (flag_publish_vibro)
-  {
-#ifdef LED_VIBRO
-    if (use_leds)
-      digitalWrite(LED_VIBRO, vibro_state);
-#endif
-    flag_publish_vibro = !publish_mqtt_binary_sensor("VIBRATION", "VIBRATION OFF", vibro_state, mqtt_vibro_topic);
-    any_publish = !flag_publish_vibro || any_publish;
-  }
-#endif
-
-#ifdef PIN_LIGHT_SENSOR_DIGITAL
-  // Update LIGHT state:
-  if (flag_publish_light || (sinceStart - last_light_post > MQTT_POSTINTERVAL_LIGHT_SEC * 1000))
-  {
-    float light_percentage;
-
-    if (!flag_publish_light)
-    {
-      light_state = digitalRead(PIN_LIGHT_SENSOR_DIGITAL);
-      if (light_state != last_light_post_state)
-      {
-        last_light_post_state = light_state;
-        flag_publish_light = !publish_mqtt_binary_sensor("LIGHT", "LIGHT OFF", !light_state, mqtt_light_topic);
-        any_publish = !flag_publish_light || any_publish;
-      }
-    }
-    else
-    {
-      last_light_post_state = light_state;
-      flag_publish_light = !publish_mqtt_binary_sensor("LIGHT", "LIGHT OFF", !light_state, mqtt_light_topic);
-      any_publish = !flag_publish_light || any_publish;
-    }
-
-#ifdef PIN_LIGHT_SENSOR_ANALOG
-    light_percentage = read_analog_light_percentage();
-    flag_publish_light = !publish_mqtt_data("LIGHT", mqtt_light_analog_topic,
-                                            String(light_percentage).c_str(), false);
-    any_publish = !flag_publish_light || any_publish;
-#endif
-
-    if (!flag_publish_light)
-      last_light_post = sinceStart;
-
-  }
-#endif
-
-  return any_publish;
-}
-
-bool publish_dht22_sensor_data()
-{
-#ifdef DHTPIN
-  //post MQTT DHT22 data every X seconds
-  if ((error_counter_dht == 0) && (sinceStart - last_dht22_post > MQTT_POSTINTERVAL_DHT22_SEC * 1000))
-  {
-    bool publishing = false;
-
-    calc_sensor_stats(&tempSamples, &tempHistory);
-    if(tempHistory.size() > 0)
-    {
-      publishing = publish_mqtt_data("TEMP", mqtt_temp_topic,
-                                     String(tempHistory.front()).c_str(), false);
-    }
-
-    calc_sensor_stats(&humidSamples, &humidHistory);
-    if(humidHistory.size() > 0)
-    {
-      publishing = publish_mqtt_data("HUMID", mqtt_humid_topic,
-                                     String(humidHistory.front()).c_str(), false);
-    }
-
-    if (publishing)
-      last_dht22_post = sinceStart;
-
-    return publishing;
-  }
-#endif
-
-  return false;
-}
-
-bool publish_bme280_sensor_data()
-{
-#ifdef PIN_I2C_BME280_SDA
-  //post MQTT BME280 data every X seconds
-  if (sinceStart - last_bme280_post > MQTT_POSTINTERVAL_BME280_SEC * 1000)
-  {
-    bool publishing = false;
-
-    calc_sensor_stats(&bme_tempSamples, &bme_tempHistory);
-    calc_sensor_stats(&bme_humidSamples, &bme_humidHistory);
-    calc_sensor_stats(&bme_pressureSamples, &bme_pressureHistory);
-    if(bme_tempHistory.size() > 0)
-      publishing = publish_mqtt_data("TEMP", mqtt_temp_topic,
-                                     String(bme_tempHistory.front()).c_str(), false);
-    if(bme_humidHistory.size() > 0)
-      publishing = publish_mqtt_data("HUMID", mqtt_humid_topic,
-                                     String(bme_humidHistory.front()).c_str(), false);
-    if(bme_pressureHistory.size() > 0)
-      publishing = publish_mqtt_data("PRESSURE", mqtt_pressure_topic,
-                                     String(bme_pressureHistory.front()).c_str(), false);
-
-    if (publishing)
-      last_bme280_post = sinceStart;
-
-    return publishing;
-  }
-#endif
-  return false;
-}
-
-bool publish_mqtt_data(const char* type_publish, const char* topic_prefix, const char* payload, boolean retained)
-{
-  if (VERBOSE) {
-    Serial.print("PUBLISH ");
-    Serial.print(type_publish);
-    Serial.print(": topic=");
-    Serial.print((topic_prefix + String(MAC_char)).c_str());
-    Serial.print(" -> ");
-    Serial.println(payload);
-  }
-  return client.publish((topic_prefix + String(MAC_char)).c_str(), payload, retained);
-}
-
-bool publish_mqtt_binary_sensor(const char* name_on, const char* name_off,
-                                bool state, const char* topic)
-{
-  if (state)
-    return publish_mqtt_data(name_on, topic, MQTT_STATE_ON, true);
-  else
-    return publish_mqtt_data(name_off, topic, MQTT_STATE_OFF, true);
 }
 
 void set_color_rgb(uint16_t red, uint16_t green, uint16_t blue)
@@ -710,6 +575,10 @@ void set_state(int new_state)
         break;
       }
     }
+  }
+  else
+  {
+    set_color_rgb(0, 0, 0);
   }
 }
 
@@ -843,6 +712,7 @@ void sample_bme280_sensor_data(bool *sampled, bool *sample_ok)
   {
     double temp, humid, pressure;
 
+//    # TODO Revisar comportamiento BME280
     *sampled = true;
     *sample_ok = true;
     temp = bme.readTemperature();
@@ -907,9 +777,14 @@ void setup_timers()
   last_sensor_ok = 0;
   last_dht_sensed = 0;                //The last time a sample was taken from the DHT22 sensor.
   error_counter_dht = 1;
-  last_dht22_post = 15000;            // Init value to wait some time before the 1st publish.
-  last_light_post = 15000;            // Init value to wait some time before the 1st publish.
-  flag_publish_light = HIGH;
+
+  // Init values to wait some time before the 1st publish.
+  last_temp_post = 15000;
+  last_humid_post = 15000;
+  last_pressure_post = 15000;
+  last_light_analog_post = 10000;
+  last_switch_bin_state_post = 0;
+  last_switch_leds_state_post = 0;
 }
 
 void setup_leds()
@@ -983,7 +858,8 @@ void setup_bme280_sensor()
     bme_status = bme.begin();
     if (!bme_status)
     {
-        Serial.println("Could not find a valid BME280 sensor, check wiring!");
+        if (VERBOSE)
+          Serial.println("Could not find a valid BME280 sensor, check wiring!");
         set_state(STATE_CRITICAL);
         delay(10000);
         reset_exec();
@@ -1043,7 +919,7 @@ void connectWiFi()
       reset_exec();
   }
   if (VERBOSE) {
-    Serial.println("You're connected to the network");
+    Serial.println("You are connected to the network");
     printWifiStatus();
   }
   set_state(STATE_STANDBY);
@@ -1071,73 +947,276 @@ void printWifiStatus()
 
 void reset_exec()
 {
-  Serial.println("ABORTING ...");
+  if (VERBOSE)
+    Serial.println("ABORTING ...");
   set_color_rgb(1023, 200, 200);
   delay(30000);
   ESP.restart();
 }
 
 //**********************************
-//** MQTT Callback
+//** MQTT
 //**********************************
-
-bool read_json(byte *payload, unsigned int payload_length)
+void publish_switch_states()
 {
-  StaticJsonBuffer<500> jsonBuffer;
-  char *json = (char*)payload;
-  JsonObject& root = jsonBuffer.parseObject(json);
-
-  // Test if parsing succeeds.
-  if (!root.success())
+//  TODO Revisar funcionamiento publish states in reconex
+  if (!in_default_state_binary_sensors && (sinceStart - last_switch_bin_state_post > DELAY_MS_BETWEEN_MQTT_PUB_STATE))
   {
-    Serial.println("parseObject() failed");
-    return false;
-  }
-  else if (root.containsKey("color"))
-  {
-    // Fetch values.
-    uint16_t R, G, B;
-    R = root["color"][0];
-    G = root["color"][1];
-    B = root["color"][2];
-    Serial.print("RGB RECEIVED: (");
-    Serial.print(R);
-    Serial.print(", ");
-    Serial.print(G);
-    Serial.print(", ");
-    Serial.print(B);
-    Serial.println(")");
-    set_color_rgb(4 * R, 4 * G, 4 * B);
-    return client.publish((mqtt_control_topic_out + String(MAC_char)).c_str(), "COLOR SET");
-  }
-  else if (root.containsKey("led"))
-  {
-    bool new_use_leds = root["led"];
-    Serial.print("RECEIVED LED USE=");
-    Serial.print(new_use_leds);
-    if (new_use_leds != use_leds)
+    Serial.println("DEBUG PUB STATE BIN SENSORS");
+    if (client.publish((mqtt_control_topic + String(MAC_char) + mqtt_switch_bin_sensors_subtopic).c_str(),
+                       use_binary_sensors ? MQTT_STATE_ON : MQTT_STATE_OFF, HIGH))
     {
-      use_leds = new_use_leds;
-      set_state(STATE_STANDBY);
-      return client.publish((mqtt_control_topic_out + String(MAC_char)).c_str(), "USE LED CHANGE OK");
+      last_switch_bin_state_post = sinceStart;
     }
-    return client.publish((mqtt_control_topic_out + String(MAC_char)).c_str(), "USE LED NO CHANGE");
   }
-  else if (root.containsKey("binary_sensors"))
+  if (!in_default_state_use_leds && (sinceStart - last_switch_leds_state_post > DELAY_MS_BETWEEN_MQTT_PUB_STATE))
   {
-    bool new_use_bin_sensors = root["binary_sensors"];
-    Serial.print("RECEIVED BINARY_SENSORS USE=");
-    Serial.print(new_use_bin_sensors);
-    if (new_use_bin_sensors != use_binary_sensors)
+    Serial.println("DEBUG PUB STATE USE LEDS");
+    if (client.publish((mqtt_control_topic + String(MAC_char) + mqtt_switch_leds_subtopic).c_str(),
+                       use_leds ? MQTT_STATE_ON : MQTT_STATE_OFF, HIGH))
     {
-      use_binary_sensors = new_use_bin_sensors;
-      return client.publish((mqtt_control_topic_out + String(MAC_char)).c_str(), "USE BINARY_SENSORS CHANGE OK");
+      last_switch_leds_state_post = sinceStart;
     }
-    return client.publish((mqtt_control_topic_out + String(MAC_char)).c_str(), "USE BINARY_SENSORS NO CHANGE");
   }
-
-  return client.publish((mqtt_control_topic_out + String(MAC_char)).c_str(), payload, payload_length);
 }
+
+bool publish_binary_sensors_if_flag_or_delta()
+{
+  bool any_publish = false;
+#ifdef PIN_PIR
+  // Update PIR state:
+  if (flag_publish_pir)
+  {
+#ifdef LED_PIR
+    if (use_leds)
+      digitalWrite(LED_PIR, pir_state);
+#endif
+    flag_publish_pir = !publish_mqtt_binary_sensor("MOVEMENT", "MOVEMENT OFF", pir_state, mqtt_movement_topic);
+    any_publish = !flag_publish_pir;
+  }
+#endif
+
+#ifdef PIN_VIBRO
+  // Update vibro sensor state:
+  if (flag_publish_vibro)
+  {
+#ifdef LED_VIBRO
+    if (use_leds)
+      digitalWrite(LED_VIBRO, vibro_state);
+#endif
+    flag_publish_vibro = !publish_mqtt_binary_sensor("VIBRATION", "VIBRATION OFF", vibro_state, mqtt_vibro_topic);
+    any_publish = !flag_publish_vibro || any_publish;
+  }
+#endif
+
+#ifdef PIN_LIGHT_SENSOR_DIGITAL
+  // Update LIGHT state:
+  if (flag_publish_light || (sinceStart - last_light_analog_post > MQTT_POSTINTERVAL_LIGHT_SEC * 1000))
+  {
+    if (!flag_publish_light)
+    {
+      light_state = digitalRead(PIN_LIGHT_SENSOR_DIGITAL);
+      if (light_state != last_light_post_state)
+      {
+        last_light_post_state = light_state;
+        flag_publish_light = !publish_mqtt_binary_sensor("LIGHT", "LIGHT OFF", !light_state, mqtt_light_topic);
+        any_publish = !flag_publish_light || any_publish;
+      }
+    }
+    else
+    {
+      last_light_post_state = light_state;
+      flag_publish_light = !publish_mqtt_binary_sensor("LIGHT", "LIGHT OFF", !light_state, mqtt_light_topic);
+      any_publish = !flag_publish_light || any_publish;
+    }
+  }
+#endif
+
+  return any_publish;
+}
+
+bool publish_analog_light_at_delta()
+{
+#ifdef PIN_LIGHT_SENSOR_ANALOG
+  if (sinceStart - last_light_analog_post > MQTT_POSTINTERVAL_LIGHT_SEC * 1000)
+  {
+    if (publish_mqtt_data("LIGHT AO", mqtt_light_analog_topic, String(read_analog_light_percentage()).c_str(), false))
+    {
+      last_light_analog_post = sinceStart;
+      return true;
+    }
+  }
+#endif
+  return false;
+}
+
+bool publish_dht22_sensor_data()
+{
+  bool publishing_t = false, publishing_h = false;
+
+#ifdef DHTPIN
+  //post MQTT DHT22 data every X seconds
+  if ((error_counter_dht == 0) && (sinceStart - last_temp_post > MQTT_POSTINTERVAL_DHT22_SEC * 1000))
+  {
+    calc_sensor_stats(&tempSamples, &tempHistory);
+    if(tempHistory.size() > 0)
+    {
+      publishing_t = publish_mqtt_data("TEMP", mqtt_temp_topic,
+                                       String(tempHistory.front()).c_str(), false);
+      if (publishing_t)
+        last_temp_post = sinceStart;
+    }
+  }
+
+  if ((error_counter_dht == 0) && (sinceStart - last_humid_post > MQTT_POSTINTERVAL_DHT22_SEC * 1000))
+  {
+    calc_sensor_stats(&humidSamples, &humidHistory);
+    if(humidHistory.size() > 0)
+    {
+      publishing_h = publish_mqtt_data("HUMID", mqtt_humid_topic,
+                                       String(humidHistory.front()).c_str(), false);
+      if (publishing_h)
+        last_humid_post = sinceStart;
+    }
+  }
+#endif
+
+//    return publishing_t && publishing_h;
+  return publishing_t || publishing_h;
+}
+
+bool publish_bme280_sensor_data()
+{
+  bool publishing_t = false, publishing_h = false, publishing_p = false;
+#ifdef PIN_I2C_BME280_SDA
+  //post MQTT BME280 data every X seconds
+  if (sinceStart - last_temp_post > MQTT_POSTINTERVAL_BME280_SEC * 1000)
+  {
+    calc_sensor_stats(&bme_tempSamples, &bme_tempHistory);
+    if(bme_tempHistory.size() > 0)
+      publishing_t = publish_mqtt_data("TEMP", mqtt_temp_topic,
+                                       String(bme_tempHistory.front()).c_str(), false);
+    if (publishing_t)
+        last_temp_post = sinceStart;
+  }
+
+  if (sinceStart - last_humid_post > MQTT_POSTINTERVAL_BME280_SEC * 1000)
+  {
+    calc_sensor_stats(&bme_humidSamples, &bme_humidHistory);
+    if(bme_humidHistory.size() > 0)
+      publishing_h = publish_mqtt_data("HUMID", mqtt_humid_topic,
+                                       String(bme_humidHistory.front()).c_str(), false);
+    if (publishing_h)
+      last_humid_post = sinceStart;
+  }
+
+  if (sinceStart - last_pressure_post > MQTT_POSTINTERVAL_BME280_SEC * 1000)
+  {
+    calc_sensor_stats(&bme_pressureSamples, &bme_pressureHistory);
+    if(bme_pressureHistory.size() > 0)
+      publishing_p = publish_mqtt_data("PRESSURE", mqtt_pressure_topic,
+                                       String(bme_pressureHistory.front()).c_str(), false);
+    if (publishing_p)
+      last_pressure_post = sinceStart;
+  }
+#endif
+  return publishing_t || publishing_h || publishing_p;
+}
+
+bool publish_mqtt_data(const char* type_publish, const char* topic_prefix, const char* payload, boolean retained)
+{
+  bool published;
+
+  published = client.publish((topic_prefix + String(MAC_char)).c_str(), payload, retained);
+  if (VERBOSE && published)
+  {
+    Serial.print("PUBLISH ");
+    Serial.print(type_publish);
+    Serial.print(": topic=");
+    Serial.print((topic_prefix + String(MAC_char)).c_str());
+    Serial.print(" -> ");
+    Serial.println(payload);
+  }
+  return published;
+}
+
+bool publish_mqtt_binary_sensor(const char* name_on, const char* name_off,
+                                bool state, const char* topic)
+{
+  if (state)
+    return publish_mqtt_data(name_on, topic, MQTT_STATE_ON, true);
+  else
+    return publish_mqtt_data(name_off, topic, MQTT_STATE_OFF, true);
+}
+
+void publish_online_state()
+{
+  bool publish_ok = false;
+  do {
+    publish_ok = client.publish((MQTT_WILLTOPIC + String(MAC_char)).c_str(), MQTT_STATE_ON, MQTT_WILLRETAIN);
+  } while (!publish_ok);
+
+  if (VERBOSE)
+    Serial.println("PUBLISHING STATE ON");
+}
+
+//bool read_json(byte *payload, unsigned int payload_length)
+//{
+//  StaticJsonBuffer<500> jsonBuffer;
+//  char *json = (char*)payload;
+//  JsonObject& root = jsonBuffer.parseObject(json);
+//
+//  // Test if parsing succeeds.
+//  if (!root.success())
+//  {
+//    Serial.println("parseObject() failed");
+//    return false;
+//  }
+//  else if (root.containsKey("color"))
+//  {
+//    // Fetch values.
+//    uint16_t R, G, B;
+//    R = root["color"][0];
+//    G = root["color"][1];
+//    B = root["color"][2];
+//    Serial.print("RGB RECEIVED: (");
+//    Serial.print(R);
+//    Serial.print(", ");
+//    Serial.print(G);
+//    Serial.print(", ");
+//    Serial.print(B);
+//    Serial.println(")");
+//    set_color_rgb(4 * R, 4 * G, 4 * B);
+//    return client.publish((mqtt_control_topic_out + String(MAC_char)).c_str(), "COLOR SET");
+//  }
+//  else if (root.containsKey("led"))
+//  {
+//    bool new_use_leds = root["led"];
+//    Serial.print("RECEIVED LED USE=");
+//    Serial.print(new_use_leds);
+//    if (new_use_leds != use_leds)
+//    {
+//      use_leds = new_use_leds;
+//      set_state(STATE_STANDBY);
+//      return client.publish((mqtt_control_topic_out + String(MAC_char)).c_str(), "USE LED CHANGE OK");
+//    }
+//    return client.publish((mqtt_control_topic_out + String(MAC_char)).c_str(), "USE LED NO CHANGE");
+//  }
+//  else if (root.containsKey("binary_sensors"))
+//  {
+//    bool new_use_bin_sensors = root["binary_sensors"];
+//    Serial.print("RECEIVED BINARY_SENSORS USE=");
+//    Serial.print(new_use_bin_sensors);
+//    if (new_use_bin_sensors != use_binary_sensors)
+//    {
+//      use_binary_sensors = new_use_bin_sensors;
+//      return client.publish((mqtt_control_topic_out + String(MAC_char)).c_str(), "USE BINARY_SENSORS CHANGE OK");
+//    }
+//    return client.publish((mqtt_control_topic_out + String(MAC_char)).c_str(), "USE BINARY_SENSORS NO CHANGE");
+//  }
+//
+//  return client.publish((mqtt_control_topic_out + String(MAC_char)).c_str(), payload, payload_length);
+//}
 
 bool i_contains(const char *str1, const char *str2)
 {
@@ -1148,41 +1227,83 @@ bool i_contains(const char *str1, const char *str2)
   return false;
 }
 
+void i_print_mqtt_msg(const char *topic, const char *message)
+{
+  if (VERBOSE)
+  {
+    Serial.println("MQTT MSG ARRIVED:");
+    Serial.print(" --> topic=");
+    Serial.println(topic);
+    Serial.print(" --> payload=");
+    Serial.println(message);
+  }
+}
+
+bool mqtt_switch_check(const char *topic, const char *message,
+                       const char *topic_switch,
+                       const char *str_debug_set_switch,
+                       bool switch_value_old, bool *switch_value)
+{
+  if (i_contains(topic, topic_switch) && i_contains(topic, mqtt_subtopic_set))
+  {
+    bool new_switch_value;
+
+    new_switch_value = i_contains(message, MQTT_STATE_ON);
+    *switch_value = new_switch_value;
+    if (new_switch_value != switch_value_old)
+    {
+      if (VERBOSE)
+      {
+        i_print_mqtt_msg(topic, message);
+        Serial.print(str_debug_set_switch);
+        Serial.println(new_switch_value ? MQTT_STATE_ON : MQTT_STATE_OFF);
+      }
+      client.publish((mqtt_control_topic + String(MAC_char) + topic_switch).c_str(),
+                     new_switch_value ? MQTT_STATE_ON : MQTT_STATE_OFF, HIGH);
+    }
+    return true;
+  }
+  return false;
+}
+
 void callback_mqtt_message_received(char* topic, byte* payload, unsigned int payload_length)
 {
   char *message;
+  bool switch_value;
   byte *p = (byte*)malloc(payload_length);
   memcpy(p, payload, payload_length);
   message = (char*)p;
 
-  Serial.println("MQTT MSG ARRIVED:");
-  Serial.print(" --> topic=");
-  Serial.println(topic);
-  Serial.print(" --> payload=");
-  Serial.println(message);
-
-//  TODO separacion topics + states
-  if (i_contains(topic, mqtt_switch_bin_sensors_subtopic) && i_contains(topic, mqtt_subtopic_set))
+//  Serial.print("- MQTT RECEIVED: ");
+//  Serial.println(topic);
+  if (i_contains(topic, MQTT_WILLTOPIC))
   {
-    use_binary_sensors = i_contains(message, MQTT_STATE_ON);
-    Serial.print("SET use_binary_sensors = ");
-    Serial.println(use_binary_sensors ? MQTT_STATE_ON : MQTT_STATE_OFF);
-    client.publish((mqtt_control_topic + String(MAC_char) + mqtt_switch_bin_sensors_subtopic).c_str(),
-                   use_binary_sensors ? MQTT_STATE_ON : MQTT_STATE_OFF);
+    if (!i_contains(message, MQTT_STATE_ON))
+    {
+      i_print_mqtt_msg(topic, message);
+      publish_online_state();
+      Serial.println("published_online_state");
+    }
   }
-  else if (i_contains(topic, mqtt_switch_leds_subtopic) && i_contains(topic, mqtt_subtopic_set))
+  else if (mqtt_switch_check(topic, message, mqtt_switch_bin_sensors_subtopic,
+                        "SET use_binary_sensors = ", use_binary_sensors, &switch_value))
   {
-    use_leds = i_contains(message, MQTT_STATE_ON);
-    if (!use_leds)
-      set_state(STATE_STANDBY);
-    Serial.print("SET use_leds = ");
-    Serial.println(use_leds ? MQTT_STATE_ON : MQTT_STATE_OFF);
-    client.publish((mqtt_control_topic + String(MAC_char) + mqtt_switch_leds_subtopic).c_str(),
-                   use_leds ? MQTT_STATE_ON : MQTT_STATE_OFF);
+    Serial.println("USE BIN SENSORS CHANGED");
+    use_binary_sensors = switch_value;
+    in_default_state_binary_sensors = false;
+  }
+  else if (mqtt_switch_check(topic, message, mqtt_switch_leds_subtopic,
+                        "SET use_leds = ", use_leds, &switch_value))
+  {
+    Serial.println("USE LEDS CHANGED");
+    use_leds = switch_value;
+    in_default_state_use_leds = false;
   }
   else
   {
-    read_json(p, payload_length);
+    Serial.println("WTF MQTT MESSAGE:");
+    i_print_mqtt_msg(topic, message);
+//    read_json(p, payload_length);
   }
   free(p);
 }
