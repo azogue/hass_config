@@ -169,8 +169,9 @@ necesidad de cambiar el programa para cada uno.
 //  #define PIN_PIR                             5      //D1
 //  #define PIN_VIBRO                           4      //D2 - dht22 box
 //  #define PIN_VIBRO                           0      //D3 - dht11 breadboard
-  #define PIN_LIGHT_SENSOR_DIGITAL            14     //D5
+//  #define PIN_LIGHT_SENSOR_DIGITAL            14     //D5
   #define PIN_LIGHT_SENSOR_ANALOG             A0     //A0
+  #define NEGATE_SENSOR_ANALOG
 #endif
 
 //**********************************
@@ -621,7 +622,11 @@ void isr_light_sensor_change()
 #ifdef PIN_LIGHT_SENSOR_ANALOG
 float read_analog_light_percentage()
 {
+#ifdef NEGATE_SENSOR_ANALOG
+  return round(100. * analogRead(PIN_LIGHT_SENSOR_ANALOG) /  10.23) / 100.;
+#else
   return round(100. * (1023 - analogRead(PIN_LIGHT_SENSOR_ANALOG)) /  10.23) / 100.;
+#endif
 }
 #endif
 
