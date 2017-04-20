@@ -126,8 +126,8 @@ necesidad de cambiar el programa para cada uno.
 //** comment to deactivate        **
 //**********************************
 // Master switches:
-#define ESP_TEST1
-//#define ESP_COCINA
+//#define ESP_TEST1
+#define ESP_COCINA
 //#define USE_ESP32
 
 #ifdef USE_ESP32
@@ -361,7 +361,7 @@ void loop()
   {
     while (!client.connected())
     {
-      if (!client.connect(MQTT_USERID, MQTT_USER, MQTT_PASSWORD,
+      if (!client.connect((MQTT_USERID + String(MAC_char)).c_str(), MQTT_USER, MQTT_PASSWORD,
                           (MQTT_WILLTOPIC + String(MAC_char)).c_str(), MQTT_WILLQOS,
                           MQTT_WILLRETAIN, MQTT_STATE_OFF))
       {
@@ -864,6 +864,15 @@ void setup_bme280_sensor()
         delay(10000);
         reset_exec();
     }
+//    bme.setSampling(sensor_mode mode              = MODE_NORMAL,
+//			 sensor_sampling tempSampling  = SAMPLING_X16,
+//			 sensor_sampling pressSampling = SAMPLING_X16,
+//			 sensor_sampling humSampling   = SAMPLING_X16,
+//			 sensor_filter filter          = FILTER_OFF,
+//			 standby_duration duration     = STANDBY_MS_0_5
+//			 );
+
+    bme.setSampling(Adafruit_BME280::MODE_NORMAL, Adafruit_BME280::SAMPLING_X2, Adafruit_BME280::SAMPLING_X2, Adafruit_BME280::SAMPLING_X2, Adafruit_BME280::FILTER_OFF, Adafruit_BME280::STANDBY_MS_1000);
 
     delay(100); // let sensor boot up
 }
@@ -959,10 +968,8 @@ void reset_exec()
 //**********************************
 void publish_switch_states()
 {
-//  TODO Revisar funcionamiento publish states in reconex
   if (!in_default_state_binary_sensors && (sinceStart - last_switch_bin_state_post > DELAY_MS_BETWEEN_MQTT_PUB_STATE))
   {
-    Serial.println("DEBUG PUB STATE BIN SENSORS");
     if (client.publish((mqtt_control_topic + String(MAC_char) + mqtt_switch_bin_sensors_subtopic).c_str(),
                        use_binary_sensors ? MQTT_STATE_ON : MQTT_STATE_OFF, HIGH))
     {
@@ -971,7 +978,6 @@ void publish_switch_states()
   }
   if (!in_default_state_use_leds && (sinceStart - last_switch_leds_state_post > DELAY_MS_BETWEEN_MQTT_PUB_STATE))
   {
-    Serial.println("DEBUG PUB STATE USE LEDS");
     if (client.publish((mqtt_control_topic + String(MAC_char) + mqtt_switch_leds_subtopic).c_str(),
                        use_leds ? MQTT_STATE_ON : MQTT_STATE_OFF, HIGH))
     {
@@ -1244,7 +1250,7 @@ bool mqtt_switch_check(const char *topic, const char *message,
                        const char *str_debug_set_switch,
                        bool switch_value_old, bool *switch_value)
 {
-  if (i_contains(topic, topic_switch) && i_contains(topic, mqtt_subtopic_set))
+  if (i_contains(topic, topic_switch) && i_contains(topic, MAC_char) && i_contains(topic, mqtt_subtopic_set))
   {
     bool new_switch_value;
 
@@ -1276,7 +1282,7 @@ void callback_mqtt_message_received(char* topic, byte* payload, unsigned int pay
 
 //  Serial.print("- MQTT RECEIVED: ");
 //  Serial.println(topic);
-  if (i_contains(topic, MQTT_WILLTOPIC))
+  if (i_contains(topic, MQTT_WILLTOPIC) && i_contains(topic, MAC_char))
   {
     if (!i_contains(message, MQTT_STATE_ON))
     {
@@ -1288,14 +1294,14 @@ void callback_mqtt_message_received(char* topic, byte* payload, unsigned int pay
   else if (mqtt_switch_check(topic, message, mqtt_switch_bin_sensors_subtopic,
                         "SET use_binary_sensors = ", use_binary_sensors, &switch_value))
   {
-    Serial.println("USE BIN SENSORS CHANGED");
+    //Serial.println("USE BIN SENSORS CHANGED");
     use_binary_sensors = switch_value;
     in_default_state_binary_sensors = false;
   }
   else if (mqtt_switch_check(topic, message, mqtt_switch_leds_subtopic,
                         "SET use_leds = ", use_leds, &switch_value))
   {
-    Serial.println("USE LEDS CHANGED");
+    //Serial.println("USE LEDS CHANGED");
     use_leds = switch_value;
     in_default_state_use_leds = false;
   }
