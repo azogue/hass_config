@@ -1,13 +1,23 @@
 # SENSORS
+#sensor.temperatura_dormitorio:
+#  friendly_name: Temperatura (DS)
+#  icon: mdi:thermometer
+#sensor.dht22_dormitorio_temperature:
+#  friendly_name: Temperatura (DHT)
+#  icon: mdi:thermometer
+#sensor.dht22_dormitorio_humidity:
+#  friendly_name: Humedad
+#  icon: mdi:water-percent
+
 sensor.temperatura_dormitorio:
-  friendly_name: Temperatura (DS)
+  friendly_name: Temperatura
   icon: mdi:thermometer
-sensor.dht22_dormitorio_temperature:
-  friendly_name: Temperatura (DHT)
-  icon: mdi:thermometer
-sensor.dht22_dormitorio_humidity:
+sensor.humedad_dormitorio:
   friendly_name: Humedad
   icon: mdi:water-percent
+sensor.presion_dormitorio:
+  friendly_name: Presión atmosférica
+  icon: mdi:weather-cloudy
 
 binary_sensor.pir_dormitorio:
   friendly_name: Movimiento (dormitorio)

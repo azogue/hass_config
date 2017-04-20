@@ -99,21 +99,43 @@ binary_sensor:
 #  pull_mode: "DOWN"
 
 sensor:
-  - platform: myonewire
-    names:
-      28-80000001595e: Temperatura Dormitorio
-    scan_interval: 40
-    maximum: 50
-    minimum: 5
+#  - platform: myonewire
+#    names:
+#      28-80000001595e: Temperatura Dormitorio
+#    scan_interval: 40
+#    maximum: 50
+#    minimum: 5
+#
+#  - platform: dht
+#    sensor: DHT22
+#    pin: 24
+#    name: dht22_dormitorio
+#    scan_interval: 40
+#    monitored_conditions:
+#      - temperature
+#      - humidity
 
-  - platform: dht
-    sensor: DHT22
-    pin: 24
-    name: dht22_dormitorio
-    scan_interval: 40
-    monitored_conditions:
-      - temperature
-      - humidity
+  # BME280 in RPI
+  - platform: command_line
+    name: Temperatura Dormitorio
+    command: "/usr/local/bin/read_bme280 --temperature --i2c-address 0x77"
+    unit_of_measurement: "°C"
+    value_template: '{{ value |replace(" C", "") | round(2) }}'
+    scan_interval: 30
+
+  - platform: command_line
+    name: Humedad Dormitorio
+    command: "/usr/local/bin/read_bme280 --humidity --i2c-address 0x77"
+    unit_of_measurement: "%"
+    value_template: '{{ value |replace("％", "") | round(2) }}'
+    scan_interval: 30
+
+  - platform: command_line
+    name: Presión Dormitorio
+    command: "/usr/local/bin/read_bme280 --pressure --i2c-address 0x77"
+    unit_of_measurement: "mb"
+    value_template: '{{ value |replace(" hPa", "") | round(2) }}'
+    scan_interval: 30
 
   - platform: systemmonitor
     resources:
@@ -197,9 +219,12 @@ script:
 
 group:
   Dormitorio:
+#    - sensor.temperatura_dormitorio
+#    - sensor.dht22_dormitorio_temperature
+#    - sensor.dht22_dormitorio_humidity
     - sensor.temperatura_dormitorio
-    - sensor.dht22_dormitorio_temperature
-    - sensor.dht22_dormitorio_humidity
+    - sensor.humedad_dormitorio
+    - sensor.presion_dormitorio
     - binary_sensor.pir_dormitorio
 #    - binary_sensor.vibration_sensor
 #    - binary_sensor.sound_sensor_dormitorio
