@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Support for the OpenWeatherMap (OWM) service.
 
@@ -178,7 +179,10 @@ class WeatherData(object):
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         """Get the latest data from OpenWeatherMap."""
-        obs = self.owm.weather_at_coords(self.latitude, self.longitude)
+        try:
+            obs = self.owm.weather_at_coords(self.latitude, self.longitude)
+        except TypeError:
+            obs = None
         if obs is None:
             _LOGGER.warning("Failed to fetch data from OpenWeatherMap")
             return
