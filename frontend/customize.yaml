@@ -1,4 +1,12 @@
 ####################################################################################
+#                                ZONES                                             #
+####################################################################################
+zone.home:
+  track_ios: true
+zone.hospital_elda:
+  track_ios: true
+
+####################################################################################
 #                                KODI                                              #
 ####################################################################################
 media_player.kodi:
@@ -372,6 +380,52 @@ sensor.esp1_light:
   friendly_name: Iluminación
   homebridge_hidden: true
   icon: mdi:lightbulb-on
+switch.use_esp1_leds:
+  friendly_name: Usar LEDs
+  icon: mdi:led-outline
+  homebridge_hidden: true
+switch.use_esp1_binary_sensors:
+  friendly_name: Usar sensores binarios
+  icon: mdi:camera-burst
+  homebridge_hidden: true
+binary_sensor.cocina_online:
+  homebridge_hidden: true
+
+sensor.esp2_temperature:
+  friendly_name: Temperatura
+  icon: mdi:thermometer
+  homebridge_hidden: true
+sensor.esp2_humidity:
+  friendly_name: Humedad
+  icon: mdi:water-percent
+  homebridge_hidden: true
+sensor.esp2_pressure:
+  friendly_name: Presión atmosférica
+  icon: mdi:weather-cloudy
+  homebridge_hidden: true
+binary_sensor.esp2_pir:
+  friendly_name: Movimiento
+  homebridge_hidden: true
+binary_sensor.esp2_vibro:
+  friendly_name: Vibración
+  homebridge_hidden: true
+binary_sensor.esp2_light:
+  friendly_name: Luz
+  homebridge_hidden: true
+sensor.esp2_light:
+  friendly_name: Iluminación
+  homebridge_hidden: true
+  icon: mdi:lightbulb-on
+switch.use_esp2_leds:
+  friendly_name: Usar LEDs
+  icon: mdi:led-outline
+  homebridge_hidden: true
+switch.use_esp2_binary_sensors:
+  friendly_name: Usar sensores binarios
+  icon: mdi:camera-burst
+  homebridge_hidden: true
+binary_sensor.esp2_online:
+  homebridge_hidden: true
 
 sensor.bateria_iphone_6s:
   homebridge_hidden: true

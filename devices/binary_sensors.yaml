@@ -21,15 +21,13 @@
   payload_on: "on"
   payload_off: "off"
   device_class: motion
-
-- platform: mqtt
-  state_topic: !secret mqtt_topic_esp1_vibro
-  name: esp1_Vibro
-#  qos (Optional): The maximum QoS level of the state topic. Default is 0.
-  payload_on: "on"
-  payload_off: "off"
-  device_class: vibration
-
+#- platform: mqtt
+#  state_topic: !secret mqtt_topic_esp1_vibro
+#  name: esp1_Vibro
+##  qos (Optional): The maximum QoS level of the state topic. Default is 0.
+#  payload_on: "on"
+#  payload_off: "off"
+#  device_class: vibration
 - platform: mqtt
   state_topic: !secret mqtt_topic_esp1_light
   name: esp1_Light
@@ -37,6 +35,42 @@
   payload_on: "on"
   payload_off: "off"
   device_class: light
+- platform: mqtt
+  state_topic: !secret mqtt_topic_esp1_online
+  name: Cocina Online
+#  qos (Optional): The maximum QoS level of the state topic. Default is 0.
+  payload_on: "on"
+  payload_off: "off"
+  device_class: connectivity
+
+- platform: mqtt
+  state_topic: !secret mqtt_topic_esp2_pir
+  name: esp2_PIR
+#  qos (Optional): The maximum QoS level of the state topic. Default is 0.
+  payload_on: "on"
+  payload_off: "off"
+  device_class: motion
+- platform: mqtt
+  state_topic: !secret mqtt_topic_esp2_vibro
+  name: esp2_Vibro
+#  qos (Optional): The maximum QoS level of the state topic. Default is 0.
+  payload_on: "on"
+  payload_off: "off"
+  device_class: vibration
+- platform: mqtt
+  state_topic: !secret mqtt_topic_esp2_light
+  name: esp2_Light
+#  qos (Optional): The maximum QoS level of the state topic. Default is 0.
+  payload_on: "on"
+  payload_off: "off"
+  device_class: light
+- platform: mqtt
+  state_topic: !secret mqtt_topic_esp2_online
+  name: Esp2 Online
+#  qos (Optional): The maximum QoS level of the state topic. Default is 0.
+  payload_on: "on"
+  payload_off: "off"
+  device_class: connectivity
 
 - platform: command_line
   name: Internet Online
@@ -123,7 +157,8 @@
          (states.binary_sensor.database_ok.state == 'off') or
          (states.binary_sensor.router_on.state == 'off') or
          (states.binary_sensor.internet_online.state == 'off') or
-         (states.sensor.ip_externa.state != '185.97.169.163') or
+         (states.sensor.ip_externa.state != 'XX.XX.XX.XX') or
+         (states.binary_sensor.cocina_online.state == 'off') or
          (states.switch.systemd_appdaemon.state == 'off') or
          (states.switch.systemd_homebridge.state == 'off')
          }}
@@ -135,6 +170,7 @@
         - binary_sensor.telegram_online
         - binary_sensor.database_ok
         - binary_sensor.router_on
+        - binary_sensor.cocina_online
         - binary_sensor.internet_online
         - sensor.ip_externa
         - switch.systemd_appdaemon

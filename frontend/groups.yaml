@@ -109,9 +109,12 @@ Dormitorio RPI2MPD:
   name: Dormitorio
   control: hidden
   entities:
+#    - sensor.temperatura_dormitorio_rpi2mpd
+#    - sensor.dht22_dormitorio_temperature_rpi2mpd
+#    - sensor.dht22_dormitorio_humidity_rpi2mpd
     - sensor.temperatura_dormitorio_rpi2mpd
-    - sensor.dht22_dormitorio_temperature_rpi2mpd
-    - sensor.dht22_dormitorio_humidity_rpi2mpd
+    - sensor.humedad_dormitorio_rpi2mpd
+    - sensor.presion_dormitorio_rpi2mpd
     - binary_sensor.pir_dormitorio_rpi2mpd
     - switch.altavoz
     - switch.calefactor
@@ -120,22 +123,43 @@ Dormitorio RPI2MPD_simple:
   name: Dormitorio
   control: hidden
   entities:
+#    - sensor.temperatura_dormitorio_rpi2mpd
+#    - sensor.dht22_dormitorio_temperature_rpi2mpd
+#    - sensor.dht22_dormitorio_humidity_rpi2mpd
     - sensor.temperatura_dormitorio_rpi2mpd
-    - sensor.dht22_dormitorio_temperature_rpi2mpd
-    - sensor.dht22_dormitorio_humidity_rpi2mpd
+    - sensor.humedad_dormitorio_rpi2mpd
+    - sensor.presion_dormitorio_rpi2mpd
     - switch.altavoz
     - switch.calefactor
+
+esp8266_2:
+  name: Esp8266 Breadboard
+  control: hidden
+  entities:
+    - binary_sensor.esp2_online
+    - sensor.esp2_temperature
+    - sensor.esp2_humidity
+    - sensor.esp2_pressure
+    - sensor.esp2_light
+    - switch.use_esp2_leds
+    - switch.use_esp2_binary_sensors
+    - binary_sensor.esp2_light
+    - binary_sensor.esp2_pir
+    - binary_sensor.esp2_vibro
 
 Cocina:
   name: Cocina
   control: hidden
   entities:
+    - binary_sensor.cocina_online
     - sensor.esp1_temperature
     - sensor.esp1_humidity
     - sensor.esp1_light
+    - switch.use_esp1_leds
+    - switch.use_esp1_binary_sensors
     - binary_sensor.esp1_light
     - binary_sensor.esp1_pir
-    - binary_sensor.esp1_vibro
+#    - binary_sensor.esp1_vibro
     - switch.cocina
 
 Cocina_simple:
@@ -365,6 +389,7 @@ Conectivity:
   - binary_sensor.database_ok
   - binary_sensor.internet_online
   - binary_sensor.nas_online
+  - binary_sensor.cocina_online
   - binary_sensor.pushbullet_online
   - binary_sensor.email_online
   - binary_sensor.telegram_online
@@ -400,6 +425,7 @@ Status:
     - group.estudio_rpi2h_simple
     - group.dormitorio_rpi2mpd
     - group.dormitorio_rpi2mpd_simple
+    - group.esp8266_2
     - group.cocina
     - group.cocina_simple
     - group.galeria

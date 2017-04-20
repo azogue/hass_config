@@ -193,6 +193,36 @@
         service: input_boolean.turn_on
       value_template: '{{ states.input_boolean.use_esp1_vibro.state == "on" }}'
 
+- platform: mqtt
+  name: use_esp1_binary_sensors
+  command_topic: !secret mqtt_topic_esp1_switch_binary_sensors_set
+  state_topic: !secret mqtt_topic_esp1_switch_binary_sensors_state
+  payload_on: 'on'
+  payload_off: 'off'
+  retain: true
+- platform: mqtt
+  name: use_esp1_leds
+  command_topic: !secret mqtt_topic_esp1_switch_leds_set
+  state_topic: !secret mqtt_topic_esp1_switch_leds_state
+  payload_on: 'on'
+  payload_off: 'off'
+  retain: true
+
+- platform: mqtt
+  name: use_esp2_binary_sensors
+  command_topic: !secret mqtt_topic_esp2_switch_binary_sensors_set
+  state_topic: !secret mqtt_topic_esp2_switch_binary_sensors_state
+  payload_on: 'on'
+  payload_off: 'off'
+  retain: true
+- platform: mqtt
+  name: use_esp2_leds
+  command_topic: !secret mqtt_topic_esp2_switch_leds_set
+  state_topic: !secret mqtt_topic_esp2_switch_leds_state
+  payload_on: 'on'
+  payload_off: 'off'
+  retain: true
+
 #- platform: rpi_gpio
 #  ports:
 #    13: RPI LED

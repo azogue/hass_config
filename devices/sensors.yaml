@@ -19,19 +19,38 @@
   state_topic: !secret mqtt_topic_esp1_hum
   name: 'esp1_Humidity'
   unit_of_measurement: '%'
-  expire_after: 600
-
+  expire_after: 180
 - platform: mqtt
   state_topic: !secret mqtt_topic_esp1_temp
   name: 'esp1_Temperature'
   unit_of_measurement: 'ºC'
-  expire_after: 600
-
+  expire_after: 180
 - platform: mqtt
   state_topic: !secret mqtt_topic_esp1_light_analog
   name: 'esp1_Light'
   unit_of_measurement: '%'
-  expire_after: 600
+  expire_after: 180
+
+- platform: mqtt
+  state_topic: !secret mqtt_topic_esp2_temp
+  name: 'esp2_Temperature'
+  unit_of_measurement: 'ºC'
+  expire_after: 180
+- platform: mqtt
+  state_topic: !secret mqtt_topic_esp2_hum
+  name: 'esp2_Humidity'
+  unit_of_measurement: '%'
+  expire_after: 180
+- platform: mqtt
+  state_topic: !secret mqtt_topic_esp2_pres
+  name: 'esp2_Pressure'
+  unit_of_measurement: 'mb'
+  expire_after: 180
+- platform: mqtt
+  state_topic: !secret mqtt_topic_esp2_light_analog
+  name: 'esp2_Light'
+  unit_of_measurement: '%'
+  expire_after: 180
 
 - platform: mqtt
   state_topic: "owntracks/hass/iphone"
@@ -39,7 +58,6 @@
   unit_of_measurement: '%'
   value_template: '{{ value_json.batt }}'
   expire_after: 3600
-
 - platform: mqtt
   state_topic: "owntracks/hass/iphonese"
   name: 'Batería iPhone SE'
@@ -84,18 +102,28 @@
     dht22_humidity_rpi2h:
       friendly_name: Humedad
       unit_of_measurement: '%'
+
+#    temperatura_dormitorio_rpi2mpd:
+#      friendly_name: Temperatura (DS)
+#      unit_of_measurement: '°C'
+#    dht22_dormitorio_temperature_rpi2mpd:
+#      friendly_name: Temperatura (DHT)
+#      unit_of_measurement: '°C'
+#    dht22_dormitorio_humidity_rpi2mpd:
+#      friendly_name: Humedad
+#      unit_of_measurement: '%'
     temperatura_dormitorio_rpi2mpd:
-      friendly_name: Temperatura (DS)
+      friendly_name: Temperatura
       unit_of_measurement: '°C'
-    dht22_dormitorio_temperature_rpi2mpd:
-      friendly_name: Temperatura (DHT)
-      unit_of_measurement: '°C'
-    dht22_dormitorio_humidity_rpi2mpd:
+    humedad_dormitorio_rpi2mpd:
       friendly_name: Humedad
       unit_of_measurement: '%'
+    presion_dormitorio_rpi2mpd:
+      friendly_name: Presión
+      unit_of_measurement: 'mb'
 
 # Weather sensors:
-- platform: openweathermap
+- platform: myopenweathermap
   api_key: !secret openweathermap_api_key
   forecast: 1
   name: Villena
