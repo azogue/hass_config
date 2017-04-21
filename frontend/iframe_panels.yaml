@@ -1,3 +1,7 @@
+grafana:
+  title: Grafana
+  url: !secret grafana_url
+  icon: mdi:chart-areaspline
 enerpi:
   title: enerPI
   url: !secret enerpi_url
@@ -10,7 +14,7 @@ motioneye:
   title: MotionEye
   url: !secret motioneye_url
   icon: mdi:video
-music:
-  title: Mopidy
-  icon: mdi:music-box-outline
-  url: !secret mopidy_url
+#music:
+#  title: Mopidy
+#  icon: mdi:music-box-outline
+#  url: !secret mopidy_url

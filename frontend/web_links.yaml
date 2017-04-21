@@ -2,6 +2,8 @@ entities:
 # WAN access
   - name: NAS
     url: !secret nas_url
+  - name: Grafana
+    url: !secret grafana_url
   - name: MotionEye
     url: !secret motioneye_url
   - name: enerPI

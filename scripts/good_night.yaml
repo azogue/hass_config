@@ -17,3 +17,10 @@ sequence:
       message: 'Apagado de interruptores y encendido de cámaras de seguridad.'
       data:
         disable_notification: true
+
+  - delay:
+      seconds: 10
+
+  - alias: Apagado de luces
+    service: light.turn_off
+    entity_id: light.salon,light.dormitorio

@@ -9,7 +9,7 @@ use_pir_dormitorio_rpi2mpd:
 use_sound_sensor_rpi2h:
 use_vibration_sensor_rpi2h:
 use_esp1_pir:
-use_esp1_vibro:
+#use_esp1_vibro:
 
 # Alarma despertador ON/OFF
 alarm_clock_status:
@@ -23,4 +23,4 @@ switch_motion_lights:
 
 # Visibility group automation (expert mode)
 show_expert_mode:
-  initial: off
+#  initial: off

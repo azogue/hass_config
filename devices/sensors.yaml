@@ -103,15 +103,6 @@
       friendly_name: Humedad
       unit_of_measurement: '%'
 
-#    temperatura_dormitorio_rpi2mpd:
-#      friendly_name: Temperatura (DS)
-#      unit_of_measurement: '°C'
-#    dht22_dormitorio_temperature_rpi2mpd:
-#      friendly_name: Temperatura (DHT)
-#      unit_of_measurement: '°C'
-#    dht22_dormitorio_humidity_rpi2mpd:
-#      friendly_name: Humedad
-#      unit_of_measurement: '%'
     temperatura_dormitorio_rpi2mpd:
       friendly_name: Temperatura
       unit_of_measurement: '°C'

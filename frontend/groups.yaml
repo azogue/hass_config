@@ -19,17 +19,20 @@ Inputs Alarm:
 
 Eugenio:
   entities:
+    - device_tracker.iphone
     - device_tracker.hass_iphone
     - device_tracker.iphone_bt
     - device_tracker.applewatch
 
 Mary:
   entities:
+    - device_tracker.iphonese
     - device_tracker.hass_iphonese
     - device_tracker.iphonedemariadelcarmen_bt
 
 iPad:
   entities:
+    - device_tracker.ipad
     - device_tracker.ipaddeeugenio
     - device_tracker.ipaddeeugenio_bt
 
@@ -239,6 +242,7 @@ Tiempo en Villena_simple:
     - sensor.villena_forecast
 
 Links:
+  - weblink.grafana
   - weblink.slave_hass
   - weblink.slave_hass_mpd
   - weblink.enerpi
@@ -256,6 +260,7 @@ Links:
 Links_simple:
   name: Links
   entities:
+    - weblink.grafana
     - weblink.enerpi
     - weblink.motioneye
     - weblink.kodi_web_interface
@@ -300,24 +305,29 @@ Red e Internet:
   - switch.wol_nas
 
 Cacharros:
+  - group.ipad
+  - sensor.ipad_battery_level
+  - sensor.ipad_battery_state
   - sensor.iphone_battery_level
   - sensor.iphone_battery_state
-  - sensor.bateria_iphone_6s
-  - sensor.bateria_iphone_se
-  - group.ipad
+  - sensor.iphonese_battery_level
+  - sensor.iphonese_battery_state
   - device_tracker.jo01
+  - device_tracker.rpi3osmc
+  - device_tracker.rpi3w
+  - device_tracker.esp8266_1
   - device_tracker.rpi_wifi
   - device_tracker.rpi2hat
   - device_tracker.rpi2
 #  - device_tracker.rpi2_wifi
-  - device_tracker.rpi3w
-  - device_tracker.rpi3osmc
-  - device_tracker.esp8266_1
+  - sensor.bateria_iphone_6s
+  - sensor.bateria_iphone_se
 
 Cacharros_simple:
   name: Cacharros
   entities:
     - group.ipad
+    - sensor.ipad_battery_level
     - device_tracker.jo01
     - device_tracker.rpi_wifi
     - device_tracker.rpi2hat
@@ -493,7 +503,7 @@ Alarm Control:
   - switch.motioncam_estudio
   - switch.use_pir_dormitorio_rpi2mpd
   - switch.use_esp1_pir
-  - switch.use_esp1_vibro
+#  - switch.use_esp1_vibro
 
 Home Network:
   name: Red local del hogar
@@ -549,6 +559,7 @@ default_view:
     - group.dormitorio_rpi2mpd_simple
     - group.cocina
     - group.cocina_simple
+    - group.esp8266_2
     - group.galeria
     - group.caldera
     - group.caldera_simple

@@ -184,14 +184,14 @@
         entity_id: input_boolean.use_esp1_pir
         service: input_boolean.turn_on
       value_template: '{{ states.input_boolean.use_esp1_pir.state == "on" }}'
-    use_esp1_vibro:
-      turn_off:
-        entity_id: input_boolean.use_esp1_vibro
-        service: input_boolean.turn_off
-      turn_on:
-        entity_id: input_boolean.use_esp1_vibro
-        service: input_boolean.turn_on
-      value_template: '{{ states.input_boolean.use_esp1_vibro.state == "on" }}'
+#    use_esp1_vibro:
+#      turn_off:
+#        entity_id: input_boolean.use_esp1_vibro
+#        service: input_boolean.turn_off
+#      turn_on:
+#        entity_id: input_boolean.use_esp1_vibro
+#        service: input_boolean.turn_on
+#      value_template: '{{ states.input_boolean.use_esp1_vibro.state == "on" }}'
 
 - platform: mqtt
   name: use_esp1_binary_sensors

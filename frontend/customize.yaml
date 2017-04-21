@@ -165,6 +165,7 @@ switch.systemd_homebridge:
   icon: mdi:settings
 
 switch.show_expert_mode:
+  homebridge_hidden: true
   friendly_name: Modo experto
   icon: mdi:glasses
 
@@ -470,6 +471,8 @@ weblink.slave_hass:
 weblink.slave_hass_mpd:
   friendly_name: HA Dormitorio
   icon: mdi:castle
+weblink.grafana:
+  icon: mdi:chart-areaspline
 
 ####################################################################################
 #                                GROUPS                                            #
@@ -478,6 +481,9 @@ group.eugenio:
   entity_picture: /static/images/eugenio.png
 group.mary:
   entity_picture: /static/images/mari_carmen.png
+group.ipad:
+  icon: mdi:tablet-ipad
+  entity_picture: /static/images/ipad_air.png
 
 ####################################################################################
 #                                SCRIPTS                                           #
@@ -554,9 +560,6 @@ device_tracker.jo01:
   icon: mdi:music-note-bluetooth
 device_tracker.esp8266_1:
   icon: mdi:raspberrypi
-group.ipad:
-  icon: mdi:tablet-ipad
-
 
 switch.use_pir_estudio_rpi2h:
   homebridge_hidden: true
@@ -582,10 +585,10 @@ switch.use_esp1_pir:
   homebridge_hidden: true
   friendly_name: Usar movimiento en cocina
   icon: mdi:bullseye
-switch.use_esp1_vibro:
-  homebridge_hidden: true
-  friendly_name: Usar vibración en cocina
-  icon: mdi:vibrate
+#switch.use_esp1_vibro:
+#  homebridge_hidden: true
+#  friendly_name: Usar vibración en cocina
+#  icon: mdi:vibrate
 #switch.use_esp1_light:
 
 switch.motioncam_estudio:
