@@ -63,7 +63,7 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     name = config.get(CONF_NAME)
     forecast = config.get(CONF_FORECAST)
 
-    owm = OWM(config.get(CONF_API_KEY))
+    owm = OWM(API_key=config.get(CONF_API_KEY), language="es")
 
     if not owm:
         _LOGGER.error("Unable to connect to OpenWeatherMap")
