@@ -88,15 +88,15 @@ binary_sensor:
   bouncetime: 50
   pull_mode: "DOWN"
 
-input_boolean:
-  switch_matrix_display:
-#    initial: on
+#input_boolean:
+#  switch_matrix_display:
+##    initial: on
 
 sensor:
   - platform: myonewire
     names:
       28-800000015326: Temperatura Estudio
-    scan_interval: 40
+    scan_interval: 60
     maximum: 50
     minimum: 5
 
@@ -104,7 +104,7 @@ sensor:
     sensor: DHT22
     pin: 22
     name: dht22
-    scan_interval: 40
+    scan_interval: 60
     monitored_conditions:
       - temperature
       - humidity
@@ -166,22 +166,28 @@ script:
 weblink:
   entities:
     - name: Master Hass
-      url: http://192.168.1.13:8123/
+      url: !secret master_hass_url
     - name: Hass Dormitorio
-      url: http://192.168.1.52:8123/
+      url: !secret hass_dormitorio_url
     - name: MotionEye
       url: !secret motioneye_url
     - name: enerPI
-      url: http://192.168.1.44/enerpi/
+      url: !secret enerpi_url
 
 group:
   Estudio:
     - sensor.temperatura_estudio
     - sensor.dht22_temperature
     - sensor.dht22_humidity
+
+  Estudio_sensehat:
+    name: SenseHat
+    entities:
     - sensor.temperature
     - sensor.humidity
     - sensor.pressure
+
+  Movimiento:
     - binary_sensor.pir_estudio
     - binary_sensor.vibration_sensor
     - binary_sensor.sound_sensor
@@ -201,8 +207,8 @@ group:
       - script.reboot
       - script.shutdown
 
-  SenseHat:
-    - input_boolean.switch_matrix_display
+#  SenseHat:
+#    - input_boolean.switch_matrix_display
 
   Links:
     - weblink.master_hass
@@ -210,19 +216,19 @@ group:
     - weblink.motioneye
     - weblink.enerpi
 
-  Status:
-    name: Home Status
-    icon: mdi:castle
-    view: yes
-    entities:
-      - group.estudio
-      - group.sense_hat
-
-  Home Network:
-    name: Red local del hogar
-    icon: mdi:sitemap
-    view: yes
-    entities:
-      - group.rpi_2_sensehat_monitor
-      - group.sensehat
-      - group.links
+#  Status:
+#    name: Home Status
+#    icon: mdi:castle
+#    view: yes
+#    entities:
+#      - group.estudio
+#      - group.sense_hat
+#
+#  Home Network:
+#    name: Red local del hogar
+#    icon: mdi:sitemap
+#    view: yes
+#    entities:
+#      - group.rpi_2_sensehat_monitor
+#      - group.sensehat
+#      - group.links
