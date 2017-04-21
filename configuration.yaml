@@ -92,6 +92,11 @@ mqtt:
     payload: 'offline'
   protocol: 3.1
 
+########################################
+# influxdb export
+########################################
+influxdb: !include influxdb.yaml
+
 ####################################################
 #                     Telegram webhooks            #
 ####################################################
@@ -127,7 +132,7 @@ logger:
     # custom_components.switch: error
 
 browser:
-#conversation:
+conversation:
 discovery:
 frontend:
 sun:
