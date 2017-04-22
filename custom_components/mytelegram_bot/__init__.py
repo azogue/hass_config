@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Component to receive telegram messages.
 
@@ -13,16 +14,22 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import discovery, config_per_platform
 from homeassistant.setup import async_prepare_setup_platform
 
-DOMAIN = 'telegram_bot'
+DOMAIN = 'mytelegram_bot'
 
 _LOGGER = logging.getLogger(__name__)
 
 EVENT_TELEGRAM_COMMAND = 'telegram_command'
 EVENT_TELEGRAM_TEXT = 'telegram_text'
+EVENT_TELEGRAM_CALLBACK = 'telegram_callback'
 
 ATTR_COMMAND = 'command'
 ATTR_USER_ID = 'user_id'
 ATTR_ARGS = 'args'
+ATTR_DATA = 'data'
+ATTR_MSG = 'message'
+ATTR_CALLBACK_QUERY = 'callback_query'
+ATTR_CHAT_INSTANCE = 'chat_instance'
+ATTR_MSGID = 'id'
 ATTR_FROM_FIRST = 'from_first'
 ATTR_FROM_LAST = 'from_last'
 ATTR_TEXT = 'text'
@@ -50,7 +57,7 @@ def async_setup(hass, config):
             _LOGGER.error("Unknown notification service specified")
             return
 
-        _LOGGER.info("Setting up1 %s.%s", DOMAIN, p_type)
+        _LOGGER.info("Setting up %s.%s", DOMAIN, p_type)
 
         try:
             if hasattr(platform, 'async_setup_platform'):
@@ -101,31 +108,52 @@ class BaseTelegramBotEntity:
 
     def process_message(self, data):
         """Check for basic message rules and fire an event if message is ok."""
-        data = data.get('message')
 
-        if (not data
-                or 'from' not in data
-                or 'text' not in data
-                or data['from'].get('id') not in self.allowed_chat_ids):
-            # Message is not correct.
-            _LOGGER.error("Incoming message does not have required data.")
-            return False
+        def _get_message_data(msg_data, allowed_chat_ids):
+            if (not msg_data
+                    or 'from' not in msg_data
+                    or 'text' not in msg_data
+                    or data['from'].get('id') not in allowed_chat_ids):
+                # Message is not correct.
+                _LOGGER.error("Incoming message does not have required data.")
+                return None
+            return {
+                ATTR_USER_ID: msg_data['from']['id'],
+                ATTR_FROM_FIRST: msg_data['from']['first_name'],
+                ATTR_FROM_LAST: msg_data['from']['last_name']}
 
-        event = EVENT_TELEGRAM_COMMAND
-        event_data = {
-            ATTR_USER_ID: data['from']['id'],
-            ATTR_FROM_FIRST: data['from']['first_name'],
-            ATTR_FROM_LAST: data['from']['last_name']}
+        if ATTR_MSG in data:
+            event = EVENT_TELEGRAM_COMMAND
+            data = data.get(ATTR_MSG)
+            event_data = _get_message_data(data, self.allowed_chat_ids)
+            if event_data is None:
+                return False
 
-        if data['text'][0] == '/':
-            pieces = data['text'].split(' ')
-            event_data[ATTR_COMMAND] = pieces[0]
-            event_data[ATTR_ARGS] = pieces[1:]
+            if data['text'][0] == '/':
+                pieces = data['text'].split(' ')
+                event_data[ATTR_COMMAND] = pieces[0]
+                event_data[ATTR_ARGS] = pieces[1:]
+            else:
+                event_data[ATTR_TEXT] = data['text']
+                event = EVENT_TELEGRAM_TEXT
 
+            self.hass.bus.async_fire(event, event_data)
+            return True
+        elif ATTR_CALLBACK_QUERY in data:
+            event = EVENT_TELEGRAM_CALLBACK
+            data = data.get('callback_query')
+            event_data = _get_message_data(data, self.allowed_chat_ids)
+            if event_data is None:
+                return False
+
+            event_data[ATTR_DATA] = data[ATTR_DATA]
+            event_data[ATTR_MSG] = data[ATTR_MSG]
+            event_data[ATTR_CHAT_INSTANCE] = data[ATTR_CHAT_INSTANCE]
+            event_data[ATTR_MSGID] = data[ATTR_MSGID]
+
+            self.hass.bus.async_fire(event, event_data)
+            return True
         else:
-            event_data[ATTR_TEXT] = data['text']
-            event = EVENT_TELEGRAM_TEXT
-
-        self.hass.bus.async_fire(event, event_data)
-
-        return True
+            # Some other thing...
+            _LOGGER.warning('SOME OTHER THING RECEIVED --> "{}"'.format(data))
+            return False
