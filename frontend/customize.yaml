@@ -43,6 +43,7 @@ sensor.alarm_clock_time:
   icon: mdi:alarm
 input_boolean.manual_trigger_lacafetera:
   icon: mdi:play-circle
+  homebridge_hidden: true
 
 input_boolean.switch_master_alarm:
   homebridge_hidden: true
@@ -190,17 +191,20 @@ camera.enerpi_ldr:
 sensor.speedtest_ping:
   icon: mdi:speedometer
   friendly_name: Ping
+  homebridge_hidden: true
 sensor.speedtest_download:
   icon: mdi:download
   friendly_name: Download
+  homebridge_hidden: true
 sensor.speedtest_upload:
   icon: mdi:upload
   friendly_name: Upload
+  homebridge_hidden: true
 
 # Local sensors
 sensor.T_salon:
   friendly_name: Temperatura (DS)
-  homebridge_hidden: True
+#  homebridge_hidden: True
 #  homebridge_name: Temperatura (DS)
 sensor.salon_temperature:
   friendly_name: Temperatura (DHT)
@@ -303,11 +307,24 @@ sensor.cpu_use_rpi2h:
   homebridge_hidden: True
 sensor.cpu_use_rpi2mpd:
   homebridge_hidden: True
+sensor.disk_use_home:
+  homebridge_hidden: True
 sensor.disk_use__rpi2h:
   homebridge_hidden: True
 sensor.disk_use__rpi2mpd:
   homebridge_hidden: True
 sensor.last_boot_rpi2h:
+  homebridge_hidden: True
+
+sensor.hass_cpu_temperature:
+  homebridge_hidden: True
+sensor.hass_cpu_temperature_rpi2h:
+  homebridge_hidden: True
+sensor.hass_cpu_temperature_rpi2mpd:
+  homebridge_hidden: True
+sensor.kodi_cpu_temperature:
+  homebridge_hidden: True
+sensor.influxdb_cpu_temperature:
   homebridge_hidden: True
 
 # enerweb sensors

@@ -1,4 +1,4 @@
-grafana:
+grafana_access:
   title: Grafana
   url: !secret grafana_url
   icon: mdi:chart-areaspline
@@ -6,7 +6,7 @@ enerpi:
   title: enerPI
   url: !secret enerpi_url
   icon: mdi:power-plug
-kodi:
+kodi_access:
   title: Kodi
   url: !secret kodi_url
   icon: mdi:kodi

@@ -271,22 +271,25 @@ Links_simple:
     - weblink.slave_hass
     - weblink.slave_hass_mpd
 
-Host RPI3:
+Host HA:
+  - sensor.hass_cpu_temperature
+  - sensor.kodi_cpu_temperature
+  - sensor.influxdb_cpu_temperature
   - sensor.cpu_use
   - sensor.ram_free
   - sensor.last_boot
   - sensor.disk_use_home
 #  - sensor.badlogin
-#  - sensor.since_last_boot
-#  - sensor.since_last_boot_templated
 
-Host RPI2 Hat:
+Host Estudio:
+  - sensor.hass_cpu_temperature_rpi2h
   - sensor.cpu_use_rpi2h
   - sensor.ram_free_rpi2h
   - sensor.last_boot_rpi2h
   - sensor.disk_use__rpi2h
 
-Host RPI2 MPD:
+Host Dormitorio:
+  - sensor.hass_cpu_temperature_rpi2mpd
   - sensor.cpu_use_rpi2mpd
   - sensor.ram_free_rpi2mpd
   - sensor.last_boot_rpi2mpd
@@ -517,9 +520,9 @@ Home Network:
     - group.family
     - group.links
     - group.links_simple
-    - group.host_rpi3
-    - group.host_rpi2_hat
-    - group.host_rpi2_mpd
+    - group.host_ha
+    - group.host_estudio
+    - group.host_dormitorio
     - group.cacharros
     - group.cacharros_simple
     - group.red_e_internet

@@ -114,9 +114,16 @@ whitelist:
  - sensor.cpu_use_rpi2h
  - sensor.cpu_use_rpi2mpd
  - sensor.disk_use_home
+ - sensor.disk_use__rpi2h
+ - sensor.disk_use__rpi2mpd
  - sensor.ram_free
  - sensor.ram_free_rpi2h
  - sensor.ram_free_rpi2mpd
+ - sensor.hass_cpu_temperature
+ - sensor.kodi_cpu_temperature
+ - sensor.influxdb_cpu_temperature
+ - sensor.hass_cpu_temperature_rpi2h
+ - sensor.hass_cpu_temperature_rpi2mpd
  - sensor.warning_counter_core
  - sensor.core_error_counter
  - sensor.error_counter_notifiers
@@ -125,6 +132,10 @@ whitelist:
  - switch.switch_master_alarm
  - switch.systemd_appdaemon
  - switch.systemd_homebridge
+
+ - group.eugenio
+ - group.mary
+ - group.ipad
 
 #  tags:
 #    source: hass

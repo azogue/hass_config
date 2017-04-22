@@ -142,6 +142,30 @@
     - type: processor_use
     - type: last_boot
 
+- platform: command_line
+  name: HASS CPU Temperature
+  command: "cat /sys/class/thermal/thermal_zone0/temp"
+  unit_of_measurement: "°C"
+  value_template: '{{ value | multiply(0.001) | round(1) }}'
+  scan_interval: 60
+#- platform: command_line
+#  name: enerPI CPU Temperature
+#  command: !secret ssh_cmd_rpi_temp_enerpi
+#  unit_of_measurement: "°C"
+#  value_template: '{{ value | multiply(0.001) | round(1) }}'
+- platform: command_line
+  name: KODI CPU Temperature
+  command: !secret ssh_cmd_rpi_temp_kodi
+  unit_of_measurement: "°C"
+  value_template: '{{ value | multiply(0.001) | round(1) }}'
+  scan_interval: 60
+- platform: command_line
+  name: influxDB CPU Temperature
+  command: !secret ssh_cmd_rpi_temp_influxdb
+  unit_of_measurement: "°C"
+  value_template: '{{ value | multiply(0.001) | round(1) }}'
+  scan_interval: 60
+
 - platform: speedtest
   minute:
     - 5
