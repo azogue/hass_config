@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 """
 Allows utilizing telegram webhooks.
 
@@ -44,26 +45,38 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-def setup_platform(hass, config, async_add_devices, discovery_info=None):
+@asyncio.coroutine
+def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Setup the polling platform."""
     import telegram
     bot = telegram.Bot(config[CONF_API_KEY])
 
     current_status = bot.getWebhookInfo()
+
+    # Some logging of Bot current status:
+    last_error_date = getattr(current_status, 'last_error_date', None)
+    if (last_error_date is not None) and (type(last_error_date) is int):
+        import datetime as dt
+        last_error_date = dt.datetime.fromtimestamp(last_error_date)
+        _LOGGER.info("telegram webhook last_error_date: {}. Status: {}"
+                     .format(last_error_date, current_status))
+    else:
+        _LOGGER.debug("telegram webhook Status: {}".format(current_status))
     handler_url = "{0}{1}".format(hass.config.api.base_url,
                                   TELEGRAM_HANDLER_URL)
     if current_status and current_status['url'] != handler_url:
         if bot.setWebhook(handler_url):
             _LOGGER.info("set new telegram webhook %s", handler_url)
-
-            hass.http.register_view(
-                BotPushReceiver(
-                    hass,
-                    config[CONF_ALLOWED_CHAT_IDS],
-                    config[CONF_TRUSTED_NETWORKS]))
-
         else:
             _LOGGER.error("set telegram webhook failed %s", handler_url)
+            return False
+
+    hass.http.register_view(
+        BotPushReceiver(
+            hass,
+            config[CONF_ALLOWED_CHAT_IDS],
+            config[CONF_TRUSTED_NETWORKS]))
+    return True
 
 
 class BotPushReceiver(HomeAssistantView, BaseTelegramBotEntity):
