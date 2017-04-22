@@ -145,6 +145,12 @@ sensor:
       - type: processor_use
       - type: last_boot
 
+  - platform: command_line
+    name: HASS CPU Temperature
+    command: "cat /sys/class/thermal/thermal_zone0/temp"
+    unit_of_measurement: "°C"
+    value_template: '{{ value | multiply(0.001) | round(1) }}'
+
 media_player:
   - platform: mpd
     host: !secret mpd_host
@@ -235,6 +241,7 @@ group:
   RPi 2 monitor:
     control: hidden
     entities:
+      - sensor.hass_cpu_temperature
       - sensor.disk_use_
       - sensor.cpu_use
       - sensor.ram_free
