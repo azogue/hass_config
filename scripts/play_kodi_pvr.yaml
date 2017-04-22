@@ -1,0 +1,33 @@
+alias: Enciende la caja tonta
+sequence:
+  - alias: Play TV channel
+    service: media_player.play_media
+    data_template:
+      entity_id: media_player.kodi
+#      The type of the content to play. Must be one of MUSIC, TVSHOW, VIDEO, EPISODE, CHANNEL or PLAYLIST
+      media_content_type: "CHANNEL"
+      media_content_id: >
+        {% if (now().hour < 14) or ((now().hour == 14) and (now().minute < 50)) %}
+          10
+        {% elif (now().hour < 16) %}
+          15
+        {% elif (now().hour < 20) %}
+          2
+        {% elif (now().hour == 20) and (now().minute < 50) %}
+          10
+        {% elif (now().hour == 20) or ((now().hour == 21) and (now().minute < 15)) %}
+          15
+        {% else %}
+          10
+        {% endif %}
+
+  - alias: Notificación de selección de canal
+    service: notify.telegram_bot
+    data_template:
+      title: '*TV PVR ON*'
+      target: !secret telegram_bot_chat_id_admin
+      message: >
+        Encendido de caja tonta en canal '{% if (now().hour < 14) or ((now().hour == 14) and (now().minute < 50)) %}laSexta HD{% elif (now().hour < 16) %}antena3 HD{% elif (now().hour < 20) %}24h{% elif (now().hour == 20) and (now().minute < 50) %}laSexta HD{% elif (now().hour == 20) or ((now().hour == 21) and (now().minute < 15)) %}antena3 HD{% else %}laSexta HD{% endif %}'.
+
+      data:
+        disable_notification: true

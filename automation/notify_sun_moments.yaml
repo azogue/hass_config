@@ -19,9 +19,9 @@
   trigger:
     platform: sun
     event: sunset
-#    offset: '+00:00:00'
+    offset: '+00:00:00'
   action:
-    service: notify.ios
+    service: notify.ios_iphone
     data:
       title: 'Empieza la noche!'
       message: 'Acaba de ponerse el sol..'

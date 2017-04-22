@@ -1,10 +1,12 @@
 ####################################################################################
 #                                ZONES                                             #
 ####################################################################################
-zone.home:
-  track_ios: true
-zone.hospital_elda:
-  track_ios: true
+#zone.home:
+#  track_ios: true
+#zone.hospital:
+#  track_ios: true
+zone.curre:
+  track_ios: false
 
 ####################################################################################
 #                                KODI                                              #
@@ -478,12 +480,15 @@ weblink.grafana:
 #                                GROUPS                                            #
 ####################################################################################
 group.eugenio:
-  entity_picture: /static/images/eugenio.png
+#  entity_picture: /static/images/eugenio.png
+  entity_picture: /local/images/eugenio.png
 group.mary:
-  entity_picture: /static/images/mari_carmen.png
+#  entity_picture: /static/images/mari_carmen.png
+  entity_picture: /local/images/mari_carmen.png
 group.ipad:
   icon: mdi:tablet-ipad
-  entity_picture: /static/images/ipad_air.png
+#  entity_picture: /static/images/ipad_air.png
+  entity_picture: /local/images/ipad_air.png
 
 ####################################################################################
 #                                SCRIPTS                                           #
@@ -494,6 +499,14 @@ script.reboot:
 script.shutdown:
   friendly_name: APAGAR
   icon: mdi:power
+
+script.play_kodi_pvr:
+  friendly_name: Enciende la caja tonta
+  icon: mdi:television-guide
+
+script.restart_kodi_osmc:
+  friendly_name: Reset KODI
+  icon: mdi:restart
 
 ####################################################################################
 #                                SCENES                                            #

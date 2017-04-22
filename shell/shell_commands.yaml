@@ -15,3 +15,6 @@ cmd_shutdown: 'sudo shutdown now'
 
 # MySQL Database flush hosts
 cmd_recorder_flush_hosts: !secret recorder_flush_cmd
+
+# Kill OSMC Kodi (when frozen)
+cmd_kill_kodi: !secret kill_kodi_cmd

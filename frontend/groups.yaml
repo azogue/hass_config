@@ -219,6 +219,8 @@ Kodi:
 #    - input_select.salon_movie_mode
     - switch.toggle_kodi_ambilight
     - switch.toggle_config_kodi_ambilight
+    - script.play_kodi_pvr
+    - script.restart_kodi_osmc
 
 Tiempo en Villena:
   - sun.sun
@@ -413,6 +415,8 @@ Scripts:
   control: hidden
   entities:
     - script.good_night
+    - script.play_kodi_pvr
+    - script.restart_kodi_osmc
     - script.flash_cuenco
     - script.notify_hass_start
     - script.test_notify

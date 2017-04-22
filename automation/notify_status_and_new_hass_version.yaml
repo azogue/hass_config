@@ -1,15 +1,17 @@
 # Startup notifications & new version notify
 - alias: Startup Notification
   trigger:
-    platform: homeassistant
-    event: start
+    - platform: homeassistant
+      event: start
+    - platform: event
+      event_type: homeassistant_start
   action:
-  - service: switch.turn_on
-    entity_id: switch.camara
-  - service: switch.turn_on
-    entity_id: switch.caldera
-  - service: script.turn_on
-    entity_id: script.notify_hass_start
+    - service: switch.turn_on
+      entity_id: switch.camara
+    - service: switch.turn_on
+      entity_id: switch.caldera
+    - service: script.turn_on
+      entity_id: script.notify_hass_start
 
 - alias: Update notifications
   trigger:

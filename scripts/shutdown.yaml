@@ -1,10 +1,9 @@
 alias: Apagar RPI
 sequence:
-  - service: notify.ios
+  - service: notify.ios_iphone
     data:
       title: 'Apagando sistema domótico'
       message: "Espera al menos 30 segundos para desenchufar"
-      target: !secret ios_target
       data:
         push:
           badge: 10
