@@ -13,7 +13,7 @@ rsync -avrzp -L --no-o --no-g -ui  --stats --progress -e ssh --exclude-from $LOC
 
 echo COPY CUSTOM IMAGES TO STATIC in $REMOTE_STATIC_PATH:
 ssh pi@$HASSIP sudo cp $REMOTE_HASS/custom_images/* $REMOTE_STATIC_PATH
-ssh pi@$HASSIP ls -la $REMOTE_STATIC_PATH/images/
+ssh pi@$HASSIP ls -la $REMOTE_STATIC_PATH
 
 echo Set permissions for homeassistant
 ssh pi@$HASSIP sudo chown homeassistant:homeassistant -R $REMOTE_HASS
