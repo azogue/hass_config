@@ -5,8 +5,6 @@
 #  track_ios: true
 #zone.hospital:
 #  track_ios: true
-zone.curre:
-  track_ios: false
 
 ####################################################################################
 #                                KODI                                              #

@@ -15,6 +15,7 @@ from homeassistant.const import (
     CONF_PASSWORD, CONF_WHITELIST)
 from homeassistant.helpers import state as state_helper
 import homeassistant.helpers.config_validation as cv
+from requests.exceptions import ReadTimeout
 
 REQUIREMENTS = ['influxdb==3.0.0']
 
@@ -27,8 +28,8 @@ CONF_OVERRIDE_MEASUREMENT = 'override_measurement'
 
 DEFAULT_DATABASE = 'home_assistant'
 DEFAULT_VERIFY_SSL = True
-DOMAIN = 'influxdb'
-TIMEOUT = 5
+DOMAIN = 'myinfluxdb'
+TIMEOUT = 15
 
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
@@ -97,7 +98,7 @@ def setup(hass, config):
         """Listen for new messages on the bus and sends them to Influx."""
         state = event.data.get('new_state')
         if state is None or state.state in (
-                STATE_UNKNOWN, '', STATE_UNAVAILABLE) or \
+                STATE_UNKNOWN, '', 'nan', STATE_UNAVAILABLE) or \
                 state.entity_id in blacklist:
             return
 
@@ -154,8 +155,10 @@ def setup(hass, config):
 
         try:
             influx.write_points(json_body)
-        except exceptions.InfluxDBClientError:
+        except (exceptions.InfluxDBClientError, exceptions.InfluxDBServerError):
             _LOGGER.exception('Error saving event "%s" to InfluxDB', json_body)
+        except ReadTimeout:
+            _LOGGER.error('TimeOut error saving event "%s" to InfluxDB', json_body)
 
     hass.bus.listen(EVENT_STATE_CHANGED, influx_event_listener)
 

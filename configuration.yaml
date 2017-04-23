@@ -20,12 +20,6 @@ zone 2:
   longitude: !secret z2_longitude
   radius: !secret z2_radius
   icon: !secret z2_icon
-zone 3:
-  name: !secret z3_name
-  latitude: !secret z3_latitude
-  longitude: !secret z3_longitude
-  radius: !secret z3_radius
-  icon: !secret z3_icon
 
 http:
   base_url: !secret base_url
@@ -95,19 +89,30 @@ mqtt:
 ########################################
 # influxdb export
 ########################################
-influxdb: !include influxdb.yaml
+#influxdb: !include influxdb_grafana/influxdb.yaml
+# customized for longer timeout and some error handling
+myinfluxdb: !include influxdb_grafana/influxdb.yaml
 
 ####################################################
 #                     Telegram webhooks            #
 ####################################################
-mytelegram_webhooks:
-#  trusted_networks:
-#    - 149.154.167.197/32
-#    - 149.154.167.198/31
+#mytelegram_webhooks:
+##  trusted_networks:
+##    - 149.154.167.197/32
+##    - 149.154.167.198/31
+#  api_key: !secret telegram_bot_api_key
+#  user_id:
+#    Eugenio: !secret telegram_bot_chat_id_admin
+#    Carmen: !secret telegram_bot_chat_id_2
+#    Maria: !secret telegram_bot_chat_id_3
+
+mytelegram_bot:
+  platform: webhooks
   api_key: !secret telegram_bot_api_key
-  user_id:
-    Eugenio: !secret telegram_bot_chat_id_admin
-    Carmen: !secret telegram_bot_chat_id_2
+  allowed_chat_ids:
+    - !secret telegram_bot_chat_id_admin
+    - !secret telegram_bot_chat_id_2
+    - !secret telegram_bot_chat_id_3
 
 ####################################################
 #                     Enables                      #
@@ -115,18 +120,22 @@ mytelegram_webhooks:
 logger:
   default: warn
   logs:
-    netdisco: error
-    homeassistant.setup: error
+#    netdisco: error
+#    homeassistant.setup: error
     homeassistant.bootstrap: info
-#    homeassistant.components.automation: info
-    homeassistant.components.camera: error
-    homeassistant.components.netdisco: error
+    homeassistant.components.recorder: info
+    homeassistant.components.history: debug
+#    homeassistant.components.logbook: debug
+    homeassistant.components.automation: info
+#    homeassistant.components.camera: error
+#    homeassistant.components.netdisco: error
     homeassistant.components.script: info
 #    homeassistant.components.media_player: info
     homeassistant.components.tts: debug
     custom_components.notify.richsmtp: info
     custom_components.notify.mytelegram: info
     custom_components.mytelegram_webhooks: info
+    custom_components.mytelegram_bot: info
     # custom_components.sensor.enerweb: info
     # custom_components.enerpi: info
     # custom_components.switch: error
