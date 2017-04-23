@@ -17,10 +17,9 @@ from homeassistant.const import (
     HTTP_BAD_REQUEST, HTTP_UNAUTHORIZED)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.components.http import HomeAssistantView
-from homeassistant.components.telegram_bot import CONF_ALLOWED_CHAT_IDS, \
-    BaseTelegramBotEntity, PLATFORM_SCHEMA
 from homeassistant.const import CONF_API_KEY
 from homeassistant.components.http.util import get_real_ip
+from . import CONF_ALLOWED_CHAT_IDS, BaseTelegramBotEntity, PLATFORM_SCHEMA
 
 DEPENDENCIES = ['http']
 REQUIREMENTS = ['python-telegram-bot==5.3.0']

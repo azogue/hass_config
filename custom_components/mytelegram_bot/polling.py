@@ -1,5 +1,5 @@
+# -*- coding: utf-8 -*-
 """Telegram bot polling implementation."""
-
 import asyncio
 from asyncio.futures import CancelledError
 import logging
@@ -7,8 +7,7 @@ import logging
 import async_timeout
 from aiohttp.client_exceptions import ClientError
 
-from homeassistant.components.telegram_bot import CONF_ALLOWED_CHAT_IDS, \
-    BaseTelegramBotEntity, PLATFORM_SCHEMA
+from . import CONF_ALLOWED_CHAT_IDS, BaseTelegramBotEntity, PLATFORM_SCHEMA
 from homeassistant.const import EVENT_HOMEASSISTANT_START, \
     EVENT_HOMEASSISTANT_STOP, CONF_API_KEY
 from homeassistant.core import callback
