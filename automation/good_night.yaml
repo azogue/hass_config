@@ -1,0 +1,79 @@
+- alias: Buenas noches
+  trigger:
+    platform: time
+    minutes: '/5'
+    seconds: 00
+
+  condition:
+    # At night
+    - condition: time
+      after: '23:50:00'
+      before: '05:00:00'
+
+    # Not playing anything for a time
+    - condition: state
+      entity_id: media_player.kodi
+      state: 'idle'
+      for:
+        minutes: 15
+
+    # Lights off
+    - condition: state
+      entity_id: light.dormitorio
+      state: 'off'
+      for:
+        minutes: 3
+    - condition: state
+      entity_id: light.salon
+      state: 'off'
+      for:
+        minutes: 5
+
+    # Family at home
+    - condition: state
+      entity_id: group.eugenio
+      state: 'home'
+      for:
+        minutes: 10
+    - condition: state
+      entity_id: group.mary
+      state: 'home'
+      for:
+        minutes: 10
+
+    # Low Light level
+    - condition: template
+      value_template: >
+        {% if states.sensor.enerpi_ldr and states.sensor.esp1_light and states.sensor.esp2_light %}
+          {{ (states.sensor.enerpi_ldr.state|float < 5) and (states.sensor.esp1_light.state|float < 10) and (states.sensor.esp2_light.state|float < 10)}}
+        {% elif states.sensor.enerpi_ldr and states.sensor.esp1_light %}
+          {{ (states.sensor.enerpi_ldr.state|float < 5) and (states.sensor.esp1_light.state|float < 10)}}
+        {% elif states.sensor.esp1_light %}
+          {{ states.sensor.esp1_light.state|float < 10}}
+        {% else %}
+          1
+        {% endif %}
+
+    # No multi-trigger!
+    - condition: template
+      value_template: '{% if states.automation.buenas_noches.attributes.last_triggered %}{{as_timestamp(now()) - as_timestamp(states.automation.buenas_noches.attributes.last_triggered) > 7 * 3600}}{% else %}{{ 1 > 0 }}{% endif %}'
+
+  action:
+    # Run good_night script
+  - service: script.turn_on
+    entity_id: script.good_night
+
+    # Notify script run
+  - service: persistent_notification.create
+    data:
+      title: '¡Buenas noches!'
+      message: "Script de buenas noches auto-activado en {{ as_timestamp(now())| timestamp_local}}."
+      notification_id: "good_night_notif"
+
+  - service: notify.telegram_bot
+    data_template:
+      title: '*¡Buenas noches!*'
+      message: "Script de buenas noches *auto-activado*."
+      target: !secret telegram_bot_chat_id_admin
+      data:
+        disable_notification: true
