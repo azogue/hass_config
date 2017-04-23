@@ -23,10 +23,9 @@
 #      title: 'New Home Assistant Release'
 #      target: !secret pb_target
 #      message: "Home Assistant  {{ states.updater.updater.state }}  is now available."
-  - service: notify.ios
+  - service: notify.ios_iphone
     data:
       title: 'New Home Assistant Release'
-      target: !secret ios_target
       message: "Home Assistant  {{ states.updater.updater.state }}  is now available."
       data:
         push:

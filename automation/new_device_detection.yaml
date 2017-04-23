@@ -4,12 +4,11 @@
     platform: event
     event_type: device_tracker_new_device
   action:
-  - service: notify.ios
+  - service: notify.ios_iphone
     alias: Notify new BT device
     data_template:
       title: "Nuevo dispositivo detectado"
       message: "entity_id:\n* {{ trigger.event.as_dict()['data']['entity_id'] }}. Hostname: {{ trigger.event.as_dict()['data']['host_name'] }}"
-      target: !secret ios_target
       data:
         push:
           badge: 1
