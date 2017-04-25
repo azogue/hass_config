@@ -15,7 +15,7 @@ from homeassistant.const import (
     CONF_PASSWORD, CONF_WHITELIST)
 from homeassistant.helpers import state as state_helper
 import homeassistant.helpers.config_validation as cv
-from requests.exceptions import ReadTimeout
+from requests.exceptions import ReadTimeout, ConnectionError, ConnectTimeout
 
 REQUIREMENTS = ['influxdb==3.0.0']
 
@@ -157,6 +157,8 @@ def setup(hass, config):
             influx.write_points(json_body)
         except (exceptions.InfluxDBClientError, exceptions.InfluxDBServerError):
             _LOGGER.exception('Error saving event "%s" to InfluxDB', json_body)
+        except (ConnectionError, ConnectTimeout) as e:
+            _LOGGER.error('%s error saving event "%s" to InfluxDB', str(e), json_body)
         except ReadTimeout:
             _LOGGER.error('TimeOut error saving event "%s" to InfluxDB', json_body)
 
