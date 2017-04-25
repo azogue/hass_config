@@ -1,8 +1,19 @@
 # -*- coding: utf-8 -*-
 """
-Component to receive telegram messages.
+Component to receive telegram messages, including callback queries.
 
 Either by polling or webhook.
+
+callback query message:
+```
+{'chat_instance': 'XXXXXXXXXXXXXXXXXXX',
+ 'data': '[/data sended]',
+ 'from': {'username': '[USERNAME]',
+          'last_name': '[LAST_NAME]', 'first_name': '[FIRST_NAME]',
+          'id': 123456789},
+ 'id': '1234567890123456789',
+ 'message': { original_msg }
+```
 """
 
 import asyncio
@@ -112,7 +123,7 @@ class BaseTelegramBotEntity:
         def _get_message_data(msg_data, allowed_chat_ids):
             if (not msg_data
                     or 'from' not in msg_data
-                    or 'text' not in msg_data
+                    or ('text' not in msg_data and 'data' not in msg_data)
                     or data['from'].get('id') not in allowed_chat_ids):
                 # Message is not correct.
                 _LOGGER.error("Incoming message does not have required data ({})".format(msg_data))
