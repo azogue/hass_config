@@ -4,30 +4,6 @@ Telegram platform for notify component.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/notify.telegram/
-
-Changes:
-- Customized for using any of both parsers (`markdown` and `html`) in any
-message with: `data: {'parse_mode': 'html'}`, with markdown as default,
-but can be globally customized with 'parse_mode' in yaml config.
-- Inline keyboards with `data: {'inline_keyboard':
-                                [(text_btn1, data_callback_btn1), ...]}`
-- Custom reply_markup (keyboard or inline_keyboard) for every type of message
-(message, photo, location & document).
-- `disable_notification`, `disable_web_page_preview` and
-`reply_to_message_id` optional keyword args.
-- Callback replies for edit messages, reply_markup keyboards and captions,
-and for answering callback queries.
-with: `data: {'callback_query'|'edit_message'|
-              'edit_caption'|'edit_replymarkup': ...}`
-- Line break between title and message fields: `'{}\n{}'.format(title, message)`
-
-- BREAKING CHANGE: use array of `user_id` to allow one notifier
-to comunicate with multiple users (first user is the default, but you
-can pass a `ATTR_TARGET=chat_id_X` to send a message to other recipient).
-(Reading `chat_id` as User1 to work with old configuration)
-
-- Ablility to target multiple pre-authorized chat_ids (`target=[12345, 67890]`) when sending a message.
-
 """
 import io
 import logging
@@ -42,17 +18,16 @@ from homeassistant.components.notify import (
 from homeassistant.const import (
     CONF_API_KEY, CONF_TIMEOUT, ATTR_LOCATION, ATTR_LATITUDE, ATTR_LONGITUDE)
 
-
 _LOGGER = logging.getLogger(__name__)
 
-REQUIREMENTS = ['python-telegram-bot==5.3.0']
+REQUIREMENTS = ['python-telegram-bot==5.3.1']
 
 ATTR_PARSER = 'parse_mode'
 PARSER_MD = 'markdown'
 PARSER_HTML = 'html'
 ATTR_DISABLE_NOTIF = 'disable_notification'
 ATTR_DISABLE_WEB_PREV = 'disable_web_page_preview'
-ATTR_REPLY_TO_MESSAGE_ID = 'reply_to_message_id'
+ATTR_REPLY_TO_MSGID = 'reply_to_message_id'
 
 ATTR_PHOTO = 'photo'
 ATTR_KEYBOARD = 'keyboard'
@@ -84,7 +59,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 # noinspection PyUnusedLocal
 def get_service(hass, config, discovery_info=None):
     """Get the Telegram notification service."""
-    import telegram
+    from telegram import Bot
 
     try:
         chat_id = config.get(CONF_CHAT_ID)
@@ -94,10 +69,10 @@ def get_service(hass, config, discovery_info=None):
             user_id_array = config.get(CONF_USER_ID)
         api_key = config.get(CONF_API_KEY)
         default_parser = config.get(ATTR_PARSER)
-        bot = telegram.Bot(token=api_key)
+        bot = Bot(token=api_key)
         username = bot.getMe()['username']
-        _LOGGER.info("Telegram bot is '@{}', users allowed are: {}, default={}"
-                     .format(username, user_id_array, list(user_id_array)[0]))
+        _LOGGER.debug("Telegram bot is '@%s', users allowed: %s, default=%s",
+                      username, user_id_array, list(user_id_array)[0])
     except HTTPError:
         _LOGGER.error("Please check your access token")
         return None
@@ -109,7 +84,7 @@ def load_data(url=None, file=None, username=None, password=None):
     """Load photo/document into ByteIO/File container from a source."""
     try:
         if url is not None:
-            # load photo from url
+            # Load photo from URL
             if username is not None and password is not None:
                 req = requests.get(url, auth=(username, password), timeout=15)
             else:
@@ -117,7 +92,7 @@ def load_data(url=None, file=None, username=None, password=None):
             return io.BytesIO(req.content)
 
         elif file is not None:
-            # load photo from file
+            # Load photo from file
             return open(file, "rb")
         else:
             _LOGGER.warning("Can't load photo no photo found in params!")
@@ -133,7 +108,7 @@ class TelegramNotificationService(BaseNotificationService):
 
     def __init__(self, api_key, user_id_array, parser):
         """Initialize the service."""
-        import telegram
+        from telegram import Bot
         from telegram.parsemode import ParseMode
 
         self._api_key = api_key
@@ -148,12 +123,16 @@ class TelegramNotificationService(BaseNotificationService):
         self._parse_mode = self._parsers.get(parser)
         # last_msg_cache:
         self._last_message_id = {user: None for user in self._users.keys()}
-        self.bot = telegram.Bot(token=self._api_key)
+        self.bot = Bot(token=self._api_key)
 
     def _get_msg_ids(self, msg_data, chat_id):
-        """Get one of (message_id, inline_message_id) from a msg dict,
-        returning a tuple. You can use 'last' as message_id to edit
-        the last sended message in the chat_id."""
+        """Get the message id to edit.
+
+        This can be one of (message_id, inline_message_id) from a msg dict,
+        returning a tuple.
+        **You can use 'last' as message_id** to edit
+        the last sended message in the chat_id.
+        """
         message_id = inline_message_id = None
         if 'message_id' in msg_data:
             message_id = msg_data['message_id']
@@ -165,35 +144,36 @@ class TelegramNotificationService(BaseNotificationService):
         return message_id, inline_message_id
 
     def _get_target_chat_ids(self, target):
-        """Validate chat_id targets, which come as list of strings (['12234'])
-        or get the default chat_id. Returns list of chat_id targets (integers).
+        """Validate chat_id targets or return default target (fist defined).
+
+        :param target: optional list of strings (['12234'])
+        :return list of chat_id targets (integers)
         """
         if target is not None:
             if isinstance(target, int):
                 if target in self._users:
                     return [target]
-                _LOGGER.warning('BAD TARGET "{}", using default: {}'
-                                .format(target, self._default_user))
+                _LOGGER.warning('BAD TARGET "%s", using default: %s',
+                                target, self._default_user)
             else:
                 try:
-                    chat_ids = list(filter(lambda x: x in self._users,
-                                           [int(t) for t in target]))
+                    chat_ids = [int(t) for t in target if t in self._users]
                     if len(chat_ids) > 0:
                         return chat_ids
-                    _LOGGER.warning('ALL BAD TARGETS: "{}"'.format(target))
+                    _LOGGER.warning('ALL BAD TARGETS: "%s"', target)
                 except (ValueError, TypeError):
-                    _LOGGER.warning('BAD TARGET DATA "{}", using default: {}'
-                                    .format(target, self._default_user))
+                    _LOGGER.warning('BAD TARGET DATA "%s", using default: %s',
+                                    target, self._default_user)
         return [self._default_user]
 
     def _get_msg_kwargs(self, data):
-        """Get parameters in data kwargs"""
+        """Get parameters in message data kwargs."""
 
         def _make_row_of_kb(row_keyboard):
-            """Espera un str de texto en botones separados por comas,
-            o una lista de tuplas de la forma: [(texto_b1, data_callback_b1),
-                                                (texto_b2, data_callback_b2), ]
-            Devuelve una lista de InlineKeyboardButton.
+            """Make a list of InlineKeyboardButtons from a list of tuples.
+
+            :param row_keyboard: [(text_b1, data_callback_b1),
+                                  (text_b2, data_callback_b2), ...]
             """
             from telegram import InlineKeyboardButton
             if isinstance(row_keyboard, str):
@@ -208,7 +188,7 @@ class TelegramNotificationService(BaseNotificationService):
             else:
                 raise ValueError(str(row_keyboard))
 
-        # defaults
+        # Defaults
         params = dict(parse_mode=self._parse_mode,
                       disable_notification=False,
                       disable_web_page_preview=None,
@@ -224,9 +204,9 @@ class TelegramNotificationService(BaseNotificationService):
             if ATTR_DISABLE_NOTIF in data:
                 params['disable_notification'] = data[ATTR_DISABLE_NOTIF]
             if ATTR_DISABLE_WEB_PREV in data:
-                params['disable_web_page_preview'] = data[ATTR_DISABLE_WEB_PREV]
-            if ATTR_REPLY_TO_MESSAGE_ID in data:
-                params['reply_to_message_id'] = data[ATTR_REPLY_TO_MESSAGE_ID]
+                params[ATTR_DISABLE_WEB_PREV] = data[ATTR_DISABLE_WEB_PREV]
+            if ATTR_REPLY_TO_MSGID in data:
+                params[ATTR_REPLY_TO_MSGID] = data[ATTR_REPLY_TO_MSGID]
             # Keyboards:
             if ATTR_KEYBOARD in data:
                 from telegram import ReplyKeyboardMarkup
@@ -250,11 +230,11 @@ class TelegramNotificationService(BaseNotificationService):
             if not isinstance(out, bool) and hasattr(out, 'message_id'):
                 chat_id = out.chat_id
                 self._last_message_id[chat_id] = out.message_id
-                _LOGGER.debug('LAST MSG ID: {} (from chat_id {})'
-                              .format(self._last_message_id, chat_id))
+                _LOGGER.debug('LAST MSG ID: %s (from chat_id %s)',
+                              self._last_message_id, chat_id)
             elif not isinstance(out, bool):
-                _LOGGER.warning('UPDATE LAST MSG??: out_type:{}, out={}'
-                                .format(type(out), out))
+                _LOGGER.warning('UPDATE LAST MSG??: out_type:%s, out=%s',
+                                type(out), out)
             return out
         except TelegramError:
             _LOGGER.exception(msg_error)
@@ -284,22 +264,20 @@ class TelegramNotificationService(BaseNotificationService):
                 return self.send_document(data.get(ATTR_DOCUMENT),
                                           chat_id=chat_id, **params)
             elif ATTR_CALLBACK_QUERY in data:
-                # send answer to callback query
+                # Send answer to callback query
                 callback_data = data.get(ATTR_CALLBACK_QUERY)
                 callback_query_id = callback_data.pop('callback_query_id')
-                _LOGGER.debug('sending answer_callback_query id {}: "{}" ({})'
-                              .format(callback_query_id, text, callback_data))
                 return self._send_msg(self.bot.answerCallbackQuery,
-                                      "Error sending answer to callback query",
+                                      "Error sending answer callback query",
                                       callback_query_id,
                                       text=text, **callback_data)
             elif ATTR_EDIT_MSG in data:
-                # edit existent text message
+                # Edit existent text message
                 message_id, inline_message_id = self._get_msg_ids(
                     data.get(ATTR_EDIT_MSG), chat_id)
-                _LOGGER.debug('editing message w/id {}: "{}" ({})'
-                              .format(message_id or inline_message_id, text,
-                                      data.get(ATTR_EDIT_MSG)))
+                _LOGGER.debug('editing message w/id %s: "%s" (%s)',
+                              message_id or inline_message_id, text,
+                              data.get(ATTR_EDIT_MSG))
                 return self._send_msg(self.bot.editMessageText,
                                       "Error editing text message",
                                       text,
@@ -307,32 +285,32 @@ class TelegramNotificationService(BaseNotificationService):
                                       inline_message_id=inline_message_id,
                                       **params)
             elif ATTR_EDIT_CAPTION in data:
-                # edit existent caption
+                # Edit existent caption
                 caption = data.get(ATTR_EDIT_CAPTION)['caption']
                 message_id, inline_message_id = self._get_msg_ids(
                     data.get(ATTR_EDIT_CAPTION), chat_id)
-                _LOGGER.debug('editing message caption w/id {}: "{}" ({})'
-                              .format(message_id or inline_message_id, text,
-                                      data.get(ATTR_EDIT_CAPTION)))
+                _LOGGER.debug('editing message caption w/id %s: "%s" (%s)',
+                              message_id or inline_message_id, text,
+                              data.get(ATTR_EDIT_CAPTION))
                 return self._send_msg(self.bot.editMessageCaption,
                                       "Error editing message caption",
                                       chat_id=chat_id, message_id=message_id,
                                       inline_message_id=inline_message_id,
                                       caption=caption, **params)
             elif ATTR_EDIT_REPLYMARKUP in data:
-                # edit existent replymarkup (like the keyboard)
+                # Edit existent replymarkup (like the keyboard)
                 message_id, inline_message_id = self._get_msg_ids(
                     data.get(ATTR_EDIT_REPLYMARKUP), chat_id)
-                _LOGGER.debug('editing reply_markup w/id {}: "{}" ({})'
-                              .format(message_id or inline_message_id, text,
-                                      data.get(ATTR_EDIT_REPLYMARKUP)))
+                _LOGGER.debug('editing reply_markup w/id %s: "%s" (%s)',
+                              message_id or inline_message_id, text,
+                              data.get(ATTR_EDIT_REPLYMARKUP))
                 return self._send_msg(self.bot.editMessageReplyMarkup,
                                       "Error editing reply_markup",
                                       chat_id=chat_id, message_id=message_id,
                                       inline_message_id=inline_message_id,
                                       **params)
         # send text message
-        _LOGGER.debug('sending message to chat_id: "{}"'.format(chat_id))
+        _LOGGER.debug('sending message to chat_id: "%s"', chat_id)
         return self._send_msg(self.bot.sendMessage,
                               "Error sending message",
                               chat_id, text, **params)
@@ -341,7 +319,7 @@ class TelegramNotificationService(BaseNotificationService):
         """Send a photo."""
         caption = data.get(ATTR_CAPTION)
 
-        # send photo
+        # Send photo
         photo = load_data(
             url=data.get(ATTR_URL),
             file=data.get(ATTR_FILE),
@@ -357,7 +335,7 @@ class TelegramNotificationService(BaseNotificationService):
         """Send a document."""
         caption = data.get(ATTR_CAPTION)
 
-        # send document
+        # Send document
         document = load_data(
             url=data.get(ATTR_URL),
             file=data.get(ATTR_FILE),
@@ -374,7 +352,7 @@ class TelegramNotificationService(BaseNotificationService):
         latitude = float(gps.get(ATTR_LATITUDE, 0.0))
         longitude = float(gps.get(ATTR_LONGITUDE, 0.0))
 
-        # send location
+        # Send location
         return self._send_msg(self.bot.sendLocation,
                               "Error sending location",
                               chat_id=chat_id,
