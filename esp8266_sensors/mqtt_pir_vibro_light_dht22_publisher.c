@@ -717,7 +717,6 @@ void sample_bme280_sensor_data(bool *sampled, bool *sample_ok)
   {
     double temp, humid, pressure;
 
-//    # TODO Revisar comportamiento BME280
     *sampled = true;
     *sample_ok = true;
     temp = bme.readTemperature();
@@ -737,10 +736,14 @@ void sample_bme280_sensor_data(bool *sampled, bool *sample_ok)
       Serial.print(pressure);
       Serial.println(" mbar");
     }
-
-    bme_tempSamples.push_front(temp);
-    bme_humidSamples.push_front(humid);
-    bme_pressureSamples.push_front(pressure);
+    if (temp)
+      bme_tempSamples.push_front(temp);
+    if (humid)
+      bme_humidSamples.push_front(humid);
+    if (pressure)
+      bme_pressureSamples.push_front(pressure);
+    if (!temp | !humid | !pressure)
+      *sample_ok = false;
     last_bme_sensed = sinceStart;
   }
 #endif
