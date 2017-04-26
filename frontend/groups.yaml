@@ -51,6 +51,7 @@ Salón:
     - sensor.t_salon
     - sensor.salon_temperature
     - sensor.salon_humidity
+    - sensor.salon_pressure
     - binary_sensor.pir_salon
     - binary_sensor.motioncam_salon
     - switch.camara
@@ -63,6 +64,7 @@ Salón_simple:
     - sensor.t_salon
     - sensor.salon_temperature
     - sensor.salon_humidity
+    - sensor.salon_pressure
     - switch.camara
     - switch.kodi_tv_salon
 
@@ -160,7 +162,7 @@ Cocina:
     - sensor.esp1_light
     - switch.use_esp1_leds
     - switch.use_esp1_binary_sensors
-    - binary_sensor.esp1_light
+#    - binary_sensor.esp1_light
     - binary_sensor.esp1_pir
 #    - binary_sensor.esp1_vibro
     - switch.cocina

@@ -9,6 +9,7 @@ password: !secret influxdb_pass
 # ssl: true
 # verify_ssl: true
 default_measurement: state
+max_retries: 3
 # blacklist:
 #     - entity.id1
 #     - entity.id2
@@ -42,6 +43,9 @@ whitelist:
  - sensor.presion_dormitorio_rpi2mpd
 
  - sensor.t_salon
+ - sensor.salon_temperature
+ - sensor.salon_humidity
+ - sensor.salon_pressure
 
  - sensor.esp1_temperature
  - sensor.esp1_humidity

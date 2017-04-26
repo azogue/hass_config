@@ -1,15 +1,18 @@
 alias: Reiniciar RPI
 sequence:
-  - service: notify.ios
+  - service: notify.ios_iphone
     data:
       title: 'Reiniciando sistema domótico'
       message: "En unos minutos estará funcionando de nuevo"
-      target: !secret ios_target
       data:
         push:
           badge: 5
           sound: "US-EN-Morgan-Freeman-Vacate-The-Premises.wav"
           category: "CONFIRM"
+  - service: notify.telegram_bot
+    data:
+      title: '*Reiniciando sistema domótico*'
+      message: "En unos minutos estará funcionando de nuevo..."
   - delay:
       seconds: 3
   - service: shell_command.cmd_reboot

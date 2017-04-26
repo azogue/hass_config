@@ -1,0 +1,14 @@
+# logbook:
+include:
+  domains:
+    - switch
+    - media_player
+    - sun
+    - script
+    - automation
+  entities:
+    - sensor.heating
+    - sensor.calefaccion
+    - group.eugenio
+    - group.family
+    - group.mary

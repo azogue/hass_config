@@ -1,0 +1,76 @@
+# history:
+include:
+  domains:
+    - sun
+    - binary_sensor
+    - media_player
+  entities:
+    - sensor.calefaccion
+
+    - sensor.temperatura_dormitorio_rpi2mpd
+    - sensor.humedad_dormitorio_rpi2mpd
+    - sensor.presion_dormitorio_rpi2mpd
+
+    - sensor.dht22_humidity_rpi2h
+    - sensor.dht22_temperature_rpi2h
+#      - sensor.enerpi
+#      - sensor.enerpi_ldr
+#      - sensor.enerpi_power
+    - sensor.galeria_dht22_humidity
+    - sensor.galeria_dht22_temperature
+    - sensor.galeria_acs
+    - sensor.galeria_impulsion_calefaccion
+    - sensor.galeria_retorno_calefaccion
+#      - sensor.iphone_battery_level
+#      - sensor.iphone_battery_state
+    - sensor.pressure_rpi2h
+    - sensor.t_salon
+    - sensor.salon_humidity
+    - sensor.salon_temperature
+    - sensor.salon_pressure
+    - sensor.temperatura_dormitorio_rpi2mpd
+    - sensor.temperatura_estudio_rpi2h
+#      - sensor.villena_cloud_coverage
+#      - sensor.villena_condition
+#      - sensor.villena_forecast
+    - sensor.villena_humidity
+    - sensor.villena_pressure
+    - sensor.villena_rain
+    - sensor.villena_temperature
+#      - sensor.villena_wind_speed
+
+#      - sensor.cpu_use
+#      - sensor.cpu_use_rpi2h
+#      - sensor.cpu_use_rpi2mpd
+#      - sensor.disk_use__rpi2h
+#      - sensor.disk_use__rpi2mpd
+#      - sensor.disk_use_home
+#    - sensor.speedtest_download
+#    - sensor.speedtest_ping
+#    - sensor.speedtest_upload
+    - sensor.ram_free
+    - sensor.ram_free_rpi2h
+    - sensor.ram_free_rpi2mpd
+
+    - switch.altavoz
+    - switch.caldera
+    - switch.calefactor
+    - switch.camara
+    - switch.cocina
+    - switch.impresora
+    - switch.kodi_tv_salon
+    - switch.switch_master_alarm
+    - switch.alarm_clock_status
+    - switch.toggle_config_kodi_ambilight
+    - switch.toggle_kodi_ambilight
+
+    - group.eugenio
+    - group.family
+    - group.mary
+
+    - device_tracker.hass_iphone
+    - device_tracker.hass_iphonese
+    - device_tracker.iphone
+    - device_tracker.iphone_bt
+    - device_tracker.iphone_se
+    - device_tracker.iphone_se_bt

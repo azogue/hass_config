@@ -54,6 +54,24 @@ panel_iframe: !include frontend/iframe_panels.yaml
 weblink: !include frontend/web_links.yaml
 group: !include frontend/groups.yaml
 
+########################################
+# MQTT
+########################################
+mqtt:
+  broker: !secret mqtt_broker
+  port: !secret mqtt_port
+  client_id: !secret mqtt_client_id
+  keepalive: 120
+  username: !secret mqtt_username
+  password: !secret mqtt_password
+#  birth_message:
+#    topic: 'hass/status'
+#    payload: 'online'
+#  will_message:
+#    topic: 'hass/status'
+#    payload: 'offline'
+  protocol: 3.1
+
 ####################################################
 #                 Custom platforms                 #
 ####################################################
@@ -68,179 +86,39 @@ enerpi:
       - ldr
     pngtiles_refresh: 300
 
-########################################
-# MQTT
-########################################
-mqtt:
-  broker: !secret mqtt_broker
-  port: !secret mqtt_port
-  client_id: !secret mqtt_client_id
-  keepalive: 60
-  username: !secret mqtt_username
-  password: !secret mqtt_password
-  birth_message:
-    topic: 'hass/status'
-    payload: 'online'
-  will_message:
-    topic: 'hass/status'
-    payload: 'offline'
-  protocol: 3.1
-
-########################################
-# influxdb export
-########################################
-#influxdb: !include influxdb_grafana/influxdb.yaml
-# customized for longer timeout and some error handling
-myinfluxdb: !include influxdb_grafana/influxdb.yaml
-
 ####################################################
-#                     Telegram webhooks            #
+#                     Telegram BOT                 #
 ####################################################
-#mytelegram_webhooks:
-##  trusted_networks:
-##    - 149.154.167.197/32
-##    - 149.154.167.198/31
-#  api_key: !secret telegram_bot_api_key
-#  user_id:
-#    Eugenio: !secret telegram_bot_chat_id_admin
-#    Carmen: !secret telegram_bot_chat_id_2
-#    Maria: !secret telegram_bot_chat_id_3
-
 mytelegram_bot:
   platform: webhooks
   api_key: !secret telegram_bot_api_key
   allowed_chat_ids:
     - !secret telegram_bot_chat_id_admin
     - !secret telegram_bot_chat_id_2
-    - !secret telegram_bot_chat_id_3
 
 ####################################################
 #                     Enables                      #
 ####################################################
-logger:
-  default: warn
-  logs:
-#    netdisco: error
-#    homeassistant.setup: error
-    homeassistant.bootstrap: info
-    homeassistant.components.recorder: info
-    homeassistant.components.history: debug
-#    homeassistant.components.logbook: debug
-    homeassistant.components.automation: info
-#    homeassistant.components.camera: error
-#    homeassistant.components.netdisco: error
-    homeassistant.components.script: info
-#    homeassistant.components.media_player: info
-    homeassistant.components.tts: debug
-    custom_components.notify.richsmtp: info
-    custom_components.notify.mytelegram: info
-    custom_components.mytelegram_webhooks: info
-    custom_components.mytelegram_bot: info
-    # custom_components.sensor.enerweb: info
-    # custom_components.enerpi: info
-    # custom_components.switch: error
-
+logger: !include database/logger.yaml
 browser:
-conversation:
+#conversation:
 discovery:
 frontend:
 sun:
 updater:
 config:
-
-# Text to speech
 tts:
+  # Text to speech
   platform: google
   language: 'es'
 
-history:
-  include:
-    domains:
-      - sun
-      - binary_sensor
-      - light
-      - media_player
-    entities:
-      - sensor.calefaccion
-#      - sensor.cpu_use
-#      - sensor.cpu_use_rpi2h
-#      - sensor.cpu_use_rpi2mpd
-      - sensor.dht22_dormitorio_humidity_rpi2mpd
-      - sensor.dht22_dormitorio_temperature_rpi2mpd
-      - sensor.dht22_humidity_rpi2h
-      - sensor.dht22_temperature_rpi2h
-#      - sensor.disk_use__rpi2h
-#      - sensor.disk_use__rpi2mpd
-#      - sensor.disk_use_home
-#      - sensor.enerpi
-#      - sensor.enerpi_ldr
-#      - sensor.enerpi_power
-      - sensor.galeria_dht22_humidity
-      - sensor.galeria_dht22_temperature
-      - sensor.galeria_acs
-      - sensor.galeria_impulsion_calefaccion
-      - sensor.galeria_retorno_calefaccion
-#      - sensor.iphone_battery_level
-#      - sensor.iphone_battery_state
-#      - sensor.temperature_rpi2h
-#      - sensor.humidity_rpi2h
-      - sensor.pressure_rpi2h
-      - sensor.ram_free
-      - sensor.ram_free_rpi2h
-      - sensor.ram_free_rpi2mpd
-      - sensor.salon_humidity
-      - sensor.salon_temperature
-      - sensor.t_salon
-      - sensor.temperatura_dormitorio_rpi2mpd
-      - sensor.temperatura_estudio_rpi2h
-#      - sensor.villena_cloud_coverage
-#      - sensor.villena_condition
-#      - sensor.villena_forecast
-      - sensor.villena_humidity
-      - sensor.villena_pressure
-      - sensor.villena_rain
-      - sensor.villena_temperature
-#      - sensor.villena_wind_speed
-      - sensor.yr_symbol
-      - sensor.speedtest_download
-      - sensor.speedtest_ping
-      - sensor.speedtest_upload
-      - switch.altavoz
-      - switch.caldera
-      - switch.calefactor
-      - switch.camara
-      - switch.cocina
-      - switch.impresora
-      - switch.kodi_tv_salon
-      - switch.switch_master_alarm
-      - switch.alarm_clock_status
-      - switch.toggle_config_kodi_ambilight
-      - switch.toggle_kodi_ambilight
-      - group.eugenio
-      - group.family
-      - group.mary
-      - device_tracker.hass_iphone
-      - device_tracker.hass_iphonese
-      - device_tracker.iphone
-      - device_tracker.iphone_bt
-      - device_tracker.iphone_se
-      - device_tracker.iphone_se_bt
-
-logbook:
-  include:
-    domains:
-      - switch
-      - media_player
-      - sun
-      - script
-      - automation
-    entities:
-      - sensor.heating
-      - sensor.calefaccion
-      - group.eugenio
-      - group.family
-      - group.mary
-
+########################################
+# Databases
+########################################
+#influxdb: !include database/influxdb.yaml
+myinfluxdb: !include database/influxdb.yaml
+history: !include database/history.yaml
+logbook: !include database/logbook.yaml
 recorder:
   purge_days: !secret recorder_purge_days
   db_url: !secret recorder_db_url

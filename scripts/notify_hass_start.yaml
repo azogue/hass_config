@@ -1,10 +1,9 @@
 alias: Notify HASS start
 sequence:
-  - service: notify.ios
+  - service: notify.ios_iphone
     data:
       title: "Home-assistant started"
       message: "Hass is now ready for you"
-      target: !secret ios_target
       data:
         push:
           badge: 5

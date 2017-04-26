@@ -44,9 +44,7 @@
     # Low Light level
     - condition: template
       value_template: >
-        {% if states.sensor.enerpi_ldr and states.sensor.esp1_light and states.sensor.esp2_light %}
-          {{ (states.sensor.enerpi_ldr.state|float < 5) and (states.sensor.esp1_light.state|float < 10) and (states.sensor.esp2_light.state|float < 10)}}
-        {% elif states.sensor.enerpi_ldr and states.sensor.esp1_light %}
+        {% if states.sensor.enerpi_ldr and states.sensor.esp1_light %}
           {{ (states.sensor.enerpi_ldr.state|float < 5) and (states.sensor.esp1_light.state|float < 10)}}
         {% elif states.sensor.esp1_light %}
           {{ states.sensor.esp1_light.state|float < 10}}

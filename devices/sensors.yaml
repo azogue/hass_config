@@ -6,14 +6,34 @@
   maximum: 45
   minimum: 5
 
-- platform: dht
-  sensor: DHT22
-  pin: 22
-  name: Salón
+#- platform: dht
+#  sensor: DHT22
+#  pin: 22
+#  name: Salón
+#  scan_interval: 30
+#  monitored_conditions:
+#    - temperature
+#    - humidity
+
+# BME280 in RPI
+- platform: command_line
+  name: salon_temperature
+  command: "/usr/local/bin/read_bme280 --temperature --i2c-address 0x77"
+  unit_of_measurement: "°C"
+  value_template: '{{ value |replace(" C", "") | round(2) }}'
   scan_interval: 30
-  monitored_conditions:
-    - temperature
-    - humidity
+- platform: command_line
+  name: salon_humidity
+  command: "/usr/local/bin/read_bme280 --humidity --i2c-address 0x77"
+  unit_of_measurement: "%"
+  value_template: '{{ value |replace("％", "") | round(2) }}'
+  scan_interval: 30
+- platform: command_line
+  name: salon_pressure
+  command: "/usr/local/bin/read_bme280 --pressure --i2c-address 0x77"
+  unit_of_measurement: "mb"
+  value_template: '{{ value |replace(" hPa", "") | round(2) }}'
+  scan_interval: 30
 
 - platform: mqtt
   state_topic: !secret mqtt_topic_esp1_hum

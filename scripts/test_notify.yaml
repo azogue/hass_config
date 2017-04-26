@@ -13,11 +13,10 @@ sequence:
 #      message: 'Test de notificaciones'
 
   - alias: iOS notify
-    service: notify.ios
+    service: notify.ios_iphone
     data:
       title: "iOS_testing"
       message: "iOs test notification AWAY"
-      target: !secret ios_target
       data:
         push:
           badge: 2
@@ -31,11 +30,10 @@ sequence:
       seconds: 60
 
   - alias: iOS notify
-    service: notify.ios
+    service: notify.ios_iphone
     data:
       title: "iOS_testing"
       message: "iOs test notification INHOME"
-      target: !secret ios_target
       data:
         push:
           badge: 4
@@ -49,11 +47,10 @@ sequence:
       seconds: 30
 
   - alias: iOS notify
-    service: notify.ios
+    service: notify.ios_iphone
     data:
       title: "iOS_testing"
       message: "iOs test notification ALARMCLOCK"
-      target: !secret ios_target
       data:
         push:
           badge: 4

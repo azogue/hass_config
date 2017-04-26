@@ -202,16 +202,16 @@ sensor.speedtest_upload:
 # Local sensors
 sensor.T_salon:
   friendly_name: Temperatura (DS)
-#  homebridge_hidden: True
+  homebridge_hidden: True
 #  homebridge_name: Temperatura (DS)
 sensor.salon_temperature:
-  friendly_name: Temperatura (DHT)
-  homebridge_hidden: True
-#  homebridge_name: Temperatura (DHT)
+  friendly_name: Temperatura
 sensor.salon_humidity:
-  friendly_name: Humedad salón
-  homebridge_name: Humedad
+  friendly_name: Humedad
   icon: mdi:water-percent
+sensor.salon_pressure:
+  friendly_name: Presión
+  icon: mdi:weather-cloudy
 
 binary_sensor.pir_salon:
   friendly_name: Movimiento (salón)
@@ -336,11 +336,11 @@ sensor.galeria_acs:
   homebridge_hidden: True
 sensor.galeria_impulsion_calefaccion:
   icon: mdi:temperature-celsius
-  friendly_name: Tª impulsión de calefacción
+  friendly_name: Tª impulsión C.
   homebridge_hidden: True
 sensor.galeria_retorno_calefaccion:
   icon: mdi:temperature-celsius
-  friendly_name: Tª del retorno de calefacción
+  friendly_name: Tª retorno C.
   homebridge_hidden: True
 sensor.galeria_dht22_temperature:
   friendly_name: Temperatura
@@ -418,7 +418,7 @@ sensor.esp2_humidity:
   icon: mdi:water-percent
   homebridge_hidden: true
 sensor.esp2_pressure:
-  friendly_name: Presión atmosférica
+  friendly_name: Presión
   icon: mdi:weather-cloudy
   homebridge_hidden: true
 binary_sensor.esp2_pir:

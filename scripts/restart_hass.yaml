@@ -1,16 +1,21 @@
 alias: Restart HASS
 sequence:
   - alias: Notify Restart
-    service: notify.ios
+    service: notify.ios_iphone
     data:
       title: "HASS restart"
-      target: !secret ios_target
       message: "HomeAssistant is going to die & resurect as a phoenix now..."
       data:
         push:
           category: "CONFIRM"
   - delay:
       seconds: 3
+  - alias: Flush MySQL DB
+    service: shell_command.cmd_recorder_flush_hosts
+
+  - delay:
+      seconds: 1
+
   - alias: Restart HA
 #    service: shell_command.restart_hass
     service: homeassistant.restart

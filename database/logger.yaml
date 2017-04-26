@@ -1,0 +1,21 @@
+# logger:
+default: warn
+logs:
+#    netdisco: error
+#    homeassistant.setup: error
+  homeassistant.bootstrap: info
+  homeassistant.components.recorder: info
+  homeassistant.components.history: info
+  custom_components.notify.richsmtp: info
+  homeassistant.components.script: info
+#    homeassistant.components.logbook: debug
+  homeassistant.components.automation: info
+#    homeassistant.components.camera: error
+#    homeassistant.components.netdisco: error
+#    homeassistant.components.media_player: info
+  homeassistant.components.tts: debug
+  custom_components.notify.mytelegram: info
+  custom_components.mytelegram_bot: info
+  # custom_components.sensor.enerweb: info
+  # custom_components.enerpi: info
+  # custom_components.switch: error
