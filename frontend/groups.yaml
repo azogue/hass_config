@@ -568,7 +568,7 @@ default_view:
     - group.dormitorio_rpi2mpd_simple
     - group.cocina
     - group.cocina_simple
-    - group.esp8266_2
+#    - group.esp8266_2
     - group.galeria
     - group.caldera
     - group.caldera_simple
