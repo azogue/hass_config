@@ -7,13 +7,6 @@
   pull_mode: "UP"
 #  invert_logic: true
 
-#- platform: mqtt
-#  state_topic: "hass/status"
-#  name: 'HA Status'
-#  payload_on: "online"
-#  payload_off: "offline"
-#  device_class: connectivity
-
 - platform: mqtt
   state_topic: !secret mqtt_topic_esp1_pir
   name: esp1_PIR
@@ -28,13 +21,13 @@
 #  payload_on: "on"
 #  payload_off: "off"
 #  device_class: vibration
-- platform: mqtt
-  state_topic: !secret mqtt_topic_esp1_light
-  name: esp1_Light
-#  qos (Optional): The maximum QoS level of the state topic. Default is 0.
-  payload_on: "on"
-  payload_off: "off"
-  device_class: light
+#- platform: mqtt
+#  state_topic: !secret mqtt_topic_esp1_light
+#  name: esp1_Light
+##  qos (Optional): The maximum QoS level of the state topic. Default is 0.
+#  payload_on: "on"
+#  payload_off: "off"
+#  device_class: light
 - platform: mqtt
   state_topic: !secret mqtt_topic_esp1_online
   name: Cocina Online
