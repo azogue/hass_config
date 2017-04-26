@@ -1,0 +1,18 @@
+# automation.schedule_leds_esp_modules
+- alias: schedule_leds_esp_modules_off
+  trigger:
+    platform: sun
+    event: sunset
+    offset: "01:00:00"
+  action:
+  - service: switch.turn_off
+    entity_id: switch.use_esp1_leds,switch.use_esp2_leds
+
+- alias: schedule_leds_esp_modules_on
+  trigger:
+    platform: sun
+    event: sunrise
+    offset: "00:30:00"
+  action:
+  - service: switch.turn_on
+    entity_id: switch.use_esp1_leds,switch.use_esp2_leds
