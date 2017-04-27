@@ -24,6 +24,8 @@
   trigger:
     - platform: homeassistant
       event: start
+    - platform: event
+      event: homeassistant_start
     - platform: state
       entity_id: input_boolean.show_expert_mode
       to: 'off'
