@@ -56,8 +56,8 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     # Some logging of Bot current status:
     last_error_date = getattr(current_status, 'last_error_date', None)
     if (last_error_date is not None) and (isinstance(last_error_date, int)):
-        import datetime as dt
-        last_error_date = dt.datetime.fromtimestamp(last_error_date)
+        import datetime
+        last_error_date = datetime.datetime.fromtimestamp(last_error_date)
         _LOGGER.info("telegram webhook last_error_date: %s. Status: %s",
                      last_error_date, current_status)
     else:
@@ -71,7 +71,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
             _LOGGER.error("set telegram webhook failed %s", handler_url)
             return False
 
-    hass.bus.listen_once(
+    hass.bus.async_listen_once(
         EVENT_HOMEASSISTANT_STOP,
         lambda event: bot.setWebhook(REMOVE_HANDLER_URL))
     hass.http.register_view(BotPushReceiver(
