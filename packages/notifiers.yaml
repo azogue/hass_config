@@ -1,0 +1,228 @@
+####################################################
+#                     Notify                       #
+####################################################
+notify:
+  - platform: pushbullet
+    api_key: !secret pushbullet_api_key
+    name: pushbullet
+
+  # Not needed anymore
+  #- platform: ios
+  #  name: ios
+  #  target: !secret ios_target
+
+  - platform: kodi
+    name: kodi
+    host: !secret kodi_host
+    port: !secret kodi_port
+    username: !secret kodi_user
+    password: !secret kodi_pw
+
+  - platform: html5
+    gcm_api_key: !secret gcm_api_key
+    gcm_sender_id: !secret gcm_sender_id
+
+  # Custom smtp platform for HTML mailing
+  - platform: richsmtp
+    name: gmail
+    server: smtp.gmail.com
+    port: 587
+    sender: !secret hass_email
+    starttls: 1
+    username: !secret hass_email
+    password: !secret hass_email_pw
+    recipient: !secret myemail
+    timeout: 60
+    product_name: UgePiso
+
+  - platform: mytelegram
+    name: telegram_bot
+    api_key: !secret telegram_bot_api_key
+    user_id:
+      Eugenio: !secret telegram_bot_chat_id_admin
+      Carmen: !secret telegram_bot_chat_id_2
+  #  chat_id: !secret telegram_bot_chat_id_admin
+
+####################################################
+#                     Telegram BOT                 #
+####################################################
+mytelegram_bot:
+  platform: webhooks
+  api_key: !secret telegram_bot_api_key
+  allowed_chat_ids:
+    - !secret telegram_bot_chat_id_admin
+    - !secret telegram_bot_chat_id_2
+
+####################################################
+#                     iOS platform                 #
+####################################################
+ios:
+  push:
+    categories:
+      - name: away
+        identifier: 'AWAY'
+        actions:
+          - identifier: 'ALARM_ARM_NOW'
+            title: 'Activar alarma'
+            activationMode: 'background'
+            authenticationRequired: yes
+            destructive: yes
+            behavior: 'default'
+            context: 'default'
+          - identifier: 'ALARM_HOME'
+            title: 'Activar vigilancia'
+            activationMode: 'background'
+            authenticationRequired: yes
+            destructive: yes
+            behavior: 'default'
+            context: 'default'
+          - identifier: 'LIGHTS_OFF'
+            title: 'Apagar luces'
+            activationMode: 'background'
+            authenticationRequired: no
+            destructive: no
+            behavior: 'default'
+            context: 'default'
+
+      - name: inhome
+        identifier: 'INHOME'
+        actions:
+          - identifier: 'WELCOME_HOME'
+            title: 'Encender luces'
+            activationMode: 'background'
+            authenticationRequired: yes
+            destructive: no
+            behavior: 'default'
+            context: 'default'
+          - identifier: 'WELCOME_HOME_TV'
+            title: 'Encender la TV'
+            activationMode: 'background'
+            authenticationRequired: yes
+            destructive: no
+            behavior: 'default'
+            context: 'default'
+          - identifier: 'IGNORE_HOME'
+            title: 'Ignorar la llegada'
+            activationMode: 'background'
+            authenticationRequired: no
+            destructive: yes
+            behavior: 'default'
+            context: 'default'
+
+      - name: alarmsounded
+        identifier: 'ALARMSOUNDED'
+        actions:
+          - identifier: 'ALARM_SILENT'
+            title: 'Silenciar'
+            activationMode: 'background'
+            authenticationRequired: yes
+            destructive: no
+            behavior: 'default'
+            context: 'default'
+          - identifier: 'ALARM_RESET'
+            title: 'Ignorar (reset)'
+            activationMode: 'background'
+            authenticationRequired: yes
+            destructive: yes
+            behavior: 'default'
+            context: 'default'
+          - identifier: 'ALARM_CANCEL'
+            title: 'Desconectar'
+            activationMode: 'background'
+            authenticationRequired: yes
+            destructive: no
+            behavior: 'default'
+            context: 'default'
+
+      - name: confirm
+        identifier: 'CONFIRM'
+        actions:
+          - identifier: 'CONFIRM_OK'
+            title: 'Validar'
+            activationMode: 'background'
+            authenticationRequired: no
+            destructive: no
+            behavior: 'default'
+            context: 'minimal'
+
+      - name: kodiplay
+        identifier: 'KODIPLAY'
+        actions:
+          - identifier: 'LIGHTS_ON'
+            title: 'Lights ON!'
+            activationMode: 'background'
+            authenticationRequired: no
+            destructive: no
+            behavior: 'default'
+            context: 'default'
+          - identifier: 'HYPERION_TOGGLE'
+            title: 'Toggle Ambilight'
+            activationMode: 'background'
+            authenticationRequired: no
+            destructive: no
+            behavior: 'default'
+            context: 'default'
+          - identifier: 'HYPERION_CHANGE'
+            title: 'Change Ambilight conf'
+            activationMode: 'background'
+            authenticationRequired: no
+            destructive: yes
+            behavior: 'default'
+            context: 'default'
+
+      - name: alarmclock
+        identifier: 'ALARMCLOCK'
+        actions:
+          - identifier: 'INIT_DAY'
+            title: 'A la ducha!'
+            activationMode: 'background'
+            authenticationRequired: no
+            destructive: no
+            behavior: 'default'
+            context: 'default'
+          - identifier: 'POSTPONE_ALARMCLOCK'
+            title: 'Postponer...'
+            activationMode: 'background'
+            authenticationRequired: no
+            destructive: no
+            behavior: 'default'
+            context: 'default'
+          - identifier: 'ALARMCLOCK_OFF'
+            title: 'Apagar'
+            activationMode: 'background'
+            authenticationRequired: no
+            destructive: yes
+            behavior: 'default'
+            context: 'default'
+
+      - name: camera
+        identifier: 'camera'
+        actions:
+          - identifier: 'CAM_YES'
+            title: 'Do it!'
+            activationMode: 'background'
+            authenticationRequired: no
+            destructive: no
+            behavior: 'default'
+            context: 'default'
+          - identifier: 'CAM_NO'
+            title: 'No'
+            activationMode: 'background'
+            authenticationRequired: no
+            destructive: no
+            behavior: 'default'
+            context: 'default'
+
+      # TODO behavior: 'textInput' ¿¿not working ??
+      - name: execorder
+        identifier: 'EXECORDER'
+        actions:
+          - identifier: 'INPUTORDER'
+            title: 'Tell me'
+            activationMode: 'background'
+            authenticationRequired: no
+            destructive: no
+            behavior: 'textInput'
+            context: 'default'
+            textInputButtonTitle: "What?" # Only for iOS 10 when behavior is TextInput.
+            textInputPlaceholder: 'tell me more' # Only for iOS 10 when behavior is TextInput.
