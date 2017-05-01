@@ -1,0 +1,191 @@
+###############################################################################
+# Device tracking
+###############################################################################
+homeassistant:
+  customize:
+    group.eugenio:
+      entity_picture: /local/images/eugenio.png
+    group.mary:
+      entity_picture: /local/images/mari_carmen.png
+    group.ipad:
+      icon: mdi:tablet-ipad
+      entity_picture: /local/images/ipad_air.png
+
+    sensor.bateria_iphone_6s:
+      homebridge_hidden: true
+      icon: mdi:battery
+    sensor.bateria_iphone_se:
+      homebridge_hidden: true
+      icon: mdi:battery
+
+    device_tracker.router_interfibra:
+      icon: mdi:router-wireless
+    device_tracker.wifi_ext:
+      icon: mdi:wifi
+    device_tracker.airport_extreme:
+      icon: mdi:wifi
+    device_tracker.airport:
+      icon: mdi:airplay
+    device_tracker.nas:
+      icon: mdi:desktop-tower
+    device_tracker.bridge_hue:
+      icon: mdi:white-balance-incandescent
+    device_tracker.apple_watchdeeugenio:
+      icon: mdi:watch
+    device_tracker.hass_iphone:
+      icon: mdi:cellphone-iphone
+    device_tracker.iphone_bt:
+      icon: mdi:cellphone-iphone
+    device_tracker.hass_iphonese:
+      icon: mdi:cellphone-iphone
+    device_tracker.iphonedemariadelcarmen_bt:
+      icon: mdi:cellphone-iphone
+    device_tracker.ipaddemariadelcarmen:
+      icon: mdi:tablet-ipad
+    device_tracker.imac:
+      icon: mdi:desktop-mac
+    device_tracker.imac_wifi:
+      icon: mdi:desktop-mac
+    device_tracker.mbp:
+      icon: mdi:laptop-mac
+    device_tracker.rpi_wifi:
+      icon: mdi:raspberrypi
+    device_tracker.rpi3w:
+      icon: mdi:raspberrypi
+    device_tracker.rpi2hat:
+      icon: mdi:raspberrypi
+    device_tracker.rpi2:
+      icon: mdi:raspberrypi
+    device_tracker.rpi2_wifi:
+      icon: mdi:raspberrypi
+    device_tracker.rpi3osmc:
+      icon: mdi:kodi
+    device_tracker.rpi3osmcw:
+      icon: mdi:raspberrypi
+    device_tracker.impresora_brother:
+      icon: mdi:printer
+    device_tracker.jo01:
+      icon: mdi:music-note-bluetooth
+    device_tracker.esp8266_1:
+      icon: mdi:raspberrypi
+
+# This will override the default home zone
+zone:
+- name: Home
+  latitude: !secret latitude
+  longitude: !secret longitude
+  radius: 125
+  icon: mdi:castle
+- name: !secret z2_name
+  latitude: !secret z2_latitude
+  longitude: !secret z2_longitude
+  radius: !secret z2_radius
+  icon: !secret z2_icon
+
+device_tracker:
+  - platform: nmap_tracker
+    hosts: 192.168.1.1-60
+    exclude:
+      - 192.168.1.13
+    home_interval: 30
+  # If new discovered devices are tracked by default (default: yes)
+    track_new_devices: no
+    # Seconds between each scan for new devices (default: 12)
+    interval_seconds: 60
+    # Seconds to wait till marking someone as not home after not being seen
+    # (default: 180)
+    consider_home: 300
+
+  - platform: bluetooth_tracker
+    home_interval: 30
+    track_new_devices: no
+
+  - platform: owntracks
+    max_gps_accuracy: 200
+    waypoints: True
+  #  waypoint_whitelist:
+  #    - ...
+
+  # Battery burner --> disconnected
+  #- platform: icloud
+  #  username: !secret icloud_user
+  #  password: !secret icloud_pwd
+  #  account_name: icloud
+
+sensor:
+  - platform: mqtt
+    state_topic: "owntracks/hass/iphone"
+    name: 'Batería iPhone 6s'
+    unit_of_measurement: '%'
+    value_template: '{{ value_json.batt }}'
+    expire_after: 3600
+  - platform: mqtt
+    state_topic: "owntracks/hass/iphonese"
+    name: 'Batería iPhone SE'
+    unit_of_measurement: '%'
+    value_template: '{{ value_json.batt }}'
+    expire_after: 3600
+
+## GMaps family location:
+#camera:
+#  - platform: generic
+#    name: Where are we?
+#    still_image_url: https://maps.googleapis.com/maps/api/staticmap?center={% if states.device_tracker.iphone.attributes.latitude %}{{ states.device_tracker.iphone.attributes.latitude }},{{ states.device_tracker.iphone.attributes.longitude }}{% else %}{{ states.zone.home.attributes.latitude }},{{ states.zone.home.attributes.longitude }}{% endif %}&zoom=13&size=500x500&scale=2&maptype=roadmap&markers=color:{% if states.device_tracker.iphone.attributes.latitude %}green{% else %}red{% endif %}%7Clabel:E%7C{% if states.device_tracker.iphone.attributes.latitude %}{{ states.device_tracker.iphone.attributes.latitude }},{{ states.device_tracker.iphone.attributes.longitude }}{% else %}{{ states.zone.home.attributes.latitude }},{{ states.zone.home.attributes.longitude }}{% endif %}&markers=color:{% if states.device_tracker.iphone_se.attributes.latitude %}blue{% else %}red{% endif %}%7Clabel:C%7C{% if states.device_tracker.iphone_se.attributes.latitude %}{{ states.device_tracker.iphone_se.attributes.latitude }},{{ states.device_tracker.iphone_se.attributes.longitude }}{% else %}{{ states.zone.home.attributes.latitude }},{{ states.zone.home.attributes.longitude }}{% endif %}
+#    limit_refetch_to_url_change: true
+
+group:
+  Eugenio:
+    entities:
+      - device_tracker.iphone
+      - device_tracker.hass_iphone
+      - device_tracker.iphone_bt
+      - device_tracker.applewatch
+
+  Mary:
+    entities:
+      - device_tracker.iphonese
+      - device_tracker.hass_iphonese
+      - device_tracker.iphonedemariadelcarmen_bt
+
+  iPad:
+    entities:
+      - device_tracker.ipad
+      - device_tracker.ipaddeeugenio
+      - device_tracker.ipaddeeugenio_bt
+
+  Family:
+    - group.eugenio
+    - group.mary
+
+  Cacharros:
+    - group.ipad
+    - sensor.ipad_battery_level
+    - sensor.ipad_battery_state
+    - sensor.iphone_battery_level
+    - sensor.iphone_battery_state
+    - sensor.iphonese_battery_level
+    - sensor.iphonese_battery_state
+    - device_tracker.jo01
+    - device_tracker.rpi3osmc
+    - device_tracker.rpi3w
+    - device_tracker.esp8266_1
+    - device_tracker.rpi_wifi
+    - device_tracker.rpi2hat
+    - device_tracker.rpi2
+  #  - device_tracker.rpi2_wifi
+    - sensor.bateria_iphone_6s
+    - sensor.bateria_iphone_se
+
+  Cacharros_simple:
+    name: Cacharros
+    entities:
+      - group.ipad
+      - sensor.ipad_battery_level
+      - device_tracker.jo01
+      - device_tracker.rpi_wifi
+      - device_tracker.rpi2hat
+      - device_tracker.rpi2
+      - device_tracker.rpi3w
+      - device_tracker.rpi3osmc
+      - device_tracker.esp8266_1
+
