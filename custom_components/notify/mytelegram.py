@@ -20,6 +20,7 @@ from homeassistant.const import (
 
 _LOGGER = logging.getLogger(__name__)
 
+# DEPENDENCIES = ['mytelegram_bot']
 REQUIREMENTS = ['python-telegram-bot==5.3.1']
 
 ATTR_PARSER = 'parse_mode'
@@ -157,7 +158,7 @@ class TelegramNotificationService(BaseNotificationService):
                                 target, self._default_user)
             else:
                 try:
-                    chat_ids = [int(t) for t in target if t in self._users]
+                    chat_ids = [int(t) for t in target if int(t) in self._users]
                     if len(chat_ids) > 0:
                         return chat_ids
                     _LOGGER.warning('ALL BAD TARGETS: "%s"', target)
