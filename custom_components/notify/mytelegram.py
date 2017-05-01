@@ -157,7 +157,7 @@ class TelegramNotificationService(BaseNotificationService):
                                 target, self._default_user)
             else:
                 try:
-                    chat_ids = [int(t) for t in target if t in self._users]
+                    chat_ids = [int(t) for t in target if int(t) in self._users]
                     if len(chat_ids) > 0:
                         return chat_ids
                     _LOGGER.warning('ALL BAD TARGETS: "%s"', target)
@@ -230,7 +230,7 @@ class TelegramNotificationService(BaseNotificationService):
             if not isinstance(out, bool) and hasattr(out, 'message_id'):
                 chat_id = out.chat_id
                 self._last_message_id[chat_id] = out.message_id
-                _LOGGER.debug('LAST MSG ID: %s (from chat_id %s)',
+                _LOGGER.debug('LAST MSG IDs: %s (from chat_id %s)',
                               self._last_message_id, chat_id)
             elif not isinstance(out, bool):
                 _LOGGER.warning('UPDATE LAST MSG??: out_type:%s, out=%s',
