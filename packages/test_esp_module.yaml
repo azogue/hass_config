@@ -1,0 +1,123 @@
+# Second ESP8266 module (MQTT connected):
+homeassistant:
+  customize:
+    sensor.esp2_temperature:
+      friendly_name: Temperatura
+      icon: mdi:thermometer
+      homebridge_hidden: true
+    sensor.esp2_humidity:
+      friendly_name: Humedad
+      icon: mdi:water-percent
+      homebridge_hidden: true
+    sensor.esp2_pressure:
+      friendly_name: Presión
+      icon: mdi:weather-cloudy
+      homebridge_hidden: true
+    sensor.esp2_light:
+      friendly_name: Iluminación
+      homebridge_hidden: true
+      icon: mdi:lightbulb-on
+    binary_sensor.esp2_pir:
+      friendly_name: Movimiento
+      homebridge_hidden: true
+    binary_sensor.esp2_vibro:
+      friendly_name: Vibración
+      homebridge_hidden: true
+    binary_sensor.esp2_light:
+      friendly_name: Luz
+      homebridge_hidden: true
+    binary_sensor.esp2_online:
+      homebridge_hidden: true
+    switch.use_esp2_leds:
+      friendly_name: Usar LEDs
+      icon: mdi:led-outline
+      homebridge_hidden: true
+    switch.use_esp2_binary_sensors:
+      friendly_name: Usar sensores binarios
+      icon: mdi:camera-burst
+      homebridge_hidden: true
+
+binary_sensor:
+  - platform: mqtt
+    state_topic: !secret mqtt_topic_esp2_pir
+    name: esp2_PIR
+  #  qos (Optional): The maximum QoS level of the state topic. Default is 0.
+    payload_on: "on"
+    payload_off: "off"
+    device_class: motion
+  - platform: mqtt
+    state_topic: !secret mqtt_topic_esp2_vibro
+    name: esp2_Vibro
+  #  qos (Optional): The maximum QoS level of the state topic. Default is 0.
+    payload_on: "on"
+    payload_off: "off"
+    device_class: vibration
+  - platform: mqtt
+    state_topic: !secret mqtt_topic_esp2_light
+    name: esp2_Light
+  #  qos (Optional): The maximum QoS level of the state topic. Default is 0.
+    payload_on: "on"
+    payload_off: "off"
+    device_class: light
+  - platform: mqtt
+    state_topic: !secret mqtt_topic_esp2_online
+    name: Esp2 Online
+  #  qos (Optional): The maximum QoS level of the state topic. Default is 0.
+    payload_on: "on"
+    payload_off: "off"
+    device_class: connectivity
+
+sensor:
+  - platform: mqtt
+    state_topic: !secret mqtt_topic_esp2_temp
+    name: 'esp2_Temperature'
+    unit_of_measurement: 'ºC'
+    expire_after: 180
+  - platform: mqtt
+    state_topic: !secret mqtt_topic_esp2_hum
+    name: 'esp2_Humidity'
+    unit_of_measurement: '%'
+    expire_after: 180
+  - platform: mqtt
+    state_topic: !secret mqtt_topic_esp2_pres
+    name: 'esp2_Pressure'
+    unit_of_measurement: 'mb'
+    expire_after: 180
+  - platform: mqtt
+    state_topic: !secret mqtt_topic_esp2_light_analog
+    name: 'esp2_Light'
+    unit_of_measurement: '%'
+    expire_after: 180
+
+switch:
+  - platform: mqtt
+    name: use_esp2_binary_sensors
+    command_topic: !secret mqtt_topic_esp2_switch_binary_sensors_set
+    state_topic: !secret mqtt_topic_esp2_switch_binary_sensors_state
+    payload_on: 'on'
+    payload_off: 'off'
+    retain: true
+  - platform: mqtt
+    name: use_esp2_leds
+    command_topic: !secret mqtt_topic_esp2_switch_leds_set
+    state_topic: !secret mqtt_topic_esp2_switch_leds_state
+    payload_on: 'on'
+    payload_off: 'off'
+    retain: true
+
+group:
+  esp8266_2:
+    name: Esp8266 Breadboard
+    control: hidden
+    entities:
+      - binary_sensor.esp2_online
+      - sensor.esp2_temperature
+      - sensor.esp2_humidity
+      - sensor.esp2_pressure
+      - sensor.esp2_light
+      - switch.use_esp2_leds
+      - switch.use_esp2_binary_sensors
+      - binary_sensor.esp2_light
+      - binary_sensor.esp2_pir
+      - binary_sensor.esp2_vibro
+

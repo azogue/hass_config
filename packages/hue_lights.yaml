@@ -1,0 +1,79 @@
+# HUE LIGHTS
+homeassistant:
+  customize:
+    input_slider.light_main_slider_salon:
+      friendly_name: Brillo
+      icon: mdi:brightness-7
+    input_slider.light_temp_slider_salon:
+      friendly_name: Temperatura de color
+      icon: mdi:temperature-kelvin
+    automation.brillo_salon_sync:
+      icon: mdi:brightness-auto
+      homebridge_hidden: true
+      friendly_name: Sync brillo bola grande
+
+light:
+  - platform: hue
+    host: 192.168.1.45
+    allow_unreachable: true
+    homebridge_hidden: true
+    scan_interval: 10
+
+input_slider:
+  # Master Sliders Salón (brillo y Tª color)
+  light_main_slider_salon:
+    name: Brillo salón
+  #  initial: 0
+    min: 0
+    max: 255
+    step: 1
+  light_temp_slider_salon:
+    name: Blanco Salón
+  #  initial: 10
+    min: 0
+    max: 100
+    step: 1
+
+input_select:
+  salon_light_scene:
+    name: Escena de luz
+    options:
+     - Concentración
+     - Energía
+     - Relax
+     - Lectura
+     - 'OFF'
+    initial: Energía
+    icon: mdi:lightbulb
+
+  #salon_movie_mode:
+  #  name: Modo ambient TV
+  #  options:
+  #   - Normal
+  #   - Ambilight Day (4)
+  #   - Ambilight Night (6)
+  #  initial: Normal
+  #  icon: mdi:traffic-light
+
+group:
+  Master luces del salón:
+    - input_slider.light_main_slider_salon
+    - input_slider.light_temp_slider_salon
+    - input_select.salon_light_scene
+
+  Luces Estudio:
+    control: hidden
+    entities:
+      - light.flexo
+
+  Luces Salón:
+    - light.bola_grande
+    - light.bola_pequena
+    - light.pie_tv
+    - light.pie_sofa
+    - light.cuenco
+    - light.lamparita
+
+  Luces Dormitorio:
+    - light.aura_habitacion
+    - light.hue_habitacion

@@ -1,0 +1,103 @@
+# Slave HASS in RPI2 - Office
+homeassistant:
+  customize:
+    binary_sensor.pir_estudio_rpi2h:
+      friendly_name: Movimiento (estudio)
+      device_class: motion
+      homebridge_hidden: true
+    binary_sensor.vibration_sensor_rpi2h:
+      friendly_name: Vibración (estudio)
+      device_class: vibration
+      homebridge_hidden: true
+    binary_sensor.sound_sensor_rpi2h:
+      friendly_name: Sonido (estudio)
+      device_class: sound
+      homebridge_hidden: true
+
+    sensor.temperature_rpi2h:
+      homebridge_hidden: True
+    sensor.humidity_rpi2h:
+      homebridge_hidden: True
+    sensor.pressure_rpi2h:
+      homebridge_hidden: True
+
+    sensor.ram_free_rpi2h:
+      homebridge_hidden: True
+    sensor.cpu_use_rpi2h:
+      homebridge_hidden: True
+    sensor.disk_use__rpi2h:
+      homebridge_hidden: True
+    sensor.last_boot_rpi2h:
+      homebridge_hidden: True
+
+    sensor.hass_cpu_temperature_rpi2h:
+      homebridge_hidden: True
+
+binary_sensor:
+  - platform: dummy
+    sensors:
+      pir_estudio_rpi2h:
+        friendly_name: Movimiento en Estudio
+        device_class: motion
+      vibration_sensor_rpi2h:
+        friendly_name: Vibración en Estudio
+        device_class: vibration
+  #    sound_sensor_rpi2h:
+  #      friendly_name: Sonido en Estudio
+  #      device_class: sound
+
+sensor:
+  - platform: dummy
+    sensors:
+      humidity_rpi2h:
+        friendly_name: Humedad SenseHat
+        unit_of_measurement: '%'
+      pressure_rpi2h:
+        friendly_name: Presión
+        unit_of_measurement: 'mb'
+      temperature_rpi2h:
+        friendly_name: Temperatura SenseHat
+        unit_of_measurement: '°C'
+      temperatura_estudio_rpi2h:
+        friendly_name: Temperatura (DS)
+        unit_of_measurement: '°C'
+      dht22_temperature_rpi2h:
+        friendly_name: Temperatura (DHT)
+        unit_of_measurement: '°C'
+      dht22_humidity_rpi2h:
+        friendly_name: Humedad
+        unit_of_measurement: '%'
+
+group:
+  Estudio RPi2h:
+    name: Estudio
+    control: hidden
+    entities:
+      - sensor.temperatura_estudio_rpi2h
+      - sensor.dht22_temperature_rpi2h
+      - sensor.dht22_humidity_rpi2h
+      - sensor.temperature_rpi2h
+      - sensor.humidity_rpi2h
+      - sensor.pressure_rpi2h
+      - binary_sensor.pir_estudio_rpi2h
+      - binary_sensor.motioncam_estudio
+      - binary_sensor.vibration_sensor_rpi2h
+#      - binary_sensor.sound_sensor_rpi2h
+      - switch.impresora
+
+  Estudio RPi2h_simple:
+    name: Estudio
+    control: hidden
+    entities:
+      - sensor.temperatura_estudio_rpi2h
+      - sensor.dht22_temperature_rpi2h
+      - sensor.dht22_humidity_rpi2h
+      - switch.impresora
+
+  Host Estudio:
+    - sensor.hass_cpu_temperature_rpi2h
+    - sensor.cpu_use_rpi2h
+    - sensor.ram_free_rpi2h
+    - sensor.last_boot_rpi2h
+    - sensor.disk_use__rpi2h
+

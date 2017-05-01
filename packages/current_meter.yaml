@@ -1,0 +1,77 @@
+###############################################################################
+# enerPI current meter
+###############################################################################
+homeassistant:
+  customize:
+    # enerPI sensors:
+    sensor.enerpi_power:
+      icon: mdi:flash
+      friendly_name: Main power
+    camera.enerpi_power:
+      friendly_name: Main power (24h)
+    sensor.enerpi_ldr:
+      icon: mdi:lightbulb
+      friendly_name: Hall illuminance
+    camera.enerpi_ldr:
+      friendly_name: Hall illuminance (24h)
+
+    input_boolean.switch_control_enerpi_max_power:
+      friendly_name: enerPI - control de potencia
+      icon: mdi:toggle-switch
+      homebridge_hidden: true
+    input_slider.enerpi_max_power:
+      friendly_name: Max Power (kW)
+      icon: mdi:flash-red-eye
+      homebridge_hidden: true
+    input_slider.enerpi_max_power_reset:
+      friendly_name: Reset level (kW)
+      icon: mdi:flash-off
+      homebridge_hidden: true
+
+#input_slider:
+  ## enerPI alarm config
+  #enerpi_max_power:
+  #  initial: 4.0
+  #  min: 1.0
+  #  max: 6.0
+  #  step: 0.25
+  #
+  #enerpi_max_power_reset:
+  #  initial: 2.0
+  #  min: 1.0
+  #  max: 6.0
+  #  step: 0.25
+
+group:
+  enerPI:
+    - sensor.enerpi
+    - sensor.enerpi_power
+    - sensor.enerpi_ldr
+
+  enerPI_consumption:
+    - camera.enerpi_tile_kwh
+
+  enerPI_tiles:
+    - camera.enerpi_tile_power
+    - camera.enerpi_tile_ldr
+
+  enerPI Max Power Control:
+    control: hidden
+    entities:
+      - input_boolean.switch_control_enerpi_max_power
+      - input_slider.enerpi_max_power
+      - input_slider.enerpi_max_power_reset
+
+####################################################
+#                 Custom platforms                 #
+####################################################
+enerpi:
+  enerpi_rpi3:
+    host: !secret enerpi_host
+    name: enerPI
+    scan_interval: 30
+    delta_refresh: 1000
+    monitored_variables:
+      - power
+      - ldr
+    pngtiles_refresh: 300

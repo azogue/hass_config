@@ -6,20 +6,7 @@ homeassistant:
   elevation: !secret elevation
   time_zone: !secret time_zone
   customize: !include frontend/customize.yaml
-
-# This will override the default home zone
-zone:
-  name: Home
-  latitude: !secret latitude
-  longitude: !secret longitude
-  radius: 125
-  icon: mdi:castle
-zone 2:
-  name: !secret z2_name
-  latitude: !secret z2_latitude
-  longitude: !secret z2_longitude
-  radius: !secret z2_radius
-  icon: !secret z2_icon
+  packages:  !include_dir_named packages
 
 http:
   base_url: !secret base_url
@@ -31,32 +18,6 @@ http:
   # ssl_certificate: !secret ssl_certificate
   # ssl_key: !secret ssl_key
 
-####################################################
-#                     Includes                     #
-####################################################
-input_boolean: !include inputs/input_booleans.yaml
-input_slider: !include inputs/input_sliders.yaml
-input_select: !include inputs/input_selects.yaml
-camera: !include devices/cameras.yaml
-light: !include devices/lights.yaml
-binary_sensor: !include devices/binary_sensors.yaml
-sensor: !include devices/sensors.yaml
-switch: !include devices/switches.yaml
-media_player: !include devices/media_players.yaml
-device_tracker: !include devices/device_trackers.yaml
-shell_command: !include shell/shell_commands.yaml
-scene: !include_dir_merge_list scenes/
-automation: !include_dir_merge_list automation/
-script: !include_dir_named scripts/
-ios: !include notify/ios_app.yaml
-notify: !include notify/notify.yaml
-panel_iframe: !include frontend/iframe_panels.yaml
-weblink: !include frontend/web_links.yaml
-group: !include frontend/groups.yaml
-
-########################################
-# MQTT
-########################################
 mqtt:
   broker: !secret mqtt_broker
   port: !secret mqtt_port
@@ -64,42 +25,31 @@ mqtt:
   keepalive: 120
   username: !secret mqtt_username
   password: !secret mqtt_password
-#  birth_message:
-#    topic: 'hass/status'
-#    payload: 'online'
-#  will_message:
-#    topic: 'hass/status'
-#    payload: 'offline'
   protocol: 3.1
 
-####################################################
-#                 Custom platforms                 #
-####################################################
-enerpi:
-  enerpi_rpi3:
-    host: !secret enerpi_host
-    name: enerPI
-    scan_interval: 30
-    delta_refresh: 1000
-    monitored_variables:
-      - power
-      - ldr
-    pngtiles_refresh: 300
+panel_iframe:
+  grafana_access:
+    title: Grafana
+    url: !secret grafana_url
+    icon: mdi:chart-areaspline
+  enerpi:
+    title: enerPI
+    url: !secret enerpi_url
+    icon: mdi:power-plug
+  kodi_access:
+    title: Kodi
+    url: !secret kodi_url
+    icon: mdi:kodi
+  motioneye:
+    title: MotionEye
+    url: !secret motioneye_url
+    icon: mdi:video
 
-####################################################
-#                     Telegram BOT                 #
-####################################################
-mytelegram_bot:
-  platform: webhooks
-  api_key: !secret telegram_bot_api_key
-  allowed_chat_ids:
-    - !secret telegram_bot_chat_id_admin
-    - !secret telegram_bot_chat_id_2
-
-####################################################
-#                     Enables                      #
-####################################################
+scene: !include_dir_merge_list scenes/
+automation: !include_dir_merge_list automation/
+script: !include_dir_named scripts/
 logger: !include database/logger.yaml
+group: !include frontend/groups.yaml
 browser:
 #conversation:
 discovery:
@@ -107,8 +57,7 @@ frontend:
 sun:
 updater:
 config:
-tts:
-  # Text to speech
+tts:  # Text to speech
   platform: google
   language: 'es'
 

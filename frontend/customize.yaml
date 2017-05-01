@@ -1,531 +1,96 @@
-####################################################################################
-#                                ZONES                                             #
-####################################################################################
-#zone.home:
-#  track_ios: true
-#zone.hospital:
-#  track_ios: true
+###############################################################################
+#                           GROUPS                                            #
+###############################################################################
+group.family:
+  order: 1
+group.alarma:
+  order: 2
+group.master_luces_del_salon:
+  order: 3
+group.luces_salon:
+  order: 4
+group.salon:
+  order: 5
+group.salon_simple:
+  order: 6
+group.enchufes:
+  order: 7
+group.kodi:
+  order: 8
+group.luces_estudio:
+  order: 9
+group.estudio_rpi2h:
+  order: 10
+group.estudio_rpi2h_simple:
+  order: 11
+group.luces_dormitorio:
+  order: 12
+group.dormitorio_rpi2mpd:
+  order: 13
+group.dormitorio_rpi2mpd_simple:
+  order: 14
+group.despertador:
+  order: 15
+group.cocina:
+  order: 16
+group.cocina_simple:
+  order: 17
+group.esp8266_2:
+  order: 18
+group.galeria:
+  order: 19
+group.caldera:
+  order: 20
+group.caldera_simple:
+  order: 21
+group.inputs_alarm:
+  order: 22
+group.camaras:
+  order: 23
+group.tiempo_en_villena:
+  order: 24
+group.tiempo_en_villena_simple:
+  order: 25
+group.enerpi:
+  order: 26
+group.enerpi_consumption:
+  order: 27
+group.enerpi_tiles:
+  order: 28
+group.enerpi_max_power_control:
+  order: 29
+group.links:
+  order: 30
+group.links_simple:
+  order: 31
+group.host_ha:
+  order: 32
+group.host_estudio:
+  order: 33
+group.host_dormitorio:
+  order: 34
+group.cacharros:
+  order: 35
+group.cacharros_simple:
+  order: 36
+group.red_e_internet:
+  order: 37
+group.alarm_control:
+  order: 38
+group.hass_control:
+  order: 39
+group.hass_control_simple:
+  order: 40
+group.conectivity:
+  order: 41
+group.all_automations:
+  order: 42
+group.scripts:
+  order: 43
 
-####################################################################################
-#                                KODI                                              #
-####################################################################################
-media_player.kodi:
-  icon: mdi:kodi
-  friendly_name: Kodi OSMC
-  homebridge_hidden: true
-
-####################################################################################
-#                                INPUTS                                            #
-####################################################################################
-# Despertador
-input_boolean.alarm_clock_status:
-  homebridge_hidden: true
-switch.alarm_clock_status:
-  homebridge_name: Despertador LaCafetera
-  icon: mdi:toggle-switch
-input_slider.alarm_clock_hour:
-  friendly_name: Hora
-  icon: mdi:timetable
-sensor.alarm_clock_hour:
-  hidden: true
-  homebridge_hidden: true
-sensor.alarm_clock_minute:
-  hidden: true
-  homebridge_hidden: true
-input_slider.alarm_clock_minute:
-  friendly_name: Minuto
-  icon: mdi:timetable
-sensor.alarm_clock_time:
-  homebridge_hidden: true
-  friendly_name: Hora de despertarse
-  icon: mdi:alarm
-input_boolean.manual_trigger_lacafetera:
-  icon: mdi:play-circle
-  homebridge_hidden: true
-
-input_boolean.switch_master_alarm:
-  homebridge_hidden: true
-#  hidden: true
-switch.switch_master_alarm:
-  homebridge_name: Alarma general
-#  icon: mdi:shield-half-full
-  icon: mdi:shield
-
-input_boolean.switch_motion_lights:
-  friendly_name: Luz con movimiento en Salón
-  icon: mdi:white-balance-incandescent
-  homebridge_hidden: true
-input_slider.light_duration_after_motion:
-  friendly_name: Duración luz (s)
-  icon: mdi:timer-sand
-  homebridge_hidden: true
-
-input_slider.light_main_slider_salon:
-  friendly_name: Brillo
-  icon: mdi:brightness-7
-input_slider.light_temp_slider_salon:
-  friendly_name: Temperatura de color
-  icon: mdi:temperature-kelvin
-automation.brillo_salon_sync:
-  icon: mdi:brightness-auto
-  homebridge_hidden: true
-  friendly_name: Sync brillo bola grande
-
-input_boolean.switch_control_enerpi_max_power:
-  friendly_name: enerPI - control de potencia
-  icon: mdi:toggle-switch
-  homebridge_hidden: true
-input_slider.enerpi_max_power:
-  friendly_name: Max Power (kW)
-  icon: mdi:flash-red-eye
-  homebridge_hidden: true
-input_slider.enerpi_max_power_reset:
-  friendly_name: Reset level (kW)
-  icon: mdi:flash-off
-  homebridge_hidden: true
-
-####################################################################################
-#                                LIGHTS                                            #
-####################################################################################
-#light.aura_habitacion:
-#  homebridge_hidden: true
-#light.bola_grande:
-#  homebridge_hidden: true
-#light.bola_pequena:
-#  homebridge_hidden: true
-#light.cuenco:
-#  homebridge_hidden: true
-#light.hue_habitacion:
-#  homebridge_hidden: true
-#light.lamparita:
-#  homebridge_hidden: true
-#light.pie_sofa:
-#  homebridge_hidden: true
-#light.pie_tv:
-#  homebridge_hidden: true
-#light.flexo:
-#  homebridge_hidden: true
-
-####################################################################################
-#                                SWITCHES                                          #
-####################################################################################
-switch.wol_nas:
-  friendly_name: WakeOnLan NAS
-  homebridge_hidden: true
-
-# These are the Etekcity switches, also appended on homebridge
-switch.cocina:
-  icon: mdi:lightbulb
-  friendly_name: LED Cocina
-  homebridge_name: Cocina
-switch.calefactor:
-  icon: mdi:fan
-  friendly_name: Calefactor Baño
-  homebridge_name: Calefactor
-switch.camara:
-  icon: mdi:video
-  friendly_name: Enchufe de videocámara
-  homebridge_name: Cámara Video
-switch.altavoz:
-  icon: mdi:speaker
-  friendly_name: Enchufe Altavoz
-  homebridge_name: Altavoz
-switch.caldera:
-  icon: mdi:radiator
-  friendly_name: Caldera de gas
-  homebridge_name: Caldera
-switch.impresora:
-  icon: mdi:printer
-  friendly_name: Impresora
-
-switch.new_switch_2:
-  icon: mdi:power-plug
-  friendly_name: Enchufe 2
-switch.new_switch_3:
-  icon: mdi:power-plug
-  friendly_name: Enchufe 3
-
-switch.toggle_kodi_ambilight:
-  icon: mdi:monitor-multiple
-  homebridge_name: Kodi Ambilight
-
-switch.toggle_config_kodi_ambilight:
-  icon: mdi:traffic-light
-  homebridge_hidden: true
-
-switch.kodi_tv_salon:
-  friendly_name: Tele
-  homebridge_name: Tele
-  assumed_state: true
-
-switch.systemd_appdaemon:
-  homebridge_hidden: true
-  icon: mdi:settings
-switch.systemd_homebridge:
-  homebridge_hidden: true
-  icon: mdi:settings
-
-switch.show_expert_mode:
-  homebridge_hidden: true
-  friendly_name: Modo experto
-  icon: mdi:glasses
-
-####################################################################################
-#                                SENSORS                                           #
-####################################################################################
-# enerPI sensors:
-sensor.enerpi_power:
-  icon: mdi:flash
-  friendly_name: Main power
-camera.enerpi_power:
-  friendly_name: Main power (24h)
-sensor.enerpi_ldr:
-  icon: mdi:lightbulb
-  friendly_name: Hall illuminance
-camera.enerpi_ldr:
-  friendly_name: Hall illuminance (24h)
-
-# Speedtest sensors
-sensor.speedtest_ping:
-  icon: mdi:speedometer
-  friendly_name: Ping
-  homebridge_hidden: true
-sensor.speedtest_download:
-  icon: mdi:download
-  friendly_name: Download
-  homebridge_hidden: true
-sensor.speedtest_upload:
-  icon: mdi:upload
-  friendly_name: Upload
-  homebridge_hidden: true
-
-# Local sensors
-sensor.T_salon:
-  friendly_name: Temperatura (DS)
-  homebridge_hidden: True
-#  homebridge_name: Temperatura (DS)
-sensor.salon_temperature:
-  friendly_name: Temperatura
-sensor.salon_humidity:
-  friendly_name: Humedad
-  icon: mdi:water-percent
-sensor.salon_pressure:
-  friendly_name: Presión
-  icon: mdi:weather-cloudy
-
-binary_sensor.pir_salon:
-  friendly_name: Movimiento (salón)
-  device_class: motion
-  homebridge_hidden: true
-
-binary_sensor.motioncam_estudio:
-  device_class: motion
-#  homebridge_name: Vídeo-Mov. en Estudio
-  homebridge_hidden: true
-binary_sensor.motioncam_salon:
-#  homebridge_name: Vídeo-Mov. en Salón
-  device_class: motion
-  homebridge_hidden: true
-
-binary_sensor.pir_dormitorio_rpi2mpd:
-  friendly_name: Movimiento (dormitorio)
-  device_class: motion
-  homebridge_hidden: true
-binary_sensor.pir_estudio_rpi2h:
-  friendly_name: Movimiento (estudio)
-  device_class: motion
-  homebridge_hidden: true
-binary_sensor.vibration_sensor_rpi2h:
-  friendly_name: Vibración (estudio)
-  device_class: vibration
-  homebridge_hidden: true
-binary_sensor.sound_sensor_rpi2h:
-  friendly_name: Sonido (estudio)
-  device_class: sound
-  homebridge_hidden: true
-
-# Conectivity sensors:
-sensor.ip_externa:
-  homebridge_hidden: true
-  friendly_name: IP externa
-  icon: mdi:sim
-sensor.error_counter_notifiers:
-  homebridge_hidden: true
-  friendly_name: Errores de notificación
-  icon: mdi:alert
-sensor.warning_counter_core:
-  homebridge_hidden: true
-  friendly_name: "# Warnings"
-  icon: mdi:alert-outline
-sensor.core_error_counter:
-  homebridge_hidden: true
-  icon: mdi:alert-outline
-binary_sensor.internet_online:
-  friendly_name: ¿Hay conexión a internet?
-  homebridge_hidden: true
-binary_sensor.database_ok:
-  friendly_name: ¿Base de datos OK?
-  homebridge_hidden: true
-binary_sensor.nas_online:
-  homebridge_hidden: true
-binary_sensor.pushbullet_online:
-  friendly_name: ¿Hay notificaciones PushBullet?
-  homebridge_hidden: true
-binary_sensor.email_online:
-  friendly_name: ¿Hay notificaciones por email?
-  homebridge_hidden: true
-binary_sensor.telegram_online:
-  homebridge_hidden: true
-binary_sensor.ios_online:
-  homebridge_hidden: true
-binary_sensor.kodi_online:
-  homebridge_hidden: true
-binary_sensor.services_notok:
-  homebridge_hidden: true
-
-#- sensor.temperatura_dormitorio_rpi2mpd
-#- sensor.dht22_dormitorio_humidity_rpi2mpd
-#- sensor.dht22_dormitorio_temperature_rpi2mpd
-#- sensor.temperatura_estudio_rpi2h
-#- sensor.dht22_temperature_rpi2h
-#- sensor.dht22_humidity_rpi2h
-
-sensor.temperature_rpi2h:
-  homebridge_hidden: True
-sensor.humidity_rpi2h:
-  homebridge_hidden: True
-sensor.pressure_rpi2h:
-  homebridge_hidden: True
-
-sensor.ram_free_rpi2h:
-  homebridge_hidden: True
-sensor.ram_free_rpi2mpd:
-  homebridge_hidden: True
-sensor.cpu_use_rpi2h:
-  homebridge_hidden: True
-sensor.cpu_use_rpi2mpd:
-  homebridge_hidden: True
-sensor.disk_use_home:
-  homebridge_hidden: True
-sensor.disk_use__rpi2h:
-  homebridge_hidden: True
-sensor.disk_use__rpi2mpd:
-  homebridge_hidden: True
-sensor.last_boot_rpi2h:
-  homebridge_hidden: True
-
-sensor.hass_cpu_temperature:
-  homebridge_hidden: True
-sensor.hass_cpu_temperature_rpi2h:
-  homebridge_hidden: True
-sensor.hass_cpu_temperature_rpi2mpd:
-  homebridge_hidden: True
-sensor.kodi_cpu_temperature:
-  homebridge_hidden: True
-sensor.influxdb_cpu_temperature:
-  homebridge_hidden: True
-
-# enerweb sensors
-sensor.calefaccion:
-  friendly_name: Calefacción
-  icon: mdi:oil-temperature
-  homebridge_hidden: True
-sensor.galeria_acs:
-  icon: mdi:water-pump
-  friendly_name: Tª ACS
-  homebridge_hidden: True
-sensor.galeria_impulsion_calefaccion:
-  icon: mdi:temperature-celsius
-  friendly_name: Tª impulsión C.
-  homebridge_hidden: True
-sensor.galeria_retorno_calefaccion:
-  icon: mdi:temperature-celsius
-  friendly_name: Tª retorno C.
-  homebridge_hidden: True
-sensor.galeria_dht22_temperature:
-  friendly_name: Temperatura
-  icon: mdi:thermometer
-sensor.galeria_dht22_humidity:
-  friendly_name: Humedad
-  icon: mdi:water-percent
-sensor.galeria_rpi2_rpi_cpu_temp:
-  icon: mdi:raspberrypi
-  friendly_name: Tª CPU RPI
-  homebridge_hidden: True
-
-# Openweather sensors
-sensor.villena_temperature:
-  friendly_name: Temperatura exterior
-sensor.villena_wind_speed:
-  friendly_name: Velocidad del viento
-  icon: mdi:weather-windy
-sensor.villena_humidity:
-  friendly_name: Humedad exterior
-  icon: mdi:water-percent
-sensor.villena_pressure:
-  friendly_name: Presión
-  icon: mdi:weather-windy-variant
-sensor.villena_condition:
-  friendly_name: Condición general
-sensor.villena_cloud_coverage:
-  friendly_name: Nubes
-  icon: mdi:weather-cloudy
-sensor.villena_rain:
-  friendly_name: LLuvia
-  icon: mdi:weather-rainy
-sensor.villena_forecast:
-  friendly_name: Previsión
-
-# MQTT sensors:
-sensor.esp1_humidity:
-  friendly_name: Humedad
-  icon: mdi:water-percent
-#  homebridge_hidden: true
-sensor.esp1_temperature:
-  friendly_name: Temperatura
-  icon: mdi:thermometer
-#  homebridge_hidden: true
-binary_sensor.esp1_pir:
-  friendly_name: Movimiento (cocina)
-  homebridge_hidden: true
-binary_sensor.esp1_vibro:
-  friendly_name: Vibración (cocina)
-  homebridge_hidden: true
-binary_sensor.esp1_light:
-  friendly_name: Luz (cocina)
-  homebridge_hidden: true
-sensor.esp1_light:
-  friendly_name: Iluminación
-  homebridge_hidden: true
-  icon: mdi:lightbulb-on
-switch.use_esp1_leds:
-  friendly_name: Usar LEDs
-  icon: mdi:led-outline
-  homebridge_hidden: true
-switch.use_esp1_binary_sensors:
-  friendly_name: Usar sensores binarios
-  icon: mdi:camera-burst
-  homebridge_hidden: true
-binary_sensor.cocina_online:
-  homebridge_hidden: true
-
-sensor.esp2_temperature:
-  friendly_name: Temperatura
-  icon: mdi:thermometer
-  homebridge_hidden: true
-sensor.esp2_humidity:
-  friendly_name: Humedad
-  icon: mdi:water-percent
-  homebridge_hidden: true
-sensor.esp2_pressure:
-  friendly_name: Presión
-  icon: mdi:weather-cloudy
-  homebridge_hidden: true
-binary_sensor.esp2_pir:
-  friendly_name: Movimiento
-  homebridge_hidden: true
-binary_sensor.esp2_vibro:
-  friendly_name: Vibración
-  homebridge_hidden: true
-binary_sensor.esp2_light:
-  friendly_name: Luz
-  homebridge_hidden: true
-sensor.esp2_light:
-  friendly_name: Iluminación
-  homebridge_hidden: true
-  icon: mdi:lightbulb-on
-switch.use_esp2_leds:
-  friendly_name: Usar LEDs
-  icon: mdi:led-outline
-  homebridge_hidden: true
-switch.use_esp2_binary_sensors:
-  friendly_name: Usar sensores binarios
-  icon: mdi:camera-burst
-  homebridge_hidden: true
-binary_sensor.esp2_online:
-  homebridge_hidden: true
-
-sensor.bateria_iphone_6s:
-  homebridge_hidden: true
-  icon: mdi:battery
-sensor.bateria_iphone_se:
-  homebridge_hidden: true
-  icon: mdi:battery
-
-####################################################################################
-#                                WEB LINKS                                         #
-####################################################################################
-weblink.router_interfibra:
-  icon: mdi:router-wireless
-weblink.wifi_extender_ap:
-  icon: mdi:wifi
-weblink.pyoutlets:
-  icon: mdi:power-plug
-weblink.enerpi:
-  icon: mdi:flash
-weblink.mopidy:
-  icon: mdi:music-box-outline
-#  entity_picture: /static/images/enerpi.png
-weblink.nas:
-  icon: mdi:library-music
-#  entity_picture: /static/images/nas_ds213j.png
-weblink.rpi_caldera:
-  icon: mdi:raspberrypi
-weblink.rpi_3_osmc_salon:
-  icon: mdi:raspberrypi
-weblink.rpi_2_sensehat_estudio:
-  icon: mdi:raspberrypi
-weblink.tv_headend:
-  icon: mdi:television-guide
-weblink.motioneye:
-  icon: mdi:video
-weblink.kodi_web_interface:
-  icon: mdi:kodi
-#  entity_picture: /static/images/kodi_logo.png
-weblink.slave_hass:
-  friendly_name: HA Estudio
-  icon: mdi:castle
-weblink.slave_hass_mpd:
-  friendly_name: HA Dormitorio
-  icon: mdi:castle
-weblink.grafana:
-  icon: mdi:chart-areaspline
-
-####################################################################################
-#                                GROUPS                                            #
-####################################################################################
-group.eugenio:
-#  entity_picture: /static/images/eugenio.png
-  entity_picture: /local/images/eugenio.png
-group.mary:
-#  entity_picture: /static/images/mari_carmen.png
-  entity_picture: /local/images/mari_carmen.png
-group.ipad:
-  icon: mdi:tablet-ipad
-#  entity_picture: /static/images/ipad_air.png
-  entity_picture: /local/images/ipad_air.png
-
-####################################################################################
-#                                SCRIPTS                                           #
-####################################################################################
-script.reboot:
-  friendly_name: Reiniciar
-  icon: mdi:alert-octagram
-script.shutdown:
-  friendly_name: APAGAR
-  icon: mdi:power
-
-script.play_kodi_pvr:
-  friendly_name: Enciende la caja tonta
-  icon: mdi:television-guide
-
-script.restart_kodi_osmc:
-  friendly_name: Reset KODI
-  icon: mdi:restart
-
-####################################################################################
-#                                SCENES                                            #
-####################################################################################
+###############################################################################
+#                           SCENES                                            #
+###############################################################################
 scene.salon_normal:
   homebridge_hidden: true
 scene.salon_dim:
@@ -534,94 +99,3 @@ scene.cuenco_blue:
   homebridge_hidden: true
 scene.cuenco_red:
   homebridge_hidden: true
-
-####################################################################################
-#                                DEVICES TRACKING                                  #
-####################################################################################
-device_tracker.router_interfibra:
-  icon: mdi:router-wireless
-device_tracker.wifi_ext:
-  icon: mdi:wifi
-device_tracker.airport_extreme:
-  icon: mdi:wifi
-device_tracker.airport:
-  icon: mdi:airplay
-device_tracker.nas:
-  icon: mdi:desktop-tower
-device_tracker.bridge_hue:
-  icon: mdi:white-balance-incandescent
-device_tracker.apple_watchdeeugenio:
-  icon: mdi:watch
-device_tracker.hass_iphone:
-  icon: mdi:cellphone-iphone
-device_tracker.iphone_bt:
-  icon: mdi:cellphone-iphone
-device_tracker.hass_iphonese:
-  icon: mdi:cellphone-iphone
-device_tracker.iphonedemariadelcarmen_bt:
-  icon: mdi:cellphone-iphone
-device_tracker.ipaddemariadelcarmen:
-  icon: mdi:tablet-ipad
-device_tracker.imac:
-  icon: mdi:desktop-mac
-device_tracker.imac_wifi:
-  icon: mdi:desktop-mac
-device_tracker.mbp:
-  icon: mdi:laptop-mac
-device_tracker.rpi_wifi:
-  icon: mdi:raspberrypi
-device_tracker.rpi3w:
-  icon: mdi:raspberrypi
-device_tracker.rpi2hat:
-  icon: mdi:raspberrypi
-device_tracker.rpi2:
-  icon: mdi:raspberrypi
-device_tracker.rpi2_wifi:
-  icon: mdi:raspberrypi
-device_tracker.rpi3osmc:
-  icon: mdi:kodi
-device_tracker.rpi3osmcw:
-  icon: mdi:raspberrypi
-device_tracker.impresora_brother:
-  icon: mdi:printer
-device_tracker.jo01:
-  icon: mdi:music-note-bluetooth
-device_tracker.esp8266_1:
-  icon: mdi:raspberrypi
-
-switch.use_pir_estudio_rpi2h:
-  homebridge_hidden: true
-  friendly_name: Usar movimiento en estudio
-  icon: mdi:bullseye
-switch.use_pir_salon:
-  homebridge_hidden: true
-  friendly_name: Usar movimiento en salón
-  icon: mdi:bullseye
-switch.use_pir_dormitorio_rpi2mpd:
-  homebridge_hidden: true
-  friendly_name: Usar movimiento en dormitorio
-  icon: mdi:bullseye
-switch.use_sound_sensor_rpi2h:
-  homebridge_hidden: true
-  friendly_name: Usar sonido en estudio
-  icon: mdi:surround-sound
-switch.use_vibration_sensor_rpi2h:
-  homebridge_hidden: true
-  friendly_name: Usar vibración en estudio
-  icon: mdi:vibrate
-switch.use_esp1_pir:
-  homebridge_hidden: true
-  friendly_name: Usar movimiento en cocina
-  icon: mdi:bullseye
-#switch.use_esp1_vibro:
-#  homebridge_hidden: true
-#  friendly_name: Usar vibración en cocina
-#  icon: mdi:vibrate
-#switch.use_esp1_light:
-
-switch.motioncam_estudio:
-  homebridge_hidden: true
-  icon: mdi:camera-burst
-switch.motioncam_escam:
-  homebridge_hidden: true
-  icon: mdi:camera-burst

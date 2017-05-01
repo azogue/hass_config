@@ -1,0 +1,224 @@
+# General Intrude/Incident Alarm
+homeassistant:
+  customize:
+#    input_boolean.switch_master_alarm:
+#      homebridge_hidden: true
+    switch.switch_master_alarm:
+      homebridge_name: Alarma general
+    #  icon: mdi:shield-half-full
+      icon: mdi:shield
+
+    switch.use_pir_estudio_rpi2h:
+      homebridge_hidden: true
+      friendly_name: Usar movimiento en estudio
+      icon: mdi:bullseye
+    switch.use_pir_salon:
+      homebridge_hidden: true
+      friendly_name: Usar movimiento en salón
+      icon: mdi:bullseye
+    switch.use_pir_dormitorio_rpi2mpd:
+      homebridge_hidden: true
+      friendly_name: Usar movimiento en dormitorio
+      icon: mdi:bullseye
+    switch.use_sound_sensor_rpi2h:
+      homebridge_hidden: true
+      friendly_name: Usar sonido en estudio
+      icon: mdi:surround-sound
+    switch.use_vibration_sensor_rpi2h:
+      homebridge_hidden: true
+      friendly_name: Usar vibración en estudio
+      icon: mdi:vibrate
+    switch.use_esp1_pir:
+      homebridge_hidden: true
+      friendly_name: Usar movimiento en cocina
+      icon: mdi:bullseye
+    #switch.use_esp1_vibro:
+    #  homebridge_hidden: true
+    #  friendly_name: Usar vibración en cocina
+    #  icon: mdi:vibrate
+    #switch.use_esp1_light:
+    switch.motioncam_estudio:
+      homebridge_hidden: true
+      icon: mdi:camera-burst
+    switch.motioncam_escam:
+      homebridge_hidden: true
+      icon: mdi:camera-burst
+
+    binary_sensor.motioncam_estudio:
+      device_class: motion
+    #  homebridge_name: Vídeo-Mov. en Estudio
+      homebridge_hidden: true
+    binary_sensor.motioncam_salon:
+    #  homebridge_name: Vídeo-Mov. en Salón
+      device_class: motion
+      homebridge_hidden: true
+
+# MOTIONEYE CAMERAS
+camera:
+  # RPI Camera in Slave HASS
+  - platform: generic
+    name: PiCamera Estudio
+    still_image_url: !secret motioneye_url_pic_estudio
+
+  # ESCAM QF001 cheap chinese cam (as still images - generic, or mjpeg stream)
+  - platform: generic
+    name: ESCAM QF001
+    still_image_url: !secret motioneye_url_pic_escam
+
+input_select:
+  alarm_mode:
+    name: Alarma
+    options:
+     - Desconectada
+     - En casa
+     - Fuera de casa
+     - Vacaciones
+  #  initial: Vacaciones | Fuera de casa
+    initial: Desconectada
+    icon: mdi:alert
+
+input_boolean:
+  switch_master_alarm:
+  # Some alarm binary inputs
+  use_pir_estudio_rpi2h:
+  use_pir_salon:
+  use_pir_dormitorio_rpi2mpd:
+  use_sound_sensor_rpi2h:
+  use_vibration_sensor_rpi2h:
+  use_esp1_pir:
+  #use_esp1_vibro:
+
+binary_sensor:
+  - platform: dummy
+    sensors:
+      motioncam_estudio:
+        friendly_name: Vídeo-Mov. en Estudio
+        device_class: motion
+      motioncam_salon:
+        friendly_name: Vídeo-Mov. en Salón
+        device_class: motion
+
+switch:
+  - platform: command_line
+    scan_interval: 120
+    switches:
+      motioncam_escam:
+        command_on: '/home/homeassistant/.homeassistant/shell/switch_camera_motion_detection.sh 192.168.1.46 1 start'
+        command_off: '/home/homeassistant/.homeassistant/shell/switch_camera_motion_detection.sh 192.168.1.46 1 pause'
+        command_state: '/home/homeassistant/.homeassistant/shell/switch_camera_motion_detection.sh 192.168.1.46 1 status'
+        friendly_name: Usar movimiento en vídeo Salón
+        value_template: '{{ value_json == 1 }}'
+      motioncam_estudio:
+        command_on: '/home/homeassistant/.homeassistant/shell/switch_camera_motion_detection.sh 192.168.1.46 2 start'
+        command_off: '/home/homeassistant/.homeassistant/shell/switch_camera_motion_detection.sh 192.168.1.46 2 pause'
+        command_state: '/home/homeassistant/.homeassistant/shell/switch_camera_motion_detection.sh 192.168.1.46 2 status'
+        friendly_name: Usar movimiento en vídeo Estudio
+        value_template: '{{ value_json == 1 }}'
+
+  - platform: template
+    switches:
+      switch_master_alarm:
+        friendly_name: Alarma general
+  #      value_template: "{{ is_state('input_boolean.switch_master_alarm', 'on') }}"
+        value_template: "{{ states.input_boolean.switch_master_alarm.state == 'on' }}"
+        turn_on:
+          service: input_boolean.turn_on
+          entity_id: input_boolean.switch_master_alarm
+        turn_off:
+          service: input_boolean.turn_off
+          entity_id: input_boolean.switch_master_alarm
+
+      use_pir_estudio_rpi2h:
+        turn_off:
+          entity_id: input_boolean.use_pir_estudio_rpi2h
+          service: input_boolean.turn_off
+        turn_on:
+          entity_id: input_boolean.use_pir_estudio_rpi2h
+          service: input_boolean.turn_on
+        value_template: '{{ states.input_boolean.use_pir_estudio_rpi2h.state == "on"}}'
+      use_pir_dormitorio_rpi2mpd:
+        turn_off:
+          entity_id: input_boolean.use_pir_dormitorio_rpi2mpd
+          service: input_boolean.turn_off
+        turn_on:
+          entity_id: input_boolean.use_pir_dormitorio_rpi2mpd
+          service: input_boolean.turn_on
+        value_template: '{{ states.input_boolean.use_pir_dormitorio_rpi2mpd.state == "on"}}'
+      use_pir_salon:
+        turn_off:
+          entity_id: input_boolean.use_pir_salon
+          service: input_boolean.turn_off
+        turn_on:
+          entity_id: input_boolean.use_pir_salon
+          service: input_boolean.turn_on
+        value_template: '{{ states.input_boolean.use_pir_salon.state == "on" }}'
+      use_sound_sensor_rpi2h:
+        turn_off:
+          entity_id: input_boolean.use_sound_sensor_rpi2h
+          service: input_boolean.turn_off
+        turn_on:
+          entity_id: input_boolean.use_sound_sensor_rpi2h
+          service: input_boolean.turn_on
+        value_template: '{{ states.input_boolean.use_sound_sensor_rpi2h.state == "on"}}'
+      use_vibration_sensor_rpi2h:
+        turn_off:
+          entity_id: input_boolean.use_vibration_sensor_rpi2h
+          service: input_boolean.turn_off
+        turn_on:
+          entity_id: input_boolean.use_vibration_sensor_rpi2h
+          service: input_boolean.turn_on
+        value_template: '{{ states.input_boolean.use_vibration_sensor_rpi2h.state == "on" }}'
+      use_esp1_pir:
+        turn_off:
+          entity_id: input_boolean.use_esp1_pir
+          service: input_boolean.turn_off
+        turn_on:
+          entity_id: input_boolean.use_esp1_pir
+          service: input_boolean.turn_on
+        value_template: '{{ states.input_boolean.use_esp1_pir.state == "on" }}'
+  #    use_esp1_vibro:
+  #      turn_off:
+  #        entity_id: input_boolean.use_esp1_vibro
+  #        service: input_boolean.turn_off
+  #      turn_on:
+  #        entity_id: input_boolean.use_esp1_vibro
+  #        service: input_boolean.turn_on
+  #      value_template: '{{ states.input_boolean.use_esp1_vibro.state == "on" }}'
+
+group:
+  Alarma:
+    - switch.switch_master_alarm
+    - input_select.alarm_mode
+
+  Cámaras:
+    - camera.picamera_salon
+    - camera.escam_qf001
+    - camera.picamera_estudio
+
+  Inputs Alarm:
+    control: hidden
+    entities:
+      - binary_sensor.pir_salon
+      - binary_sensor.motioncam_salon
+      - binary_sensor.pir_estudio_rpi2h
+      - binary_sensor.motioncam_estudio
+      - binary_sensor.vibration_sensor_rpi2h
+      - binary_sensor.sound_sensor_rpi2h
+      - binary_sensor.vibration_sensor_raw_rpi2h
+      - binary_sensor.sound_sensor_raw_rpi2h
+      - binary_sensor.esp1_pir
+      - binary_sensor.esp1_vibro
+      - binary_sensor.esp1_light
+
+  Alarm Control:
+    control: hidden
+    entities:
+    - switch.use_pir_salon
+    - switch.motioncam_escam
+    - switch.use_sound_sensor_rpi2h
+    - switch.use_vibration_sensor_rpi2h
+    - switch.use_pir_estudio_rpi2h
+    - switch.motioncam_estudio
+    - switch.use_pir_dormitorio_rpi2mpd
+    - switch.use_esp1_pir
+  #  - switch.use_esp1_vibro

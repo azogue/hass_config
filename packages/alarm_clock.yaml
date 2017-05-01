@@ -1,0 +1,93 @@
+# Alarma despertador
+homeassistant:
+  customize:
+    input_boolean.alarm_clock_status:
+      homebridge_hidden: true
+    switch.alarm_clock_status:
+      homebridge_name: Despertador LaCafetera
+      icon: mdi:toggle-switch
+    input_slider.alarm_clock_hour:
+      friendly_name: Hora
+      icon: mdi:timetable
+    sensor.alarm_clock_hour:
+      hidden: true
+      homebridge_hidden: true
+    sensor.alarm_clock_minute:
+      hidden: true
+      homebridge_hidden: true
+    input_slider.alarm_clock_minute:
+      friendly_name: Minuto
+      icon: mdi:timetable
+    sensor.alarm_clock_time:
+      homebridge_hidden: true
+      friendly_name: Hora de despertarse
+      icon: mdi:alarm
+    input_boolean.manual_trigger_lacafetera:
+      icon: mdi:play-circle
+      homebridge_hidden: true
+
+input_boolean:
+  alarm_clock_status:
+    initial: on
+  manual_trigger_lacafetera:
+    name: Reproduce LaCafetera de Radiocable
+    initial: off
+
+input_select:
+  room_altavoces:
+    name: Selección de altavoces
+    options:
+     - Dormitorio (Mopidy)
+     - Salón (KODI)
+    initial: Dormitorio (Mopidy)
+    icon: mdi:speaker
+
+input_slider:
+  # Sliders para setting de alarma despertador
+  alarm_clock_hour:
+  #  initial: 8
+    min: 0
+    max: 23
+    step: 1
+  alarm_clock_minute:
+  #  initial: 30
+    min: 0
+    max: 55
+    step: 5
+
+sensor:
+  - platform: template
+    sensors:
+      alarm_clock_hour:
+        value_template: '{{ states("input_slider.alarm_clock_hour") | round(0) }}'
+      alarm_clock_minute:
+        value_template: '{{ states("input_slider.alarm_clock_minute") | round(0) }}'
+      alarm_clock_time:
+        value_template: '{{ states("sensor.alarm_clock_hour") }}:{% if states("sensor.alarm_clock_minute")|length == 1 %}0{% endif %}{{ states("sensor.alarm_clock_minute") }}'
+
+switch:
+  - platform: template
+    switches:
+      alarm_clock_status:
+        friendly_name: Despertador LaCafetera
+        value_template: "{{ states.input_boolean.alarm_clock_status.state == 'on' }}"
+        turn_on:
+          service: input_boolean.turn_on
+          entity_id: input_boolean.alarm_clock_status
+        turn_off:
+          service: input_boolean.turn_off
+          entity_id: input_boolean.alarm_clock_status
+
+group:
+  Despertador:
+    control: hidden
+    entities:
+      - switch.alarm_clock_status
+    #  - input_boolean.alarm_clock_status
+      - input_slider.alarm_clock_hour
+      - input_slider.alarm_clock_minute
+      - sensor.alarm_clock_time
+      - input_select.room_altavoces
+      # From rf outlets:
+      - switch.altavoz
+      - input_boolean.manual_trigger_lacafetera

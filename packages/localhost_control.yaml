@@ -1,0 +1,229 @@
+# HASS & LAN/WAN supervisor:
+homeassistant:
+  customize:
+    switch.wol_nas:
+      friendly_name: WakeOnLan NAS
+      homebridge_hidden: true
+    switch.systemd_appdaemon:
+      homebridge_hidden: true
+      icon: mdi:settings
+    switch.systemd_homebridge:
+      homebridge_hidden: true
+      icon: mdi:settings
+    switch.show_expert_mode:
+      homebridge_hidden: true
+      friendly_name: Modo experto
+      icon: mdi:glasses
+    # Speedtest sensors
+    sensor.speedtest_ping:
+      icon: mdi:speedometer
+      friendly_name: Ping
+      homebridge_hidden: true
+    sensor.speedtest_download:
+      icon: mdi:download
+      friendly_name: Download
+      homebridge_hidden: true
+    sensor.speedtest_upload:
+      icon: mdi:upload
+      friendly_name: Upload
+      homebridge_hidden: true
+
+    script.reboot:
+      friendly_name: Reiniciar
+      icon: mdi:alert-octagram
+    script.shutdown:
+      friendly_name: APAGAR
+      icon: mdi:power
+
+    input_boolean.switch_motion_lights:
+      friendly_name: Luz con movimiento en Salón
+      icon: mdi:white-balance-incandescent
+      homebridge_hidden: true
+    input_slider.light_duration_after_motion:
+      friendly_name: Duración luz (s)
+      icon: mdi:timer-sand
+      homebridge_hidden: true
+
+    sensor.disk_use_home:
+      homebridge_hidden: True
+
+    sensor.hass_cpu_temperature:
+      homebridge_hidden: True
+    sensor.kodi_cpu_temperature:
+      homebridge_hidden: True
+    sensor.influxdb_cpu_temperature:
+      homebridge_hidden: True
+
+input_boolean:
+  # Visibility group automation (expert mode)
+  show_expert_mode:
+  # Lights control
+  switch_motion_lights:
+
+input_slider:
+  # Lights ON on motion
+  light_duration_after_motion:
+  #  initial: 15
+    min: 5
+    max: 60
+    step: 5
+
+binary_sensor:
+  # binary_sensor.workday_sensor
+  - platform: workday
+    country: !secret country_code
+    province: !secret province_code
+  #  workdays: List of workdays (defaults to mon, tue, wed, thu, fri).
+  #  excludes: List of workday excludes (defaults to sat, sun, holiday).
+
+sensor:
+  # Host & network sensors:
+  - platform: systemmonitor
+    name: RPI Host
+    scan_interval: 30
+    resources:
+      - type: disk_use_percent
+        arg: /home
+      - type: memory_free
+      - type: processor_use
+      - type: last_boot
+
+  - platform: command_line
+    name: HASS CPU Temperature
+    command: "cat /sys/class/thermal/thermal_zone0/temp"
+    unit_of_measurement: "°C"
+    value_template: '{{ value | multiply(0.001) | round(1) }}'
+    scan_interval: 60
+  #- platform: command_line
+  #  name: enerPI CPU Temperature
+  #  command: !secret ssh_cmd_rpi_temp_enerpi
+  #  unit_of_measurement: "°C"
+  #  value_template: '{{ value | multiply(0.001) | round(1) }}'
+  - platform: command_line
+    name: KODI CPU Temperature
+    command: !secret ssh_cmd_rpi_temp_kodi
+    unit_of_measurement: "°C"
+    value_template: '{{ value | multiply(0.001) | round(1) }}'
+    scan_interval: 60
+  - platform: command_line
+    name: influxDB CPU Temperature
+    command: !secret ssh_cmd_rpi_temp_influxdb
+    unit_of_measurement: "°C"
+    value_template: '{{ value | multiply(0.001) | round(1) }}'
+    scan_interval: 60
+
+  - platform: speedtest
+    minute:
+      - 5
+      - 35
+    monitored_conditions:
+      - ping
+      - download
+      - upload
+
+switch:
+  # WOL
+  - platform: wake_on_lan
+    mac_address: !secret mac_nas
+    name: "WOL NAS"
+    host: "192.168.1.40"
+
+  - platform: command_line
+    scan_interval: 120
+    switches:
+      systemd_appdaemon:
+        command_on: '/home/homeassistant/.homeassistant/shell/switch_systemd_service.sh appdaemon start'
+        command_off: '/home/homeassistant/.homeassistant/shell/switch_systemd_service.sh appdaemon stop'
+        command_state: '/home/homeassistant/.homeassistant/shell/switch_systemd_service.sh appdaemon status'
+        friendly_name: Appdaemon service
+        value_template: '{{ value_json == 1 }}'
+      systemd_homebridge:
+        command_on: '/home/homeassistant/.homeassistant/shell/switch_systemd_service.sh homebridge start'
+        command_off: '/home/homeassistant/.homeassistant/shell/switch_systemd_service.sh homebridge stop'
+        command_state: '/home/homeassistant/.homeassistant/shell/switch_systemd_service.sh homebridge status'
+        friendly_name: Homebridge service
+        value_template: '{{ value_json == 1 }}'
+
+  # Input_boolean's to switches because homebridge doesn't update the initial state of IBs, so IB are ignored and Ss added
+  - platform: template
+    switches:
+      show_expert_mode:
+        value_template: "{{ states.input_boolean.show_expert_mode.state == 'on' }}"
+        turn_on:
+          service: input_boolean.turn_on
+          entity_id: input_boolean.show_expert_mode
+        turn_off:
+          service: input_boolean.turn_off
+          entity_id: input_boolean.show_expert_mode
+
+shell_command:
+  # These 'sudo' commands are appended in /etc/sudoers.d/, for the HA user only.
+  restart_hass: 'sudo systemctl restart home-assistant@homeassistant'
+  stop_hass: 'sudo systemctl stop home-assistant@homeassistant'
+
+  restart_homebridge: 'sudo systemctl restart homebridge'
+  start_homebridge: 'sudo systemctl start homebridge'
+  stop_homebridge: 'sudo systemctl stop homebridge'
+
+  restart_appdaemon: 'sudo systemctl restart appdaemon'
+  stop_appdaemon: 'sudo systemctl stop appdaemon'
+
+  # Use with caution
+  cmd_reboot: 'sudo reboot now'
+  cmd_shutdown: 'sudo shutdown now'
+
+  # MySQL Database flush hosts
+  cmd_recorder_flush_hosts: !secret recorder_flush_cmd
+
+#script:
+
+
+group:
+  Host HA:
+    - sensor.hass_cpu_temperature
+    - sensor.kodi_cpu_temperature
+    - sensor.influxdb_cpu_temperature
+    - sensor.cpu_use
+    - sensor.ram_free
+    - sensor.last_boot
+    - sensor.disk_use_home
+  #  - sensor.badlogin
+
+  Hass control:
+    control: hidden
+    entities:
+      - switch.show_expert_mode
+      - input_boolean.switch_motion_lights
+      - input_slider.light_duration_after_motion
+      - switch.systemd_appdaemon
+      - script.restart_appdaemon
+      - switch.systemd_homebridge
+      - script.restart_homebridge
+      - script.restart_hass
+      - script.reboot
+      - script.shutdown
+
+  Hass control_simple:
+    name: Hass control
+    control: hidden
+    entities:
+      - switch.show_expert_mode
+      - input_boolean.switch_motion_lights
+      - binary_sensor.services_notok
+      - script.good_night
+      - script.tts_tell_me_ambient_data
+      - script.reboot
+
+  Red e Internet:
+    - sensor.speedtest_ping
+    - sensor.speedtest_download
+    - sensor.speedtest_upload
+  #  - device_tracker.router_interfibra
+  #  - device_tracker.bridge_hue
+    - device_tracker.nas
+  #  - device_tracker.airport_extreme
+  #  - device_tracker.wifi_ext
+  #  - device_tracker.airport
+  #  - device_tracker.imac
+    - device_tracker.mbp
+    - switch.wol_nas

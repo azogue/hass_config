@@ -1,0 +1,105 @@
+###############################################################################
+#                           WEB LINKS                                         #
+###############################################################################
+homeassistant:
+  customize:
+    weblink.router_interfibra:
+      icon: mdi:router-wireless
+    weblink.wifi_extender_ap:
+      icon: mdi:wifi
+    weblink.pyoutlets:
+      icon: mdi:power-plug
+    weblink.enerpi:
+      icon: mdi:flash
+    weblink.mopidy:
+      icon: mdi:music-box-outline
+    #  entity_picture: /static/images/enerpi.png
+    weblink.nas:
+      icon: mdi:library-music
+    #  entity_picture: /static/images/nas_ds213j.png
+    weblink.rpi_caldera:
+      icon: mdi:raspberrypi
+    weblink.rpi_3_osmc_salon:
+      icon: mdi:raspberrypi
+    weblink.rpi_2_sensehat_estudio:
+      icon: mdi:raspberrypi
+    weblink.tv_headend:
+      icon: mdi:television-guide
+    weblink.motioneye:
+      icon: mdi:video
+    weblink.kodi_web_interface:
+      icon: mdi:kodi
+    #  entity_picture: /static/images/kodi_logo.png
+    weblink.slave_hass:
+      friendly_name: HA Estudio
+      icon: mdi:castle
+    weblink.slave_hass_mpd:
+      friendly_name: HA Dormitorio
+      icon: mdi:castle
+    weblink.grafana:
+      icon: mdi:chart-areaspline
+
+weblink:
+  entities:
+  # WAN access
+    - name: NAS
+      url: !secret nas_url
+    - name: Grafana
+      url: !secret grafana_url
+    - name: MotionEye
+      url: !secret motioneye_url
+    - name: enerPI
+      url: !secret enerpi_url
+  # LAN-Only access
+    - name: Mopidy
+      url: !secret mopidy_url
+    - name: Slave HASS
+      url: http://192.168.1.46:8123/
+    - name: Slave HASS MPD
+      url: http://192.168.1.52:8123/
+  #  - name: enerPI 2x
+  #    url: http://192.168.1.52/enerpi/
+  #  - name: PyOutlets
+  #    url: http://192.168.1.13/outlets
+    - name: Router Interfibra
+      url: http://192.168.1.1
+    - name: Wifi Extender AP
+      url: http://192.168.1.11
+    - name: RPI Caldera
+      url: http://192.168.1.47/enerweb/
+    - name: RPI 3 OSMC Salón
+      url: http://192.168.1.56/enerweb/
+    - name: TV Headend
+      url: http://192.168.1.56:9981/
+    - name: Kodi web interface
+      url: http://192.168.1.56:8080/
+
+group:
+  Links:
+    - weblink.grafana
+    - weblink.slave_hass
+    - weblink.slave_hass_mpd
+    - weblink.enerpi
+    - weblink.motioneye
+    - weblink.kodi_web_interface
+    - weblink.tv_headend
+    - weblink.mopidy
+    - weblink.pyoutlets
+    - weblink.nas
+    - weblink.router_interfibra
+    - weblink.wifi_extender_ap
+    - weblink.rpi_caldera
+    - weblink.rpi_3_osmc_salon
+
+  Links_simple:
+    name: Links
+    entities:
+      - weblink.grafana
+      - weblink.enerpi
+      - weblink.motioneye
+      - weblink.kodi_web_interface
+      - weblink.tv_headend
+      - weblink.mopidy
+      - weblink.slave_hass
+      - weblink.slave_hass_mpd
+

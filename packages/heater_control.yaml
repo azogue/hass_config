@@ -1,0 +1,79 @@
+# enerweb sensors running in a RPI
+homeassistant:
+  customize:
+    sensor.calefaccion:
+      friendly_name: Calefacción
+      icon: mdi:oil-temperature
+      homebridge_hidden: True
+    sensor.galeria_acs:
+      icon: mdi:water-pump
+      friendly_name: Tª ACS
+      homebridge_hidden: True
+    sensor.galeria_impulsion_calefaccion:
+      icon: mdi:temperature-celsius
+      friendly_name: Tª impulsión C.
+      homebridge_hidden: True
+    sensor.galeria_retorno_calefaccion:
+      icon: mdi:temperature-celsius
+      friendly_name: Tª retorno C.
+      homebridge_hidden: True
+    sensor.galeria_dht22_temperature:
+      friendly_name: Temperatura
+      icon: mdi:thermometer
+    sensor.galeria_dht22_humidity:
+      friendly_name: Humedad
+      icon: mdi:water-percent
+#    sensor.galeria_rpi2_rpi_cpu_temp:
+#      icon: mdi:raspberrypi
+#      friendly_name: Tª CPU RPI
+#      homebridge_hidden: True
+
+binary_sensor:
+  - platform: template
+    sensors:
+      heating:
+        friendly_name: Calefacción encendida
+        device_class: heat
+        value_template: "{{states.sensor.calefaccion.state != 'off'}}"
+        entity_id:
+          - sensor.calefaccion
+
+sensor:
+  - platform: enerweb
+    name: Galería
+    host: !secret host_galeria
+    mysql_user: !secret galeria_mysql_user
+    mysql_password: !secret galeria_mysql_password
+    round: 1
+    sensors:
+      - ds18b20:
+          0000071d270e: Retorno calefacción
+          031504c1eeff: Impulsión calefacción
+          03150492d7ff: ACS
+  #    - rpi2:
+  #        rpit: RPI CPU temp
+      - dht22:
+          temp: Temperature
+          hum: Humidity
+
+group:
+  Galería:
+    - sensor.galeria_dht22_temperature
+    - sensor.galeria_dht22_humidity
+
+  Caldera:
+    control: hidden
+    entities:
+      - binary_sensor.heating
+      - sensor.calefaccion
+      - sensor.galeria_impulsion_calefaccion
+      - sensor.galeria_retorno_calefaccion
+      - sensor.galeria_acs
+      - switch.caldera
+
+  Caldera_simple:
+    name: Caldera
+    control: hidden
+    entities:
+      - sensor.calefaccion
+      - switch.caldera

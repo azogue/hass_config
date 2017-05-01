@@ -1,0 +1,71 @@
+# Slave HASS in RPI2 - Bedroom
+homeassistant:
+  customize:
+    binary_sensor.pir_dormitorio_rpi2mpd:
+      friendly_name: Movimiento (dormitorio)
+      device_class: motion
+      homebridge_hidden: true
+    sensor.ram_free_rpi2mpd:
+      homebridge_hidden: True
+    sensor.cpu_use_rpi2mpd:
+      homebridge_hidden: True
+    sensor.disk_use__rpi2mpd:
+      homebridge_hidden: True
+    sensor.hass_cpu_temperature_rpi2mpd:
+      homebridge_hidden: True
+
+binary_sensor:
+  - platform: dummy
+    sensors:
+      pir_dormitorio_rpi2mpd:
+        friendly_name: Movimiento en Dormitorio
+        device_class: motion
+
+sensor:
+  - platform: dummy
+    sensors:
+      temperatura_dormitorio_rpi2mpd:
+        friendly_name: Temperatura
+        unit_of_measurement: '°C'
+      humedad_dormitorio_rpi2mpd:
+        friendly_name: Humedad
+        unit_of_measurement: '%'
+      presion_dormitorio_rpi2mpd:
+        friendly_name: Presión
+        unit_of_measurement: 'mb'
+
+media_player:
+  - platform: mpd
+    host: !secret mpd_host
+    port: !secret mpd_port
+    name: Dormitorio (Mopidy)
+  #  scan_interval: 60
+
+group:
+  Dormitorio RPI2MPD:
+    name: Dormitorio
+    control: hidden
+    entities:
+      - sensor.temperatura_dormitorio_rpi2mpd
+      - sensor.humedad_dormitorio_rpi2mpd
+      - sensor.presion_dormitorio_rpi2mpd
+      - binary_sensor.pir_dormitorio_rpi2mpd
+      - switch.altavoz
+      - switch.calefactor
+
+  Dormitorio RPI2MPD_simple:
+    name: Dormitorio
+    control: hidden
+    entities:
+      - sensor.temperatura_dormitorio_rpi2mpd
+      - sensor.humedad_dormitorio_rpi2mpd
+      - sensor.presion_dormitorio_rpi2mpd
+      - switch.altavoz
+      - switch.calefactor
+
+  Host Dormitorio:
+    - sensor.hass_cpu_temperature_rpi2mpd
+    - sensor.cpu_use_rpi2mpd
+    - sensor.ram_free_rpi2mpd
+    - sensor.last_boot_rpi2mpd
+    - sensor.disk_use__rpi2mpd
