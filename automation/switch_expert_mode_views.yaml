@@ -22,10 +22,6 @@
 
 - alias: Visibilidad modo experto OFF
   trigger:
-    - platform: homeassistant
-      event: start
-    - platform: event
-      event_type: homeassistant_start
     - platform: state
       entity_id: input_boolean.show_expert_mode
       to: 'off'
@@ -38,3 +34,13 @@
       entity_id: group.salon,group.estudio_rpi2h,group.dormitorio_rpi2mpd,group.cocina,group.caldera,group.links,group.cacharros,group.hass_control,group.tiempo_en_villena,group.enerpi_max_power_control,group.scripts,group.host_rpi3,group.host_rpi2_hat,group.host_rpi2_mpd,group.conectivity
       data:
         visible: False
+
+- alias: Visibilidad modo experto OFF al inicio
+  trigger:
+    - platform: homeassistant
+      event: start
+    - platform: event
+      event_type: homeassistant_start
+  action:
+    - service: homeassistant.turn_off
+      entity_id: input_boolean.show_expert_mode
