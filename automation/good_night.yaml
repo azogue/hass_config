@@ -67,11 +67,3 @@
       title: '¡Buenas noches!'
       message: "Script de buenas noches auto-activado en {{ as_timestamp(now())| timestamp_local}}."
       notification_id: "good_night_notif"
-
-  - service: notify.telegram_bot
-    data_template:
-      title: '*¡Buenas noches!*'
-      message: "Script de buenas noches *auto-activado*."
-      target: !secret telegram_bot_chat_id_admin
-      data:
-        disable_notification: true

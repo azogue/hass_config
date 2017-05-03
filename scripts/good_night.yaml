@@ -9,13 +9,12 @@ sequence:
     entity_id: switch.camara
 
   - alias: Notificación de buenas noches
-    service: notify.telegram_bot
+    service: mytelegram_bot.send_message
     data:
-      title: '*Good night*'
+      title: '*¡Buenas noches!*'
       target: !secret telegram_bot_chat_id_admin
-      message: 'Apagado de interruptores y encendido de cámaras de seguridad.'
-      data:
-        disable_notification: true
+      message: 'Script de buenas noches *auto-activado*. Apagado de interruptores y encendido de cámaras de seguridad.'
+      disable_notification: true
 
   - delay:
       seconds: 10

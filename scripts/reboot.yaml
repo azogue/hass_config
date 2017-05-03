@@ -9,7 +9,7 @@ sequence:
           badge: 5
           sound: "US-EN-Morgan-Freeman-Vacate-The-Premises.wav"
           category: "CONFIRM"
-  - service: notify.telegram_bot
+  - service: mytelegram_bot.send_message
     data:
       title: '*Reiniciando sistema domótico*'
       message: "En unos minutos estará funcionando de nuevo..."

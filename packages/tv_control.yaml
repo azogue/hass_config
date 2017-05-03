@@ -88,15 +88,13 @@ script:
             {% endif %}
 
       - alias: Notificación de selección de canal
-        service: notify.telegram_bot
+        service: mytelegram_bot.send_message
         data_template:
           title: '*TV PVR ON*'
           target: !secret telegram_bot_chat_id_admin
+          disable_notification: true
           message: >
             Encendido de caja tonta en canal '{% if (now().hour < 14) or ((now().hour == 14) and (now().minute < 50)) %}laSexta HD{% elif (now().hour < 16) %}antena3 HD{% elif (now().hour < 20) %}24h{% elif (now().hour == 20) and (now().minute < 50) %}laSexta HD{% elif (now().hour == 20) or ((now().hour == 21) and (now().minute < 15)) %}antena3 HD{% else %}laSexta HD{% endif %}'.
-
-          data:
-            disable_notification: true
 
   restart_kodi_osmc:
     alias: Restart KODI OSMC
@@ -108,12 +106,11 @@ script:
           data:
             push:
               category: "CONFIRM"
-      - service: notify.telegram_bot
+      - service: mytelegram_bot.send_message
         data:
           title: 'Reiniciando KODI OSMC'
           message: "KODI debería 'morir' y 'resucitar' en unos segundos"
-          data:
-            disable_notification: true
+          disable_notification: true
       - service: shell_command.cmd_kill_kodi
 
 group:

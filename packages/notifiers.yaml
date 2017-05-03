@@ -38,10 +38,10 @@ notify:
   - platform: mytelegram
     name: telegram_bot
     api_key: !secret telegram_bot_api_key
-    user_id:
-      Eugenio: !secret telegram_bot_chat_id_admin
-      Carmen: !secret telegram_bot_chat_id_2
-  #  chat_id: !secret telegram_bot_chat_id_admin
+#    user_id:
+#      Eugenio: !secret telegram_bot_chat_id_admin
+#      Carmen: !secret telegram_bot_chat_id_2
+    chat_id: !secret telegram_bot_chat_id_admin
 
 ####################################################
 #                     Telegram BOT                 #
@@ -52,6 +52,9 @@ mytelegram_bot:
   allowed_chat_ids:
     - !secret telegram_bot_chat_id_admin
     - !secret telegram_bot_chat_id_2
+#  user_id:
+#    Eugenio: !secret telegram_bot_chat_id_admin
+#    Carmen: !secret telegram_bot_chat_id_2
 
 ####################################################
 #                     iOS platform                 #

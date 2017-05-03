@@ -13,13 +13,12 @@
   action:
   - service: switch.turn_on
     entity_id: switch.kodi_tv_salon
-  - service: notify.telegram_bot
+  - service: mytelegram_bot.send_message
     data:
       title: '*TV ON*'
       target: !secret telegram_bot_chat_id_admin
       message: 'Encendido de TV automático en Kodi PLAY'
-      data:
-        disable_notification: true
+      disable_notification: true
 #          inline_keyboard:
 
 - alias: Apagado de TV si encendida y KODI en idle > 10 min
@@ -36,13 +35,12 @@
   action:
   - service: switch.turn_off
     entity_id: switch.kodi_tv_salon
-  - service: notify.telegram_bot
+  - service: mytelegram_bot.send_message
     data:
       title: '*TV OFF*'
       target: !secret telegram_bot_chat_id_admin
       message: 'Apagado de TV automático (Kodi en `idle` > 10 min)'
-      data:
-        disable_notification: true
+      disable_notification: true
 #          inline_keyboard:
 
 - alias: Apagado de CAM salón en Kodi PLAY nocturno
@@ -61,12 +59,11 @@
   action:
   - service: switch.turn_off
     entity_id: switch.camara
-  - service: notify.telegram_bot
+  - service: mytelegram_bot.send_message
     data:
       title: '*CAM Salón OFF*'
       target: !secret telegram_bot_chat_id_admin
       message: 'Apagado de cámara de Salón en Kodi PLAY nocturno.'
-      data:
-        disable_notification: true
+      disable_notification: true
 #          inline_keyboard:
 

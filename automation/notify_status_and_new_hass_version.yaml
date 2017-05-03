@@ -41,17 +41,13 @@
     for:
       minutes: 2
   action:
-    - service: notify.telegram_bot
+    - service: mytelegram_bot.send_message
       data:
         title: '*MySQL flush*'
         target: !secret telegram_bot_chat_id_admin
         message: !secret msg_recorder_flush
-        data:
-          #inline_keyboard: TELEGRAM_INLINE_KEYBOARD,
-          disable_notification: false
-          disable_web_page_preview: true
-#          inline_keyboard:
-#            -
+        disable_notification: false
+        disable_web_page_preview: true
     - delay:
         seconds: 5
     - service: shell_command.cmd_recorder_flush_hosts
