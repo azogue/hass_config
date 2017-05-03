@@ -23,6 +23,7 @@ from homeassistant.helpers import discovery, config_per_platform
 from homeassistant.setup import async_prepare_setup_platform
 
 DOMAIN = 'mytelegram_bot'
+REQUIREMENTS = ['python-telegram-bot==5.3.1']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -318,7 +319,6 @@ class TelegramNotificationService(BaseNotificationService):
 
         self.allowed_chat_ids = allowed_chat_ids
         self._default_user = self.allowed_chat_ids[0]
-        # last_msg_cache:
         self._last_message_id = {user: None for user in self.allowed_chat_ids}
         self._parsers = {PARSER_HTML: ParseMode.HTML,
                          PARSER_MD: ParseMode.MARKDOWN}
@@ -456,6 +456,7 @@ class TelegramNotificationService(BaseNotificationService):
                 keys = keys if isinstance(keys, list) else [keys]
                 params['reply_markup'] = InlineKeyboardMarkup(
                     [_make_row_of_kb(row) for row in keys])
+        _LOGGER.debug('data %s --> params %s.', data, params)
         return params
 
     def _send_msg(self, func_send, msg_error, *args_rep, **kwargs_rep):
@@ -481,6 +482,8 @@ class TelegramNotificationService(BaseNotificationService):
         text = '{}\n{}'.format(title, message) if title else message
         params = self._get_msg_kwargs(kwargs)
         for chat_id in self._get_target_chat_ids(target):
+            _LOGGER.debug('send_message in chat_id %s with params: %s',
+                          chat_id, params)
             self._send_msg(self.bot.sendMessage,
                            "Error sending message",
                            chat_id, text, **params)
@@ -508,8 +511,6 @@ class TelegramNotificationService(BaseNotificationService):
             params[ATTR_CAPTION] = kwargs.get(ATTR_CAPTION)
         else:
             func_send = self.bot.editMessageReplyMarkup
-        _LOGGER.debug('edit_message attrs w/id %s, chat_id: %s, params: %s',
-                      message_id or inline_message_id, chat_id, params)
         return self._send_msg(func_send,
                               "Error editing message attributes",
                               chat_id=chat_id, message_id=message_id,
@@ -517,9 +518,11 @@ class TelegramNotificationService(BaseNotificationService):
                               **params)
 
     def send_answer_callback_query(self, message, callback_query_id,
-                                   show_alert=True, **kwargs):
+                                   show_alert=False, **kwargs):
         """Send a message to one or multiple pre-defined users."""
         params = self._get_msg_kwargs(kwargs)
+        _LOGGER.debug('answer_callback_query w/callback_id %s: %s, alert: %s.',
+                      callback_query_id, message, show_alert)
         self._send_msg(self.bot.answerCallbackQuery,
                        "Error sending answer callback query",
                        callback_query_id,
@@ -537,6 +540,8 @@ class TelegramNotificationService(BaseNotificationService):
         caption = kwargs.get(ATTR_CAPTION)
         func_send = self.bot.sendPhoto if is_photo else self.bot.sendDocument
         for chat_id in self._get_target_chat_ids(target):
+            _LOGGER.debug('send file %s to chat_id %s. Caption: %s.',
+                          file, chat_id, caption)
             self._send_msg(func_send, "Error sending file",
                            chat_id, file, caption=caption, **params)
 
@@ -546,6 +551,8 @@ class TelegramNotificationService(BaseNotificationService):
         longitude = float(longitude)
         params = self._get_msg_kwargs(kwargs)
         for chat_id in self._get_target_chat_ids(target):
+            _LOGGER.debug('send location %s/%s to chat_id %s.',
+                          latitude, longitude, chat_id)
             self._send_msg(self.bot.sendLocation,
                            "Error sending location",
                            chat_id=chat_id,
