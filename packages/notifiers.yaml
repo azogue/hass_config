@@ -6,11 +6,6 @@ notify:
     api_key: !secret pushbullet_api_key
     name: pushbullet
 
-  # Not needed anymore
-  #- platform: ios
-  #  name: ios
-  #  target: !secret ios_target
-
   - platform: kodi
     name: kodi
     host: !secret kodi_host
@@ -37,10 +32,6 @@ notify:
 
   - platform: mytelegram
     name: telegram_bot
-    api_key: !secret telegram_bot_api_key
-#    user_id:
-#      Eugenio: !secret telegram_bot_chat_id_admin
-#      Carmen: !secret telegram_bot_chat_id_2
     chat_id: !secret telegram_bot_chat_id_admin
 
 ####################################################
@@ -52,9 +43,6 @@ mytelegram_bot:
   allowed_chat_ids:
     - !secret telegram_bot_chat_id_admin
     - !secret telegram_bot_chat_id_2
-#  user_id:
-#    Eugenio: !secret telegram_bot_chat_id_admin
-#    Carmen: !secret telegram_bot_chat_id_2
 
 ####################################################
 #                     iOS platform                 #
