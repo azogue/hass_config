@@ -7,19 +7,18 @@ Either by polling or webhook.
 import asyncio
 import io
 from functools import partial
+from ipaddress import ip_network
 import logging
 import os
 import requests
-from urllib.error import HTTPError
 import voluptuous as vol
-from homeassistant.config import load_yaml_config_file
+
 from homeassistant.components.notify import (
     ATTR_MESSAGE, ATTR_TITLE, ATTR_DATA, BaseNotificationService)
+from homeassistant.config import load_yaml_config_file
 from homeassistant.const import (
     CONF_PLATFORM, CONF_API_KEY, CONF_TIMEOUT, ATTR_LATITUDE, ATTR_LONGITUDE)
-from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers import discovery, config_per_platform
 from homeassistant.setup import async_prepare_setup_platform
 
 DOMAIN = 'mytelegram_bot'
@@ -31,7 +30,6 @@ EVENT_TELEGRAM_COMMAND = 'telegram_command'
 EVENT_TELEGRAM_TEXT = 'telegram_text'
 EVENT_TELEGRAM_CALLBACK = 'telegram_callback'
 
-CONF_ALLOWED_CHAT_IDS = 'allowed_chat_ids'
 PARSER_MD = 'markdown'
 PARSER_HTML = 'html'
 ATTR_TEXT = 'text'
@@ -60,13 +58,27 @@ ATTR_FILE = 'file'
 ATTR_CAPTION = 'caption'
 ATTR_USERNAME = 'username'
 ATTR_PASSWORD = 'password'
+CONF_ALLOWED_CHAT_IDS = 'allowed_chat_ids'
+CONF_TRUSTED_NETWORKS = 'trusted_networks'
+DEFAULT_TRUSTED_NETWORKS = [
+    ip_network('149.154.167.197/32'),
+    ip_network('149.154.167.198/31'),
+    ip_network('149.154.167.200/29'),
+    ip_network('149.154.167.208/28'),
+    ip_network('149.154.167.224/29'),
+    ip_network('149.154.167.232/31')
+]
 
-PLATFORM_SCHEMA = vol.Schema({
-    vol.Required(CONF_PLATFORM): cv.string,
-    vol.Required(CONF_API_KEY): cv.string,
-    vol.Required(CONF_ALLOWED_CHAT_IDS):
-        vol.All(cv.ensure_list, [cv.positive_int]),
-    vol.Optional(ATTR_PARSER, default=PARSER_MD): cv.string,
+CONFIG_SCHEMA = vol.Schema({
+    DOMAIN: vol.Schema({
+        vol.Required(CONF_PLATFORM): cv.string,
+        vol.Required(CONF_API_KEY): cv.string,
+        vol.Required(CONF_ALLOWED_CHAT_IDS):
+            vol.All(cv.ensure_list, [cv.positive_int]),
+        vol.Optional(ATTR_PARSER, default=PARSER_MD): cv.string,
+        vol.Optional(CONF_TRUSTED_NETWORKS, default=DEFAULT_TRUSTED_NETWORKS):
+            vol.All(cv.ensure_list, [ip_network])
+    })
 }, extra=vol.ALLOW_EXTRA)
 
 BASE_SERVICE_SCHEMA = vol.Schema({
@@ -121,6 +133,17 @@ SERVICE_SCHEMA_ANSWER_CALLBACK_QUERY = vol.Schema({
     vol.Optional(ATTR_SHOW_ALERT): cv.boolean,
 }, extra=vol.ALLOW_EXTRA)
 
+SERVICE_MAP = {
+    SERVICE_SEND_MESSAGE: SERVICE_SCHEMA_SEND_MESSAGE,
+    SERVICE_SEND_PHOTO: SERVICE_SCHEMA_SEND_FILE,
+    SERVICE_SEND_DOCUMENT: SERVICE_SCHEMA_SEND_FILE,
+    SERVICE_SEND_LOCATION: SERVICE_SCHEMA_SEND_LOCATION,
+    SERVICE_EDIT_MESSAGE: SERVICE_SCHEMA_EDIT_MESSAGE,
+    SERVICE_EDIT_CAPTION: SERVICE_SCHEMA_EDIT_CAPTION,
+    SERVICE_EDIT_REPLYMARKUP: SERVICE_SCHEMA_EDIT_REPLYMARKUP,
+    SERVICE_ANSWER_CALLBACK_QUERY: SERVICE_SCHEMA_ANSWER_CALLBACK_QUERY,
+}
+
 
 def load_data(url=None, file=None, username=None, password=None):
     """Load photo/document into ByteIO/File container from a source."""
@@ -149,28 +172,19 @@ def load_data(url=None, file=None, username=None, password=None):
 @asyncio.coroutine
 def async_get_service(hass, config, discovery_info=None):
     """Get the Telegram notification service."""
-    from telegram import Bot
-
-    try:
-        allowed_chat_ids = config.get(CONF_ALLOWED_CHAT_IDS)
-        api_key = config.get(CONF_API_KEY)
-        parser = config.get(ATTR_PARSER)
-
-        bot = Bot(token=api_key)
-        username = bot.getMe()['username']
-        _LOGGER.debug("Telegram bot is '@%s', users allowed: %s, default=%s",
-                      username, allowed_chat_ids, allowed_chat_ids[0])
-    except HTTPError:
-        _LOGGER.error("Please check your access token")
-        return None
-
-    return TelegramNotificationService(hass, api_key, allowed_chat_ids, parser)
+    return TelegramNotificationService(
+        hass,
+        config.get(CONF_API_KEY),
+        config.get(CONF_ALLOWED_CHAT_IDS),
+        config.get(ATTR_PARSER)
+    )
 
 
 @asyncio.coroutine
 def async_setup(hass, config):
     """Setup the telegram bot component."""
 
+    conf = config[DOMAIN]
     descriptions = yield from hass.loop.run_in_executor(
         None, load_yaml_config_file,
         os.path.join(os.path.dirname(__file__), 'services.yaml'))
@@ -187,17 +201,8 @@ def async_setup(hass, config):
 
         _LOGGER.info("Setting up %s.%s", DOMAIN, p_type)
         try:
-            if hasattr(platform, 'async_setup_platform'):
-                receiver_service = yield from \
-                    platform.async_setup_platform(hass, p_config,
-                                                  discovery_info)
-            elif hasattr(platform, 'setup_platform'):
-                receiver_service = yield from hass.loop.run_in_executor(
-                    None, platform.setup_platform, hass, p_config,
-                    discovery_info)
-            else:
-                raise HomeAssistantError("Invalid telegram bot platform.")
-
+            receiver_service = yield from \
+                platform.async_setup_platform(hass, p_config, discovery_info)
             if receiver_service is None:
                 _LOGGER.error(
                     "Failed to initialize telegram bot %s", p_type)
@@ -231,7 +236,6 @@ def async_setup(hass, config):
                 attribute_templ = data.get(attribute)
                 if attribute_templ:
                     attribute_templ.hass = hass
-                    attribute_templ.hass = hass
                     data[attribute] = attribute_templ.async_render()
 
             msgtype = service.service
@@ -243,69 +247,30 @@ def async_setup(hass, config):
             if msgtype == SERVICE_SEND_MESSAGE:
                 yield from notify_service.async_send_message(**kwargs)
             elif msgtype == SERVICE_SEND_PHOTO:
-                yield from notify_service.async_send_file(True, **kwargs)
+                yield from hass.async_add_job(
+                    partial(notify_service.send_file, True, **kwargs))
             elif msgtype == SERVICE_SEND_DOCUMENT:
-                yield from notify_service.async_send_file(False, **kwargs)
+                yield from hass.async_add_job(
+                    partial(notify_service.send_file, False, **kwargs))
             elif msgtype == SERVICE_SEND_LOCATION:
-                yield from notify_service.async_send_location(**kwargs)
+                yield from hass.async_add_job(
+                    partial(notify_service.send_location, **kwargs))
             elif msgtype == SERVICE_ANSWER_CALLBACK_QUERY:
-                yield from notify_service.async_answer_callback_query(**kwargs)
+                yield from hass.async_add_job(
+                    partial(notify_service.answer_callback_query, **kwargs))
             else:
-                yield from notify_service.async_edit_message(msgtype, **kwargs)
+                yield from hass.async_add_job(
+                    partial(notify_service.edit_message, msgtype, **kwargs))
 
         # Register notification services
-        hass.services.async_register(
-            DOMAIN, SERVICE_SEND_MESSAGE, async_send_telegram_message,
-            descriptions.get(SERVICE_SEND_MESSAGE),
-            schema=SERVICE_SCHEMA_SEND_MESSAGE)
-
-        hass.services.async_register(
-            DOMAIN, SERVICE_SEND_PHOTO, async_send_telegram_message,
-            descriptions.get(SERVICE_SEND_PHOTO),
-            schema=SERVICE_SCHEMA_SEND_FILE)
-        hass.services.async_register(
-            DOMAIN, SERVICE_SEND_DOCUMENT, async_send_telegram_message,
-            descriptions.get(SERVICE_SEND_DOCUMENT),
-            schema=SERVICE_SCHEMA_SEND_FILE)
-        hass.services.async_register(
-            DOMAIN, SERVICE_SEND_LOCATION, async_send_telegram_message,
-            descriptions.get(SERVICE_SEND_LOCATION),
-            schema=SERVICE_SCHEMA_SEND_LOCATION)
-
-        hass.services.async_register(
-            DOMAIN, SERVICE_EDIT_MESSAGE, async_send_telegram_message,
-            descriptions.get(SERVICE_EDIT_MESSAGE),
-            schema=SERVICE_SCHEMA_EDIT_MESSAGE)
-        hass.services.async_register(
-            DOMAIN, SERVICE_EDIT_CAPTION, async_send_telegram_message,
-            descriptions.get(SERVICE_EDIT_CAPTION),
-            schema=SERVICE_SCHEMA_EDIT_CAPTION)
-        hass.services.async_register(
-            DOMAIN, SERVICE_EDIT_REPLYMARKUP, async_send_telegram_message,
-            descriptions.get(SERVICE_EDIT_REPLYMARKUP),
-            schema=SERVICE_SCHEMA_EDIT_REPLYMARKUP)
-
-        hass.services.async_register(
-            DOMAIN, SERVICE_ANSWER_CALLBACK_QUERY, async_send_telegram_message,
-            descriptions.get(SERVICE_ANSWER_CALLBACK_QUERY),
-            schema=SERVICE_SCHEMA_ANSWER_CALLBACK_QUERY)
+        for service_notif, schema in SERVICE_MAP.items():
+            hass.services.async_register(
+                DOMAIN, service_notif, async_send_telegram_message,
+                descriptions.get(service_notif), schema=schema)
 
         return True
 
-    setup_tasks = [async_setup_platform(p_type, p_config) for p_type, p_config
-                   in config_per_platform(config, DOMAIN)]
-
-    if setup_tasks:
-        # Only one platform (webhooks or polling) is allowed
-        yield from asyncio.wait(setup_tasks[:1], loop=hass.loop)
-
-    @asyncio.coroutine
-    def async_platform_discovered(platform, info):
-        """Callback to load a platform."""
-        yield from async_setup_platform(platform, discovery_info=info)
-
-    discovery.async_listen_platform(hass, DOMAIN, async_platform_discovered)
-
+    yield from async_setup_platform(conf.get(CONF_PLATFORM), conf)
     return True
 
 
@@ -325,40 +290,6 @@ class TelegramNotificationService(BaseNotificationService):
         self._parse_mode = self._parsers.get(parser)
         self.bot = Bot(token=api_key)
         self.hass = hass
-
-    def async_send_file(self, is_photo=True, **kwargs):
-        """Send a photo or a document.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
-        return self.hass.loop.run_in_executor(
-            None, partial(self.send_file, is_photo, **kwargs))
-
-    def async_send_location(self, latitude, longitude, **kwargs):
-        """Send a location.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
-        return self.hass.loop.run_in_executor(
-            None, partial(self.send_location, latitude, longitude, **kwargs))
-
-    def async_edit_message(self, type_edit, chat_id=None, **kwargs):
-        """Edit a previously sent message.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
-        return self.hass.loop.run_in_executor(
-            None, partial(self.edit_message, type_edit, chat_id, **kwargs))
-
-    def async_answer_callback_query(self, message,
-                                    callback_query_id, **kwargs):
-        """Answer to a callback query.
-
-        This method must be run in the event loop and returns a coroutine.
-        """
-        return self.hass.loop.run_in_executor(
-            None, partial(self.send_answer_callback_query, message,
-                          callback_query_id, **kwargs))
 
     def _get_msg_ids(self, msg_data, chat_id):
         """Get the message id to edit.
@@ -456,7 +387,6 @@ class TelegramNotificationService(BaseNotificationService):
                 keys = keys if isinstance(keys, list) else [keys]
                 params['reply_markup'] = InlineKeyboardMarkup(
                     [_make_row_of_kb(row) for row in keys])
-        _LOGGER.debug('data %s --> params %s.', data, params)
         return params
 
     def _send_msg(self, func_send, msg_error, *args_rep, **kwargs_rep):
@@ -517,9 +447,9 @@ class TelegramNotificationService(BaseNotificationService):
                               inline_message_id=inline_message_id,
                               **params)
 
-    def send_answer_callback_query(self, message, callback_query_id,
-                                   show_alert=False, **kwargs):
-        """Send a message to one or multiple pre-defined users."""
+    def answer_callback_query(self, message, callback_query_id,
+                              show_alert=False, **kwargs):
+        """Answer a callback originated with a press in an inline keyboard."""
         params = self._get_msg_kwargs(kwargs)
         _LOGGER.debug('answer_callback_query w/callback_id %s: %s, alert: %s.',
                       callback_query_id, message, show_alert)
@@ -568,10 +498,10 @@ class BaseTelegramBotEntity:
         self.hass = hass
 
     def _get_message_data(self, msg_data):
-        if (not msg_data
-            or ('text' not in msg_data and 'data' not in msg_data)
-            or 'from' not in msg_data
-            or msg_data['from'].get('id') not in self.allowed_chat_ids):
+        if (not msg_data or
+                ('text' not in msg_data and 'data' not in msg_data) or
+                'from' not in msg_data or
+                msg_data['from'].get('id') not in self.allowed_chat_ids):
             # Message is not correct.
             _LOGGER.error("Incoming message does not have required data (%s)",
                           msg_data)
