@@ -12,9 +12,8 @@ import logging
 import os
 import requests
 import voluptuous as vol
-
 from homeassistant.components.notify import (
-    ATTR_MESSAGE, ATTR_TITLE, ATTR_DATA, BaseNotificationService)
+    ATTR_MESSAGE, ATTR_TITLE, ATTR_DATA)
 from homeassistant.config import load_yaml_config_file
 from homeassistant.const import (
     CONF_PLATFORM, CONF_API_KEY, CONF_TIMEOUT, ATTR_LATITUDE, ATTR_LONGITUDE)
@@ -48,6 +47,7 @@ ATTR_PARSER = 'parse_mode'
 ATTR_DISABLE_NOTIF = 'disable_notification'
 ATTR_DISABLE_WEB_PREV = 'disable_web_page_preview'
 ATTR_REPLY_TO_MSGID = 'reply_to_message_id'
+ATTR_REPLYMARKUP = 'reply_markup'
 ATTR_CALLBACK_QUERY = 'callback_query'
 ATTR_CALLBACK_QUERY_ID = 'callback_query_id'
 ATTR_TARGET = 'target'
@@ -168,18 +168,6 @@ def load_data(url=None, file=None, username=None, password=None):
     return None
 
 
-# noinspection PyUnusedLocal
-@asyncio.coroutine
-def async_get_service(hass, config, discovery_info=None):
-    """Get the Telegram notification service."""
-    return TelegramNotificationService(
-        hass,
-        config.get(CONF_API_KEY),
-        config.get(CONF_ALLOWED_CHAT_IDS),
-        config.get(ATTR_PARSER)
-    )
-
-
 @asyncio.coroutine
 def async_setup(hass, config):
     """Setup the telegram bot component."""
@@ -212,21 +200,12 @@ def async_setup(hass, config):
             _LOGGER.exception('Error setting up platform %s', p_type)
             return
 
-        notify_service = None
-        try:
-            notify_service = yield from \
-                async_get_service(hass, p_config, discovery_info)
-
-            if notify_service is None:
-                _LOGGER.error(
-                    "Failed to initialize notification services")
-                return
-
-        except Exception:  # pylint: disable=broad-except
-            _LOGGER.exception('Error setting up notification services')
-            return
-
-        notify_service.hass = hass
+        notify_service = TelegramNotificationService(
+            hass,
+            p_config.get(CONF_API_KEY),
+            p_config.get(CONF_ALLOWED_CHAT_IDS),
+            p_config.get(ATTR_PARSER)
+        )
 
         @asyncio.coroutine
         def async_send_telegram_message(service):
@@ -245,7 +224,8 @@ def async_setup(hass, config):
             _LOGGER.debug('NEW telegram_message "%s": %s', msgtype, kwargs)
 
             if msgtype == SERVICE_SEND_MESSAGE:
-                yield from notify_service.async_send_message(**kwargs)
+                yield from hass.async_add_job(
+                    partial(notify_service.send_message, **kwargs))
             elif msgtype == SERVICE_SEND_PHOTO:
                 yield from hass.async_add_job(
                     partial(notify_service.send_file, True, **kwargs))
@@ -271,10 +251,11 @@ def async_setup(hass, config):
         return True
 
     yield from async_setup_platform(conf.get(CONF_PLATFORM), conf)
+
     return True
 
 
-class TelegramNotificationService(BaseNotificationService):
+class TelegramNotificationService:
     """Implement the notification services for the Telegram Bot domain."""
 
     def __init__(self, hass, api_key, allowed_chat_ids, parser):
@@ -356,20 +337,22 @@ class TelegramNotificationService(BaseNotificationService):
                 raise ValueError(str(row_keyboard))
 
         # Defaults
-        params = dict(parse_mode=self._parse_mode,
-                      disable_notification=False,
-                      disable_web_page_preview=None,
-                      reply_to_message_id=None,
-                      reply_markup=None,
-                      timeout=None)
+        params = {
+            ATTR_PARSER: self._parse_mode,
+            ATTR_DISABLE_NOTIF: False,
+            ATTR_DISABLE_WEB_PREV: None,
+            ATTR_REPLY_TO_MSGID: None,
+            ATTR_REPLYMARKUP: None,
+            CONF_TIMEOUT: None
+        }
         if data is not None:
             if ATTR_PARSER in data:
-                params['parse_mode'] = self._parsers.get(data[ATTR_PARSER],
-                                                         self._parse_mode)
+                params[ATTR_PARSER] = self._parsers.get(data[ATTR_PARSER],
+                                                        self._parse_mode)
             if CONF_TIMEOUT in data:
-                params['timeout'] = data[CONF_TIMEOUT]
+                params[CONF_TIMEOUT] = data[CONF_TIMEOUT]
             if ATTR_DISABLE_NOTIF in data:
-                params['disable_notification'] = data[ATTR_DISABLE_NOTIF]
+                params[ATTR_DISABLE_NOTIF] = data[ATTR_DISABLE_NOTIF]
             if ATTR_DISABLE_WEB_PREV in data:
                 params[ATTR_DISABLE_WEB_PREV] = data[ATTR_DISABLE_WEB_PREV]
             if ATTR_REPLY_TO_MSGID in data:
@@ -379,13 +362,13 @@ class TelegramNotificationService(BaseNotificationService):
                 from telegram import ReplyKeyboardMarkup
                 keys = data.get(ATTR_KEYBOARD)
                 keys = keys if isinstance(keys, list) else [keys]
-                params['reply_markup'] = ReplyKeyboardMarkup(
+                params[ATTR_REPLYMARKUP] = ReplyKeyboardMarkup(
                     [[key.strip() for key in row.split(",")] for row in keys])
             elif ATTR_KEYBOARD_INLINE in data:
                 from telegram import InlineKeyboardMarkup
                 keys = data.get(ATTR_KEYBOARD_INLINE)
                 keys = keys if isinstance(keys, list) else [keys]
-                params['reply_markup'] = InlineKeyboardMarkup(
+                params[ATTR_REPLYMARKUP] = InlineKeyboardMarkup(
                     [_make_row_of_kb(row) for row in keys])
         return params
 
