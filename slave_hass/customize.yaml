@@ -8,6 +8,7 @@ sensor.dht22_temperature:
 sensor.dht22_humidity:
   friendly_name: Humedad
   icon: mdi:water-percent
+  homebridge_sensor_type: humidity
 sensor.temperature:
   friendly_name: Temperatura SenseHat
   icon: mdi:thermometer
@@ -20,6 +21,18 @@ sensor.pressure:
   friendly_name: Presión
   icon: mdi:weather-cloudy
   homebridge_hidden: true
+
+sensor.hass_cpu_temperature:
+  homebridge_hidden: True
+
+sensor.ram_free:
+  homebridge_hidden: True
+sensor.cpu_use:
+  homebridge_hidden: True
+sensor.disk_use_:
+  homebridge_hidden: True
+sensor.last_boot:
+  homebridge_hidden: True
 
 binary_sensor.pir_estudio:
   friendly_name: Movimiento (estudio)

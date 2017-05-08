@@ -13,6 +13,8 @@ homeassistant:
       homebridge_hidden: True
     sensor.hass_cpu_temperature_rpi2mpd:
       homebridge_hidden: True
+    sensor.humedad_dormitorio_rpi2mpd:
+      homebridge_sensor_type: humidity
 
 binary_sensor:
   - platform: dummy

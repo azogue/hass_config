@@ -53,6 +53,8 @@ homeassistant:
       homebridge_hidden: True
     sensor.influxdb_cpu_temperature:
       homebridge_hidden: True
+    sensor.enerpi_cpu_temperature:
+      homebridge_hidden: True
 
 input_boolean:
   # Visibility group automation (expert mode)
@@ -94,11 +96,11 @@ sensor:
     unit_of_measurement: "°C"
     value_template: '{{ value | multiply(0.001) | round(1) }}'
     scan_interval: 60
-  #- platform: command_line
-  #  name: enerPI CPU Temperature
-  #  command: !secret ssh_cmd_rpi_temp_enerpi
-  #  unit_of_measurement: "°C"
-  #  value_template: '{{ value | multiply(0.001) | round(1) }}'
+  - platform: command_line
+    name: enerPI CPU Temperature
+    command: !secret ssh_cmd_rpi_temp_enerpi
+    unit_of_measurement: "°C"
+    value_template: '{{ value | multiply(0.001) | round(1) }}'
   - platform: command_line
     name: KODI CPU Temperature
     command: !secret ssh_cmd_rpi_temp_kodi
@@ -181,13 +183,14 @@ shell_command:
 group:
   Host HA:
     - sensor.hass_cpu_temperature
-    - sensor.kodi_cpu_temperature
-    - sensor.influxdb_cpu_temperature
     - sensor.cpu_use
     - sensor.ram_free
     - sensor.last_boot
     - sensor.disk_use_home
   #  - sensor.badlogin
+    - sensor.kodi_cpu_temperature
+    - sensor.influxdb_cpu_temperature
+    - sensor.enerpi_cpu_temperature
 
   Hass control:
     control: hidden

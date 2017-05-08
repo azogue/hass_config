@@ -139,22 +139,26 @@ binary_sensor:
           - switch.systemd_homebridge
 
 sensor:
-  - platform: command_line
-    name: CORE Error counter
-    command: "/home/homeassistant/.homeassistant/shell/check_notifiers.sh"
+- platform: command_line
+  name: CORE Error counter
+  command: "/home/homeassistant/.homeassistant/shell/check_notifiers.sh"
 
-  - platform: command_line
-    name: Error counter (notifiers)
-    command: "/home/homeassistant/.homeassistant/shell/check_notifiers.sh"
+- platform: command_line
+  name: Error counter (notifiers)
+  command: "/home/homeassistant/.homeassistant/shell/check_notifiers.sh"
 
-  - platform: command_line
-    name: Warning counter (core)
-    command: "/home/homeassistant/.homeassistant/shell/check_notifiers.sh core_warning"
+- platform: command_line
+  name: Warning counter (core)
+  command: "/home/homeassistant/.homeassistant/shell/check_notifiers.sh core_warning"
 
-  - platform: command_line
-    name: IP externa
-  #  command: python3 -c "import requests; print(requests.get('http://remote-host/sensor_data.txt').text)"
-    command: cat /home/homeassistant/.homeassistant/external_ip.txt
+- platform: command_line
+  name: IP externa
+#  command: python3 -c "import requests; print(requests.get('http://remote-host/sensor_data.txt').text)"
+  command: cat /home/homeassistant/.homeassistant/external_ip.txt
+
+- platform: cert_expiry
+  host: !secret base_host
+#    port: 443
 
 group:
   Conectivity:

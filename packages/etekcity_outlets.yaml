@@ -13,17 +13,21 @@ homeassistant:
       icon: mdi:video
       friendly_name: Enchufe de videocámara
       homebridge_name: Cámara Video
+      homebridge_switch_type: outlet
     switch.altavoz:
       icon: mdi:speaker
       friendly_name: Enchufe Altavoz
       homebridge_name: Altavoz
+      homebridge_switch_type: outlet
     switch.caldera:
       icon: mdi:radiator
       friendly_name: Caldera de gas
       homebridge_name: Caldera
+      homebridge_switch_type: outlet
     switch.impresora:
       icon: mdi:printer
       friendly_name: Impresora
+      homebridge_switch_type: outlet
 #    switch.new_switch_2:
 #      icon: mdi:power-plug
 #      friendly_name: Enchufe 2

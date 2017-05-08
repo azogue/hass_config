@@ -40,7 +40,11 @@
     - platform: homeassistant
       event: start
     - platform: event
-      event_type: homeassistant_start
+      event_type: ha_start
   action:
+    - delay:
+        seconds: 10
     - service: homeassistant.turn_off
       entity_id: input_boolean.show_expert_mode
+#    - service: automation.trigger
+#      entity_id: automation.visibilidad_modo_experto_off
