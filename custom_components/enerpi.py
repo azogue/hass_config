@@ -151,6 +151,7 @@ logger:
 """
 import asyncio
 from collections import deque, OrderedDict
+from functools import partial
 import datetime as dt
 from json import loads
 import logging
@@ -170,7 +171,6 @@ from homeassistant.helpers.discovery import load_platform
 
 
 REQUIREMENTS = ['python-dateutil>=2.6']
-DEPENDENCIES = ['sensor', 'camera']
 
 ICON = 'mdi:flash'
 DOMAIN = 'enerpi'
@@ -197,8 +197,8 @@ DEFAULT_PREFIX = 'enerpi'
 DEFAULT_NAME = 'enerPI'
 
 DEFAULT_DATA_REFRESH = 30
-DEFAULT_PNGTILES_REFRESH = 600
-DEFAULT_MIN_DELTA_W_CHANGE = 500
+DEFAULT_TILES_REFRESH = 600
+DEFAULT_MINDELTA_W_CH = 500
 
 KEY_TIMESTAMP = "ts"
 KEYS_REQUIRED_MSG = [KEY_TIMESTAMP, "host", "msg"]
@@ -212,11 +212,16 @@ CONFIG_SCHEMA = vol.Schema({
             vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
             vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.string,
             vol.Optional(CONF_PREFIX, default=DEFAULT_PREFIX): cv.string,
-            vol.Optional(CONF_MONITORED_VARIABLES, default=['all']): cv.ensure_list,
-            vol.Optional(CONF_MONITORED_TILES, default=[]): cv.ensure_list,
-            vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_DATA_REFRESH): cv.positive_int,
-            vol.Optional(CONF_DELTA_REFRESH, default=DEFAULT_MIN_DELTA_W_CHANGE): cv.positive_int,
-            vol.Optional(CONF_PNGTILES_REFRESH, default=DEFAULT_PNGTILES_REFRESH): cv.positive_int
+            vol.Optional(CONF_MONITORED_VARIABLES, default=['all']):
+                cv.ensure_list,
+            vol.Optional(CONF_MONITORED_TILES, default=[]):
+                cv.ensure_list,
+            vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_DATA_REFRESH):
+                cv.positive_int,
+            vol.Optional(CONF_DELTA_REFRESH, default=DEFAULT_MINDELTA_W_CH):
+                cv.positive_int,
+            vol.Optional(CONF_PNGTILES_REFRESH, default=DEFAULT_TILES_REFRESH):
+                cv.positive_int
         })
     })
 }, required=True, extra=vol.ALLOW_EXTRA)
@@ -231,7 +236,8 @@ MPC_GROUP = 'group.enerpi_max_power_control'
 ##########################################
 # ENERPI JSON DATA: LAST DATA & CONFIG:
 ##########################################
-def get_last_data_request(host, port=DEFAULT_PORT, prefix=DEFAULT_PREFIX, retries=5):
+def get_last_data_request(host,
+                          port=DEFAULT_PORT, prefix=DEFAULT_PREFIX, retries=5):
     """Get the latest data from enerPI Platform."""
     url = URL_DATA_MASK.format(host, port, prefix)
     data, retry = None, 0
@@ -239,7 +245,9 @@ def get_last_data_request(host, port=DEFAULT_PORT, prefix=DEFAULT_PREFIX, retrie
         try:
             r = requests.get(url, timeout=30)
             if r.ok:
-                return r.json()
+                result = r.json()
+                if result:
+                    return result
         except requests.exceptions.RequestException:
             LOGGER.error("Error fetching data in: {}".format(url))
         retry += 1
@@ -265,21 +273,24 @@ def _check_if_tile_changed(new_png_content_b, path_png_file):
         with open(path_png_file, 'wb') as f:
             f.write(new_png_content_b)
     else:
-        LOGGER.debug('NOT Updating tile {} (same as before)'.format(path_png_file))
+        LOGGER.debug('NOT Updating tile {} (same as before)'
+                     .format(path_png_file))
     return new_content
 
 
 @asyncio.coroutine
-def _get_remote_png_tile(host, port, prefix, name):
+def _get_remote_png_tile(hass, host, port, prefix, name):
     """Get remote PNG file."""
     url_tile = URL_TILE_MASK.format(host, port, prefix, name)
     ok, r_svg = False, None
     try:
-        r_svg = requests.get(url_tile, timeout=10)
+        r_svg = yield from hass.async_add_job(
+            partial(requests.get, url_tile, timeout=10))
+
         ok = r_svg.ok
     except (requests.ReadTimeout, requests.ConnectionError) as e:
         LOGGER.error('REQUEST TILE ERROR: {} [{}]'.format(e, e.__class__))
-    yield from asyncio.sleep(0)
+    # yield from asyncio.sleep(0)
     if ok:
         return r_svg.content
     LOGGER.error('TILE REQUEST ERROR: {} - {}'.format(r_svg, url_tile))
@@ -287,7 +298,7 @@ def _get_remote_png_tile(host, port, prefix, name):
 
 
 def _extract_sensor_params(sensor):
-    """Extract enerpi sensors info, including background colors from rgb to hex."""
+    """Extract enerpi sensors info, including bg colors from rgb to hex."""
     # c1 = '#' + ''.join(map('{:02x}'.format, sensor['tile_gradient_st'][:3]))
     # c2 = '#' + ''.join(map('{:02x}'.format, sensor['tile_gradient_end'][:3]))
     if 'mdi:icon' in sensor:
@@ -295,9 +306,10 @@ def _extract_sensor_params(sensor):
         LOGGER.debug('MDI Icon detected: {} -> {}'.format(sensor['name'], icon))
     else:
         icon = sensor['icon']
-        LOGGER.warning('MDI Icon not detected, using font-awesome icon (may be incompatible): {} -> {}'
-                       .format(sensor['name'], icon))
-    return sensor['name'], sensor['description'], sensor['unit'], sensor['is_rms'], icon
+        LOGGER.warning('MDI Icon not detected, using fa-icon '
+                       '(maybe incomp.): {} -> {}'.format(sensor['name'], icon))
+    return (sensor['name'], sensor['description'],
+            sensor['unit'], sensor['is_rms'], icon)
 
 
 ##########################################
@@ -320,31 +332,43 @@ def async_setup(hass, config_hosts):
         pngs_refresh = config.get(CONF_PNGTILES_REFRESH)
 
         # Get ENERPI Config & last data
-        all_sensors_data = get_last_data_request(host, port, prefix, retries=10)
+        all_sensors_data = yield from \
+            hass.async_add_job(partial(
+                get_last_data_request, host, port, prefix, retries=5))
+
         if all_sensors_data is None:
             LOGGER.error('Unable to fetch enerPI REST data')
             # return False
         elif not all([k in all_sensors_data for k in KEYS_REQUIRED_MSG]):
-            LOGGER.error('enerPI BAD DATA fetched --> {}'.format(all_sensors_data))
+            LOGGER.error('enerPI BAD DATA fetched --> {}'
+                         .format(all_sensors_data))
             # return False
         else:  # Drop aux vars from all_sensors_data:
             [all_sensors_data.pop(k) for k in KEYS_REQUIRED_MSG]
 
             # Filter enerpi sensors to add
             d_sensors = {}
-            req_conf = requests.get(URL_SENSORS_MASK.format(host, port, prefix), timeout=30)
+            req_conf = yield from hass.async_add_job(
+                partial(requests.get,
+                        URL_SENSORS_MASK.format(host, port, prefix),
+                        timeout=30))
             if req_conf.ok:
                 sensors_conf = req_conf.json()
                 d_sensors = {s['name']: s for s in sensors_conf}
-            if (len(monitored_sensors) == 1) and (monitored_sensors[0] == 'all'):
+            if (len(monitored_sensors) == 1) \
+                    and (monitored_sensors[0] == 'all'):
                 sensors_append = list(d_sensors.keys())
             else:
-                # present_sensors = list(filter(lambda x: not x.startswith('ref'), all_sensors_data.keys()))
+                # present_sensors = list(filter(
+                #  lambda x: not x.startswith('ref'), all_sensors_data.keys()))
                 sensors_append = monitored_sensors
 
             # Get consumption of last week (to init that counter):
-            start, consumption_kwh_week = dt.datetime.today().date() - dt.timedelta(days=7), None
-            req_week = requests.get(URL_CONSUMPTION_LASTWEEK.format(host, port, prefix, start), timeout=30)
+            start = dt.datetime.today().date() - dt.timedelta(days=7)
+            consumption_kwh_week = None
+            url = URL_CONSUMPTION_LASTWEEK.format(host, port, prefix, start)
+            req_week = yield from hass.async_add_job(
+                partial(requests.get, url, timeout=30))
             if req_week.ok:
                 data = req_week.json()
                 consumption_kwh_week = [round(data[k], 1) for k in sorted(data.keys())]
@@ -403,7 +427,7 @@ class EnerpiTileCam(LocalFile):
     def __init__(self, hass, entity_name, file_path, host, port, prefix, enerpi_name, mag, desc, pngs_refresh):
         """Initialize Local File Camera component."""
         super().__init__(entity_name, file_path)
-        self._hass = hass
+        self.hass = hass
         self._host = host
         self._port = port
         self._prefix = prefix
@@ -413,8 +437,8 @@ class EnerpiTileCam(LocalFile):
         self._last_tile_generation = None
         self._delta_refresh = dt.timedelta(seconds=pngs_refresh)
 
-        async_track_point_in_utc_time(self._hass, self.update_local_png_tiles, now() + dt.timedelta(seconds=5))
-        async_track_time_interval(self._hass, self.update_local_png_tiles, self._delta_refresh)
+        async_track_point_in_utc_time(self.hass, self.update_local_png_tiles, now() + dt.timedelta(seconds=5))
+        async_track_time_interval(self.hass, self.update_local_png_tiles, self._delta_refresh)
 
     # noinspection PyUnusedLocal
     @asyncio.coroutine
@@ -423,7 +447,8 @@ class EnerpiTileCam(LocalFile):
         if self._last_tile_generation is None:  # 1st tile generation
             LOGGER.info('ENERPI 1º png tile for --> {}'.format(os.path.basename(self._file_path)))
         tic = time()
-        new_tile = yield from _get_remote_png_tile(self._host, self._port, self._prefix, self._mag)
+        new_tile = yield from _get_remote_png_tile(
+            self.hass, self._host, self._port, self._prefix, self._mag)
         if new_tile is not None:
             toc = time()
             self._last_tile_generation = dt.datetime.now()
@@ -598,7 +623,8 @@ class EnerpiStreamer(object):
         while True:
             LOGGER.debug('Starting enerPI stream receiver')
             try:
-                for l in requests.get(self._url_stream, stream=True, timeout=60).iter_lines():
+                for l in requests.get(self._url_stream,
+                                      stream=True, timeout=60).iter_lines():
                     if l:
                         l = l.decode('UTF-8')
                         if not l.startswith('data: '):
