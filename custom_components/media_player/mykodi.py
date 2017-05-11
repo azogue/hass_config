@@ -5,24 +5,28 @@ For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/media_player.kodi/
 """
 import asyncio
+from collections import OrderedDict
 from functools import wraps
 import logging
 import urllib
 import re
+import os
 
 import aiohttp
 import voluptuous as vol
 
+from homeassistant.config import load_yaml_config_file
 from homeassistant.components.media_player import (
     SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PREVIOUS_TRACK, SUPPORT_SEEK,
     SUPPORT_PLAY_MEDIA, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, SUPPORT_STOP,
-    SUPPORT_TURN_OFF, SUPPORT_PLAY, SUPPORT_VOLUME_STEP, MediaPlayerDevice,
-    PLATFORM_SCHEMA, MEDIA_TYPE_MUSIC, MEDIA_TYPE_TVSHOW, MEDIA_TYPE_VIDEO,
+    SUPPORT_TURN_OFF, SUPPORT_PLAY, SUPPORT_VOLUME_STEP, SUPPORT_SHUFFLE_SET,
+    MediaPlayerDevice, PLATFORM_SCHEMA, MEDIA_PLAYER_SET_SHUFFLE_SCHEMA,
+    MEDIA_TYPE_MUSIC, MEDIA_TYPE_TVSHOW, MEDIA_TYPE_VIDEO,
     MEDIA_TYPE_PLAYLIST, MEDIA_PLAYER_SCHEMA, DOMAIN)
 from homeassistant.const import (
     STATE_IDLE, STATE_OFF, STATE_PAUSED, STATE_PLAYING, CONF_HOST, CONF_NAME,
     CONF_PORT, CONF_SSL, CONF_PROXY_SSL, CONF_USERNAME, CONF_PASSWORD,
-    EVENT_HOMEASSISTANT_STOP)
+    CONF_TIMEOUT, EVENT_HOMEASSISTANT_STOP)
 from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
@@ -31,6 +35,9 @@ from homeassistant.helpers.deprecation import get_deprecated
 REQUIREMENTS = ['jsonrpc-async==0.6', 'jsonrpc-websocket==0.5']
 
 _LOGGER = logging.getLogger(__name__)
+
+EVENT_KODI_RUN_METHOD_RESULT = 'kodi_run_method_result'
+EVENT_KODI_RUN_ADDON_RESULT = 'kodi_run_addon_result'
 
 CONF_TCP_PORT = 'tcp_port'
 CONF_TURN_OFF_ACTION = 'turn_off_action'
@@ -62,8 +69,8 @@ MEDIA_TYPES = {
 
 SUPPORT_KODI = SUPPORT_PAUSE | SUPPORT_VOLUME_SET | SUPPORT_VOLUME_MUTE | \
                SUPPORT_PREVIOUS_TRACK | SUPPORT_NEXT_TRACK | SUPPORT_SEEK | \
-               SUPPORT_PLAY_MEDIA | SUPPORT_STOP | SUPPORT_PLAY | \
-               SUPPORT_VOLUME_STEP
+               SUPPORT_PLAY_MEDIA | SUPPORT_STOP | SUPPORT_SHUFFLE_SET | \
+               SUPPORT_PLAY | SUPPORT_VOLUME_STEP
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
@@ -72,6 +79,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_TCP_PORT, default=DEFAULT_TCP_PORT): cv.port,
     vol.Optional(CONF_PROXY_SSL, default=DEFAULT_PROXY_SSL): cv.boolean,
     vol.Optional(CONF_TURN_OFF_ACTION, default=None): vol.In(TURN_OFF_ACTION),
+    vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): cv.positive_int,
     vol.Inclusive(CONF_USERNAME, 'auth'): cv.string,
     vol.Inclusive(CONF_PASSWORD, 'auth'): cv.string,
     vol.Optional(CONF_ENABLE_WEBSOCKET, default=DEFAULT_ENABLE_WEBSOCKET):
@@ -79,28 +87,49 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 SERVICE_ADD_MEDIA = 'kodi_add_to_playlist'
-SERVICE_SET_SHUFFLE = 'kodi_set_shuffle'
+SERVICE_RUN_METHOD = 'kodi_run_method'
+SERVICE_RUN_ADDON = 'kodi_execute_addon'
+SERVICE_SET_SHUFFLE = 'kodi_set_shuffle'  # this is the same as mp.shuffle_set
+
+DATA_KODI = 'kodi'
 
 ATTR_MEDIA_TYPE = 'media_type'
 ATTR_MEDIA_NAME = 'media_name'
 ATTR_MEDIA_ARTIST_NAME = 'artist_name'
 ATTR_MEDIA_ID = 'media_id'
+ATTR_ADDONID = 'addonid'
+ATTR_METHOD = 'method'
+
+MEDIA_PLAYER_RUN_METHOD_SCHEMA = MEDIA_PLAYER_SCHEMA.extend({
+    vol.Required(ATTR_METHOD): cv.string,
+}, extra=vol.ALLOW_EXTRA)
+
+MEDIA_PLAYER_RUN_ADDON_SCHEMA = MEDIA_PLAYER_SCHEMA.extend({
+    vol.Required(ATTR_ADDONID): cv.string,
+}, extra=vol.ALLOW_EXTRA)
 
 MEDIA_PLAYER_SET_SHUFFLE_SCHEMA = MEDIA_PLAYER_SCHEMA.extend({
-    vol.Required('shuffle_on'): cv.boolean,
+    vol.Exclusive('shuffle_on', 'shuffle'): cv.boolean,
+    vol.Exclusive('shuffle', 'shuffle'): cv.boolean,
 })
 
 MEDIA_PLAYER_ADD_MEDIA_SCHEMA = MEDIA_PLAYER_SCHEMA.extend({
     vol.Required(ATTR_MEDIA_TYPE): cv.string,
     vol.Optional(ATTR_MEDIA_ID): cv.string,
-    vol.Optional(ATTR_MEDIA_NAME): cv.string,
-    vol.Optional(ATTR_MEDIA_ARTIST_NAME): cv.string,
+    vol.Inclusive(ATTR_MEDIA_NAME, 'media_search'): cv.string,
+    vol.Inclusive(ATTR_MEDIA_ARTIST_NAME, 'media_search'): cv.string,
 })
 
 SERVICE_TO_METHOD = {
     SERVICE_ADD_MEDIA: {
         'method': 'async_add_media_to_playlist',
         'schema': MEDIA_PLAYER_ADD_MEDIA_SCHEMA},
+    SERVICE_RUN_METHOD: {
+        'method': 'async_run_method',
+        'schema': MEDIA_PLAYER_RUN_METHOD_SCHEMA},
+    SERVICE_RUN_ADDON: {
+        'method': 'async_run_addon',
+        'schema': MEDIA_PLAYER_RUN_ADDON_SCHEMA},
     SERVICE_SET_SHUFFLE: {
         'method': 'async_set_shuffle',
         'schema': MEDIA_PLAYER_SET_SHUFFLE_SCHEMA},
@@ -110,6 +139,8 @@ SERVICE_TO_METHOD = {
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up the Kodi platform."""
+    if DATA_KODI not in hass.data:
+        hass.data[DATA_KODI] = []
     host = config.get(CONF_HOST)
     port = config.get(CONF_PORT)
     tcp_port = config.get(CONF_TCP_PORT)
@@ -129,9 +160,14 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         host=host, port=port, tcp_port=tcp_port, encryption=encryption,
         username=config.get(CONF_USERNAME),
         password=config.get(CONF_PASSWORD),
-        turn_off_action=config.get(CONF_TURN_OFF_ACTION), websocket=websocket)
+        turn_off_action=config.get(CONF_TURN_OFF_ACTION),
+        timeout=config.get(CONF_TIMEOUT), websocket=websocket)
 
+    hass.data[DATA_KODI].append(entity)
     async_add_devices([entity], update_before_add=True)
+    descriptions = yield from hass.loop.run_in_executor(
+        None, load_yaml_config_file, os.path.join(
+            os.path.dirname(__file__), 'services.yaml'))
 
     @asyncio.coroutine
     def async_service_handler(service):
@@ -142,23 +178,35 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
         params = {key: value for key, value in service.data.items()
                   if key != 'entity_id'}
-
-        yield from getattr(entity, method['method'])(**params)
+        entity_ids = service.data.get('entity_id')
+        if entity_ids:
+            target_players = [player for player in hass.data[DATA_KODI]
+                              if player.entity_id in entity_ids]
+        else:
+            target_players = hass.data[DATA_KODI]
 
         update_tasks = []
-        if entity.should_poll:
-            update_coro = entity.async_update_ha_state(True)
-            update_tasks.append(update_coro)
+        for player in target_players:
+            yield from getattr(player, method['method'])(**params)
+
+        for player in target_players:
+            if not player.should_poll:
+                continue
+
+            update_coro = player.async_update_ha_state(True)
+            if hasattr(player, 'async_update'):
+                update_tasks.append(update_coro)
+            else:
+                yield from update_coro
 
         if update_tasks:
             yield from asyncio.wait(update_tasks, loop=hass.loop)
 
     for service in SERVICE_TO_METHOD:
-        schema = SERVICE_TO_METHOD[service].get(
-            'schema', MEDIA_PLAYER_SCHEMA)
+        schema = SERVICE_TO_METHOD[service].get('schema')
         hass.services.async_register(
             DOMAIN, service, async_service_handler,
-            description=None, schema=schema)
+            description=descriptions.get(service), schema=schema)
 
 
 def cmd(func):
@@ -183,12 +231,22 @@ def cmd(func):
     return wrapper
 
 
+def _clean_ordered_dict(params):
+    new_d = {}
+    for key, value in params.items():
+        if isinstance(value, OrderedDict):
+            new_d[key] = _clean_ordered_dict(value)
+        else:
+            new_d[key] = value
+    return new_d
+
+
 class KodiDevice(MediaPlayerDevice):
     """Representation of a XBMC/Kodi device."""
 
     def __init__(self, hass, name, host, port, tcp_port, encryption=False,
                  username=None, password=None, turn_off_action=None,
-                 websocket=True):
+                 timeout=DEFAULT_TIMEOUT, websocket=True):
         """Initialize the Kodi device."""
         import jsonrpc_async
         import jsonrpc_websocket
@@ -196,7 +254,7 @@ class KodiDevice(MediaPlayerDevice):
         self._name = name
 
         kwargs = {
-            'timeout': DEFAULT_TIMEOUT,
+            'timeout': timeout,
             'session': async_get_clientsession(hass),
         }
 
@@ -662,12 +720,66 @@ class KodiDevice(MediaPlayerDevice):
                 {"item": {"file": str(media_id)}})
 
     @asyncio.coroutine
-    def async_set_shuffle(self, shuffle_on):
+    def async_set_shuffle(self, shuffle_on=None, shuffle=None):
         """Set shuffle mode, for the first player."""
+        shuffle = shuffle if shuffle is not None else shuffle_on
         if len(self._players) < 1:
             raise RuntimeError("Error: No active player.")
         yield from self.server.Player.SetShuffle(
-            {"playerid": self._players[0]['playerid'], "shuffle": shuffle_on})
+            {"playerid": self._players[0]['playerid'], "shuffle": shuffle})
+
+    @asyncio.coroutine
+    def async_run_method(self, method, **kwargs):
+        """Run Kodi JSONRPC API method with params."""
+        import jsonrpc_base
+        _LOGGER.debug('Run API method "%s", kwargs=%s', method, kwargs)
+        params, ok = None, False
+        try:
+            if kwargs:
+                params = _clean_ordered_dict(kwargs)
+                result = yield from getattr(self.server, method)(params)
+            else:
+                result = yield from getattr(self.server, method)()
+            ok = True
+        except jsonrpc_base.jsonrpc.ProtocolError as e:
+            result = e.args[2]['error']
+            _LOGGER.error('Run API method %s.%s(%s) error: %s',
+                          self.entity_id, method, params, result)
+
+        if isinstance(result, dict):
+            event_data = {'entity_id': self.entity_id,
+                          'result': result, 'result_ok': ok,
+                          'input': {'method': method, 'params': params}}
+            _LOGGER.debug('EVENT kodi_run_method_result: %s', event_data)
+            self.hass.bus.async_fire(EVENT_KODI_RUN_METHOD_RESULT,
+                                     event_data=event_data)
+        return result
+
+    @asyncio.coroutine
+    def async_run_addon(self, addonid, **kwargs):
+        """Run Kodi addon with optional params."""
+        import jsonrpc_base
+        _LOGGER.debug('Kodi run addon "%s", kwargs=%s', addonid, kwargs)
+        params = {"addonid": addonid}
+        ok = False
+        if kwargs:
+            params.update(_clean_ordered_dict(kwargs))
+        try:
+            result = yield from self.server.Addons.ExecuteAddon(params)
+            ok = True
+        except jsonrpc_base.jsonrpc.ProtocolError as e:
+            result = e.args[2]['error']
+            _LOGGER.error('Run addon %s.%s(%s) error: %s',
+                          self.entity_id, addonid, params, result)
+
+        if isinstance(result, dict):
+            event_data = {'entity_id': self.entity_id,
+                          'result': result, 'result_ok': ok,
+                          'input': params}
+            _LOGGER.debug('EVENT kodi_run_addon_result: %s', event_data)
+            self.hass.bus.async_fire(EVENT_KODI_RUN_ADDON_RESULT,
+                                     event_data=event_data)
+        return result
 
     @asyncio.coroutine
     def async_add_media_to_playlist(
@@ -680,13 +792,14 @@ class KodiDevice(MediaPlayerDevice):
         All the albums of an artist can be added with
         media_name="ALL"
         """
+        import jsonrpc_base
+        params = {"playlistid": 0}
         if media_type == "SONG":
             if media_id is None:
                 media_id = yield from self.async_find_song(
                     media_name, artist_name)
-
-            yield from self.server.Playlist.Add(
-                {"playlistid": 0, "item": {"songid": int(media_id)}})
+            if media_id:
+                params["item"] = {"songid": int(media_id)}
 
         elif media_type == "ALBUM":
             if media_id is None:
@@ -696,11 +809,21 @@ class KodiDevice(MediaPlayerDevice):
 
                 media_id = yield from self.async_find_album(
                     media_name, artist_name)
+            if media_id:
+                params["item"] = {"albumid": int(media_id)}
 
-            yield from self.server.Playlist.Add(
-                {"playlistid": 0, "item": {"albumid": int(media_id)}})
         else:
             raise RuntimeError("Unrecognized media type.")
+
+        if media_id is not None:
+            try:
+                yield from self.server.Playlist.Add(params)
+            except jsonrpc_base.jsonrpc.ProtocolError as e:
+                result = e.args[2]['error']
+                _LOGGER.error('Run API method %s.Playlist.Add(%s) error: %s',
+                              self.entity_id, media_type, result)
+        else:
+            _LOGGER.warning('No media detected for Playlist.Add')
 
     @asyncio.coroutine
     def async_add_all_albums(self, artist_name):
@@ -739,9 +862,13 @@ class KodiDevice(MediaPlayerDevice):
     def async_find_artist(self, artist_name):
         """Find artist by name."""
         artists = yield from self.async_get_artists()
-        out = self._find(
-            artist_name, [a['artist'] for a in artists['artists']])
-        return artists['artists'][out[0][0]]['artistid']
+        try:
+            out = self._find(
+                artist_name, [a['artist'] for a in artists['artists']])
+            return artists['artists'][out[0][0]]['artistid']
+        except KeyError:
+            _LOGGER.warning('No artists were found: %s', artist_name)
+            return None
 
     @asyncio.coroutine
     def async_get_songs(self, artist_id=None):
@@ -774,8 +901,13 @@ class KodiDevice(MediaPlayerDevice):
             artist_id = yield from self.async_find_artist(artist_name)
 
         albums = yield from self.async_get_albums(artist_id)
-        out = self._find(album_name, [a['label'] for a in albums['albums']])
-        return albums['albums'][out[0][0]]['albumid']
+        try:
+            out = self._find(album_name, [a['label'] for a in albums['albums']])
+            return albums['albums'][out[0][0]]['albumid']
+        except KeyError:
+            _LOGGER.warning('No albums were found with artist: %s, album: %s',
+                            artist_name, album_name)
+            return None
 
     @staticmethod
     def _find(key_word, words):
