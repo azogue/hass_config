@@ -4,12 +4,15 @@ logs:
   homeassistant.bootstrap: info
   homeassistant.components.recorder: info
   homeassistant.components.history: info
-  custom_components.notify.richsmtp: info
   homeassistant.components.script: info
   homeassistant.components.automation: info
-#    homeassistant.components.media_player: info
+
+  homeassistant.components.media_player: info
   homeassistant.components.tts: debug
-  custom_components.notify.mytelegram: debug
-  custom_components.mytelegram_bot: debug
-  # custom_components.sensor.enerweb: info
+
+  custom_components.notify.mytelegram: info
+  custom_components.mytelegram_bot: info
+  custom_components.media_player: info
+  custom_components.notify.richsmtp: info
+#  custom_components.sensor.enerweb: info
   # custom_components.enerpi: info

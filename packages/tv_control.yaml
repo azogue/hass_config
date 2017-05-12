@@ -24,6 +24,15 @@ homeassistant:
       friendly_name: Reset KODI
       icon: mdi:restart
 
+    script.recent_episodes:
+      icon: mdi:play-circle
+    script.recent_movies:
+      icon: mdi:movie
+    script.pvr_channels:
+      icon: mdi:play-box-outline
+    input_select.kodi_results:
+      icon: mdi:kodi
+
 switch:
   - platform: command_line
     scan_interval: 120
@@ -43,13 +52,11 @@ switch:
 
   - platform: cecswitch
     name: kodi_tv_salon
-    host: !secret kodi_host
-    port: !secret kodi_port
-    username: !secret kodi_user
-    password: !secret kodi_pw
+    kodi_player: media_player.kodi
+    on_cec_command: activate
 
 media_player:
-  - platform: kodi
+  - platform: mykodi
     host: !secret kodi_host
     port: !secret kodi_port
     name: Kodi
@@ -57,6 +64,7 @@ media_player:
     password: !secret kodi_pw
     enable_websocket: true
     turn_off_action: quit
+    timeout: 10
 
 shell_command:
   # Kill OSMC Kodi (when frozen)
@@ -66,6 +74,10 @@ script:
   play_kodi_pvr:
     alias: Enciende la caja tonta
     sequence:
+      - alias: TV on
+        service: switch.turn_on
+        entity_id: switch.kodi_tv_salon
+
       - alias: Play TV channel
         service: media_player.play_media
         data_template:
@@ -113,13 +125,65 @@ script:
           disable_notification: true
       - service: shell_command.cmd_kill_kodi
 
+  recent_movies:
+    alias: Últimas películas
+    sequence:
+      - alias: Call Kodi serv
+        service: media_player.kodi_run_method
+        data:
+          entity_id: media_player.kodi
+          method: VideoLibrary.GetRecentlyAddedMovies
+          properties:
+            - title
+            - year
+            - file
+            - lastplayed
+
+  recent_episodes:
+    alias: Últimos episodios
+    sequence:
+      - alias: Call Kodi serv
+        service: media_player.kodi_run_method
+        data:
+          entity_id: media_player.kodi
+          method: VideoLibrary.GetRecentlyAddedEpisodes
+          properties:
+            - showtitle
+            - file
+            - lastplayed
+            - dateadded
+            - firstaired
+
+  pvr_channels:
+    alias: Canales de TV
+    sequence:
+      - alias: Call Kodi serv
+        service: media_player.kodi_run_method
+        data:
+          entity_id: media_player.kodi
+          method: PVR.GetChannels
+          channelgroupid: 1
+
+input_select:
+  kodi_results:
+    name: Kodi API results
+    options:
+     - Nada que hacer
+
 group:
   Kodi:
     control: hidden
     entities:
       - switch.kodi_tv_salon
-  #    - input_select.salon_movie_mode
       - switch.toggle_kodi_ambilight
       - switch.toggle_config_kodi_ambilight
       - script.play_kodi_pvr
       - script.restart_kodi_osmc
+
+  Media select:
+    control: hidden
+    entities:
+      - script.recent_episodes
+      - script.recent_movies
+      - script.pvr_channels
+      - input_select.kodi_results

@@ -52,6 +52,15 @@ Control:
     - media_player.dormitorio_mopidy
 #    - group.despertador
 
+kodi_control:
+  name: Kodi
+  icon: mdi:kodi
+  view: yes
+  entities:
+    - group.kodi
+    - media_player.kodi
+    - group.media_select
+
 enerpi_view:
   name: enerPI
   icon: mdi:flash
