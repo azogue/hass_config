@@ -73,7 +73,3 @@ class DummyBinarySensor(BinarySensorDevice):
         """Return the state attributes."""
         return dict(friendly_name=self._friendly_name, device_class=self._device_class)
 
-    # @property
-    # def icon(self):
-    #     """Return the icon of the binary sensor."""
-    #     return self._icon

@@ -1,16 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 Custom sensor component to access another custom data logger (`enerweb`)
-It can update sensor last values requesting JSON data from the enerweb API, or accessing it directly via remote MYSQL DB
-In addition, it creates a new sensor with the `EnerwebHeaterState` entity class, for monitoring the heating system state
-
-* When using the JSON API:
-
-```
-    http://{}/enerweb/get_sensors_info?samples=1
-```
-
-* When using remote MYSQL:
+It updates sensor last values accessing them directly via remote MYSQL DB.
 
 ```
     SQL_ALCHEMY URI: mysql+cymysql://{}:{}@{}/data_enerweb
@@ -21,21 +12,23 @@ In addition, it creates a new sensor with the `EnerwebHeaterState` entity class,
 """
 import asyncio
 from collections import deque
+from functools import partial
 from datetime import timedelta
-from dateutil.parser import parse
 import logging
-import requests
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from sqlalchemy.exc import OperationalError, InternalError, TimeoutError, SQLAlchemyError
+from sqlalchemy.exc import (OperationalError, InternalError,
+                            TimeoutError, SQLAlchemyError)
 import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.const import (CONF_HOST, TEMP_CELSIUS, CONF_SENSORS, CONF_TIMEOUT, CONF_NAME,
+from homeassistant.const import (CONF_HOST, TEMP_CELSIUS, CONF_SENSORS,
+                                 CONF_TIMEOUT, CONF_NAME,
                                  STATE_UNKNOWN, STATE_ON, STATE_OFF)
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.event import async_track_time_interval, async_track_point_in_utc_time
+from homeassistant.helpers.event import (async_track_time_interval,
+                                         async_track_point_in_utc_time)
 from homeassistant.util import slugify
 from homeassistant.util.dt import now
 
@@ -50,8 +43,10 @@ DEFAULT_TIMEOUT = 10
 
 URL_MASK_ENERWEB_GET_DATA = 'http://{}/enerweb/get_sensors_info?samples=1'
 URL_MASK_ENERWEB_GET_DATA_MYSQL = 'mysql+cymysql://{}:{}@{}/data_enerweb'
-SQLMASK_SELECT_TABLE_COLUMN_NAMES = "SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = \"{}\""
-SQLMASK_SELECT_TABLE_LAST_VALUES = "SELECT * FROM {} ORDER BY ID DESC LIMIT {}"
+SQLMASK_SELECT_TABLE_COLUMN_NAMES = 'SELECT COLUMN_NAME FROM ' \
+                                    'INFORMATION_SCHEMA.COLUMNS ' \
+                                    'WHERE TABLE_NAME = \"{}\"'
+SQLMASK_SELECT_TABLE_LAST_VALUES = 'SELECT * FROM {} ORDER BY ID DESC LIMIT {}'
 
 SCAN_INTERVAL = timedelta(seconds=40)
 
@@ -60,14 +55,24 @@ SENSOR_TYPES_UNITS = {
     'ds18b20': ['temperature', TEMP_CELSIUS],
     'dht22': {'temp': ['temperature', TEMP_CELSIUS], 'hum': ['humidity', '%']},
     'dht11': {'temp': ['temperature', TEMP_CELSIUS], 'hum': ['humidity', '%']},
-    'rpi2': {'rpit': ['temperature', TEMP_CELSIUS], 'temp': ['temperature', TEMP_CELSIUS],
-             'tempp': ['temperature', TEMP_CELSIUS], 'pres': ['pressure', 'mb'], 'hr': ['humidity', '%']}}
+    'rpi2': {'rpit': ['temperature', TEMP_CELSIUS],
+             'temp': ['temperature', TEMP_CELSIUS],
+             'tempp': ['temperature', TEMP_CELSIUS],
+             'pres': ['pressure', 'mb'], 'hr': ['humidity', '%']}}
 JSON_MYSQL_TRANSLATION = {
     'ds18b20': ['measureds18b20', {'temp': 'sensor_id'}],
     'dht22': ['measuredht22', {'temp': 'temperature', 'hum': 'humidity'}],
     'dht11': ['measuredht11', {'temp': 'temperature', 'hum': 'humidity'}],
     'rpi2': ['hostmeasure', {'rpit': 'rpi_temp_cpu', 'temp': 'sense_temp',
-                             'tempp': 'sense_tempp', 'pres': 'sense_press', 'hr': 'sense_hr'}]}
+                             'tempp': 'sense_tempp', 'pres': 'sense_press',
+                             'hr': 'sense_hr'}]}
+
+SQL_COLUMNS_TABLES = {
+    'dht22': ('id', 'ts', 'temperature', 'humidity', 'exec_id'),
+    'ds18b20': ('id', 'ts', 'temperature', 'sensor_id'),
+    'rpi2': ('id', 'ts', 'rpi_temp_cpu', 'sensehat', 'sense_temp',
+             'sense_pres', 'sense_hr', 'sense_tempp', 'exec_id')
+}
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Required(CONF_HOST): cv.string,
@@ -122,18 +127,29 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
                     sensor_class, sensor_unit = units_type[sensor_mag]
                 else:
                     sensor_class, sensor_unit = units_type
-                _LOGGER.info('* Found sensor_type={}: sensor_mag={}, sensor_name={}, unit={}'
-                             .format(sensor_type, sensor_mag, sensor_name, sensor_unit))
-                dev.append((sensor_type, sensor_mag, sensor_name, sensor_unit, sensor_class, round_result))
+                _LOGGER.info('* Found sensor_type={}: sensor_mag={}, '
+                             'sensor_name={}, unit={}'
+                             .format(sensor_type, sensor_mag,
+                                     sensor_name, sensor_unit))
+                dev.append((sensor_type, sensor_mag, sensor_name, sensor_unit,
+                            sensor_class, round_result))
     if dev:
-        data_handler = EnerwebData(hass, enerweb_host, dev, time_zone, timeout, mysql_user, mysql_pass)
-        sensors = [EnerwebSensor(data_handler, use_mysql, name, s_type, s_mag, s_name, s_unit, s_class, round_r)
+        data_handler = yield from hass.async_add_job(
+            EnerwebData, hass, enerweb_host, dev, time_zone,
+            timeout, mysql_user, mysql_pass)
+        sensors = [EnerwebSensor(data_handler, use_mysql, name, s_type,
+                                 s_mag, s_name, s_unit, s_class, round_r)
                    for s_type, s_mag, s_name, s_unit, s_class, round_r in dev]
 
-        # Special sensor with ambient temp + supply & return pipes temp --> Heating state estimator
-        s_imp = list(filter(lambda x: 'impul' in x.friendly_name.lower(), sensors))[0]
-        s_ret = list(filter(lambda x: 'retorno' in x.friendly_name.lower(), sensors))[0]
-        s_ref = list(filter(lambda x: 'dht22' in x.name.lower() and x.unit_of_measurement == TEMP_CELSIUS, sensors))[0]
+        # Special sensor with ambient temp + supply & return pipes temp
+        # --> Heating state estimator
+        s_imp = list(filter(
+            lambda x: 'impul' in x.friendly_name.lower(), sensors))[0]
+        s_ret = list(filter(
+            lambda x: 'retorno' in x.friendly_name.lower(), sensors))[0]
+        s_ref = list(filter(
+            lambda x: 'dht22' in x.name.lower()
+                      and x.unit_of_measurement == TEMP_CELSIUS, sensors))[0]
         # noinspection PyTypeChecker
         sensors.append(EnerwebHeaterState(data_handler, s_imp, s_ret, s_ref))
         async_add_devices(sensors)
@@ -158,7 +174,8 @@ class EnerwebSensor(Entity):
         if self._mag_is_id:
             self._name = '{}_{}'.format(name, slugify(sensor_friendly_name))
         else:
-            self._name = '{}_{}_{}'.format(name, sensor_type, slugify(sensor_friendly_name))
+            self._name = '{}_{}_{}'.format(name, sensor_type,
+                                           slugify(sensor_friendly_name))
         self._unit_of_measurement = sensor_unit
         self._state = None
         self._last_update = None
@@ -195,27 +212,33 @@ class EnerwebSensor(Entity):
                     self._state = sensor_data[self._sensor_mag]
                 elif sensor_data:
                     if self._mag_is_id:
-                        data_entity = list(filter(lambda x: self._sensor_mag in x.values(), sensor_data))
+                        data_entity = list(filter(
+                            lambda x: self._sensor_mag in x.values(),
+                            sensor_data))
                         if data_entity:
                             self._last_update = data_entity[0][KEY_TIMESTAMP]
                             self._state = data_entity[0]['temp']
                         else:
-                            _LOGGER.warning('No data_entity in update sensor por id. Data:{}'.format(sensor_data))
+                            _LOGGER.warning('No data_entity in update sensor by'
+                                            ' id. Data:{}'.format(sensor_data))
                             return
                     else:
                         data_entity = sensor_data[0]
                         self._last_update = data_entity[KEY_TIMESTAMP]
                         self._state = data_entity[self._sensor_mag]
             except KeyError as e:
-                _LOGGER.warning('KeyError: {}. No UPDATE OF {}'.format(e, self._name))
+                _LOGGER.warning('KeyError: {}. No UPDATE OF {}'
+                                .format(e, self._name))
                 return
         if (self._round is not None) and (self._state is not None):
             self._state = round(self._state, self._round)
-            # _LOGGER.debug('New state in {} [{}]'.format(self._name, self._state, self._last_update))
+            _LOGGER.debug('New state in {} [{}]'.format(self._name,
+                          self._state, self._last_update))
 
 
 class EnerwebHeaterState(Entity):
-    """Representation of the state of the heating system measured indirectly with enerweb temperature sensors."""
+    """Representation of the state of the heating system measured
+    indirectly with enerweb temperature sensors."""
 
     def __init__(self, data_handler, sensor_supply, sensor_return, sensor_ref):
         """Initialize the sensor."""
@@ -244,42 +267,54 @@ class EnerwebHeaterState(Entity):
         """Get the latest data and updates the states."""
         # self._data.async_update()
         if self._data.last_sensor_data is not None:
-            t_imp, t_ret, t_ref = self._sensor_supply.state, self._sensor_return.state, self._sensor_reference.state
-
+            t_imp = self._sensor_supply.state
+            t_ret = self._sensor_return.state
+            t_ref = self._sensor_reference.state
             state_ant = self._state
             t_imp_ant1, t_imp_ant2 = self._supply_ant[-1], self._supply_ant[-2]
             if (t_imp_ant1 is None) or(t_imp_ant2 is None):
                 t_imp_ant1 = t_imp_ant2 = state_ant
-            _LOGGER.debug('{}- UPDATE HEATER STATE: st_ant={}; IMP={}, RET={}, REF={}; IMP1={}, IMP2={}'
-                          .format(now(), state_ant, t_imp, t_ret, t_ref, t_imp_ant1, t_imp_ant2))
+            _LOGGER.debug('{}- UPDATE HEATER STATE: st_ant={}; IMP={}, RET={},'
+                          ' REF={}; IMP1={}, IMP2={}'
+                          .format(now(), state_ant, t_imp, t_ret,
+                                  t_ref, t_imp_ant1, t_imp_ant2))
 
             if not t_imp or not t_ret or not t_ref:
                 new_state = STATE_HEATING_UNKNOWN
-            elif (t_imp - t_ref <= 7) or ((t_imp + t_ret) < 60 and (t_imp < 30)):
+            elif (t_imp - t_ref <= 7) or \
+                    ((t_imp + t_ret) < 60 and (t_imp < 30)):
                 new_state = STATE_HEATING_OFF
             # subida brusca desde Tº ~ ref
-            elif (state_ant == STATE_HEATING_OFF) and (t_imp > t_ret) and (t_imp - t_imp_ant1 > 1):
+            elif (state_ant == STATE_HEATING_OFF) and \
+                    (t_imp > t_ret) and (t_imp - t_imp_ant1 > 1):
                 _LOGGER.debug('COLD START')
                 new_state = STATE_HEATING_COLD_START
             # bajada brusca en ON
             elif ((state_ant > STATE_HEATING_OFF)
-                  and (state_ant != STATE_HEATING_STOP) and (t_imp - t_imp_ant1 < -.25) and (t_imp - t_imp_ant2 < -.5)):
+                  and (state_ant != STATE_HEATING_STOP) and
+                      (t_imp - t_imp_ant1 < -.25) and
+                      (t_imp - t_imp_ant2 < -.5)):
                 _LOGGER.debug('HOT STOP')
                 new_state = STATE_HEATING_STOP
             # subida brusca en ON
-            elif (state_ant == STATE_HEATING_STOP) and (t_imp - t_imp_ant1 > .25) and (t_imp - t_imp_ant2 > .5):
+            elif (state_ant == STATE_HEATING_STOP) and \
+                    (t_imp - t_imp_ant1 > .25) and (t_imp - t_imp_ant2 > .5):
                 _LOGGER.debug('HOT RE-START')
                 new_state = STATE_HEATING_RESTART
-            elif (state_ant == STATE_HEATING_COLD_START) and (t_imp - t_imp_ant1 >= 0):
+            elif (state_ant == STATE_HEATING_COLD_START) and \
+                    (t_imp - t_imp_ant1 >= 0):
                 _LOGGER.debug('ON AFTER COLD-START')
                 new_state = STATE_HEATING_ON
-            elif (state_ant == STATE_HEATING_RESTART) and (t_imp - t_imp_ant1 >= 0):
+            elif (state_ant == STATE_HEATING_RESTART) and \
+                    (t_imp - t_imp_ant1 >= 0):
                 _LOGGER.debug('ON AFTER RE-START')
                 new_state = STATE_HEATING_ON
             # Confirmación de OFF (No Parada transitoria)
-            elif (state_ant == STATE_HEATING_STOP) and (t_imp - t_ref < 25) and (t_imp_ant2 - t_imp > .5):
+            elif (state_ant == STATE_HEATING_STOP) and \
+                    (t_imp - t_ref < 25) and (t_imp_ant2 - t_imp > .5):
                 new_state = STATE_HEATING_OFF
-            elif (state_ant == STATE_HEATING_STOP) and (t_imp - t_imp_ant1 <= 2):
+            elif (state_ant == STATE_HEATING_STOP) and \
+                    (t_imp - t_imp_ant1 <= 2):
                 new_state = STATE_HEATING_STOP
             elif (state_ant == STATE_HEATING_ON) and (t_imp - t_ref > 7):
                 new_state = state_ant
@@ -299,24 +334,26 @@ class EnerwebHeaterState(Entity):
 class EnerwebData(object):
     """Get the latest data for the enerweb platform."""
 
-    def __init__(self, hass, enerweb_host, devices, timezone, timeout=DEFAULT_TIMEOUT,
-                 mysql_user=None, mysql_pass=None):
+    def __init__(self, hass, enerweb_host, devices, timezone,
+                 timeout=DEFAULT_TIMEOUT, mysql_user=None, mysql_pass=None):
         """Initialize the data handler object."""
-        self._hass = hass
+        self.hass = hass
         self._host = enerweb_host
         self._site = None
         self._timezone = timezone
-        self._use_requests = mysql_user is None
         self._timeout = timeout
         # self._scan_interval = timedelta(seconds=scan_interval)
         self._mysql_u = mysql_user
         self._mysql_p = mysql_pass
-        self._mysql_session = None
+        # self._mysql_session = None
+        self.path_database = URL_MASK_ENERWEB_GET_DATA_MYSQL.format(
+            self._mysql_u, self._mysql_p, self._host)
 
         self._raw_data = None
         self._last_valid_request = None
         self._last_request_was_invalid = False
         self.last_sensor_data = None
+        self._updating = False
 
         d_monitored_variables = {}
         for (sensor_type, sensor_mag, _, _, _, _) in devices:
@@ -325,114 +362,85 @@ class EnerwebData(object):
             else:
                 d_monitored_variables[sensor_type] = [sensor_mag]
         self._monitored_variables_mysql = d_monitored_variables
-        self._columns_tables = None
 
-        # 1rst data request:
-        async_track_point_in_utc_time(self._hass, self.async_update, now() + timedelta(seconds=3))
-        async_track_time_interval(self._hass, self.async_update, SCAN_INTERVAL)
+        async_track_point_in_utc_time(self.hass, self.async_update,
+                                      now() + timedelta(seconds=3))
+        async_track_time_interval(self.hass, self.async_update, SCAN_INTERVAL)
 
-        if self.last_sensor_data is not None:
-            _LOGGER.info('ENERWEB DATA CONFIRMED IN SITE: {}; HOSTNAME: {}; SENSORS: {}'
-                         .format(self._site, self._host, self.last_sensor_data.keys()))
-        _LOGGER.debug('last_valid_request:{}'.format(self._last_valid_request))
+    @asyncio.coroutine
+    def async_get_session(self):
+        _LOGGER.debug('in async_get_session')
+        engine = yield from self.hass.async_add_job(
+            partial(create_engine, self.path_database, echo=False))
+        session = yield from self.hass.async_add_job(
+            partial(sessionmaker, bind=engine))
+        return session()
 
     # noinspection PyUnusedLocal
     @asyncio.coroutine
     def async_update(self, *args):
-        """Update enerweb sensor data."""
-        _LOGGER.debug('in async_update')
-        if self._use_requests:
-            url = URL_MASK_ENERWEB_GET_DATA.format(self._host)
-            data = {}
-            timeout = self._timeout if self._last_valid_request else 3 * self._timeout
-            try:
-                r = requests.get(url, timeout=timeout)
-                if r.ok:
-                    data = r.json()
-                    self._raw_data = data
-                    if not self._last_valid_request:
-                        _LOGGER.debug('FIRST RAW DATA: {}'.format(self._raw_data))
-                    site = data["config_machine"]['SITE']
-                    hostname = data["config_machine"]['HOST']
-                    sensors = data['sensors']
-                    self._last_valid_request = parse(data['finish']).replace(tzinfo=self._timezone)
-                    f_log = _LOGGER.info if self._last_request_was_invalid else _LOGGER.debug
-                    f_log('Valid_api_request at {}, tz={} --> {}'
-                          .format(self._last_valid_request, self._last_valid_request.tzinfo, sensors))
-                    self._site = '{} ({})'.format(site.capitalize(), hostname.upper())
-                    self.last_sensor_data = sensors
-                    self._last_request_was_invalid = False
-            except KeyError as e:
-                _LOGGER.error('KeyError: {}; data={}'.format(e, data))
-                self._last_request_was_invalid = True
-            except (requests.Timeout, requests.ConnectionError) as e:
-                ahora = now(self._timezone)
-                _LOGGER.debug(e)
-                _LOGGER.debug(ahora)
-                _LOGGER.debug(self._last_valid_request)
-                if self._last_valid_request:
-                    _LOGGER.debug(self._last_valid_request)
-                    _LOGGER.error('{}[{}] --> URL: {}, now is {:%c}, ∆T from last valid sample: {}'
-                                  .format(e, e.__class__, url, ahora, ahora - self._last_valid_request))
-                else:
-                    _LOGGER.error('No valid request... {}[{}] in {}, now={:%c}'.format(e, e.__class__, url, ahora))
-                self._last_request_was_invalid = True
+        """Update enerweb sensor data w/ mysql remote access."""
+        if self._updating:
+            _LOGGER.debug('no async_update --> is updating')
         else:
-            # MYSQL REMOTE ACCESS:
-            path_database = URL_MASK_ENERWEB_GET_DATA_MYSQL.format(self._mysql_u, self._mysql_p, self._host)
+            self._updating = True
             try:
                 # MYSQL Session:
-                if self._mysql_session is None:
-                    engine = create_engine(path_database, echo=False)
-                    session = sessionmaker(bind=engine)
-                    s = session()
-                else:
-                    s = self._mysql_session
-                # MYSQL Table columns:
-                if self._columns_tables is None:
-                    columns_tables = {}
-                    for s_type in self._monitored_variables_mysql.keys():
-                        table, _ = JSON_MYSQL_TRANSLATION[s_type]
-                        cols_tsql = list(zip(*s.execute(SQLMASK_SELECT_TABLE_COLUMN_NAMES.format(table)).fetchall()))[0]
-                        _LOGGER.debug('SQL_UPDATE GETTING cols_tsql:{} for s_type={}'.format(cols_tsql, s_type))
-                        columns_tables[s_type] = cols_tsql
-                    self._columns_tables = columns_tables
+                s = yield from self.async_get_session()
                 # MYSQL QUERIES:
                 last_data = {}
                 for s_type, s_mags in self._monitored_variables_mysql.items():
                     table, cols_table = JSON_MYSQL_TRANSLATION[s_type]
-                    cols_tsql = self._columns_tables[s_type]
+                    cols_tsql = SQL_COLUMNS_TABLES[s_type]
                     onerow_table = table != 'measureds18b20'
-                    last_values = s.execute(SQLMASK_SELECT_TABLE_LAST_VALUES
-                                            .format(table, 1 if onerow_table else len(s_mags))).fetchall()
+                    n_last = 1 if onerow_table else len(s_mags)
+                    task = yield from self.hass.async_add_job(
+                        s.execute,
+                        SQLMASK_SELECT_TABLE_LAST_VALUES.format(table, n_last))
+                    last_values = yield from self.hass.async_add_job(
+                        task.fetchall)
+                    _LOGGER.debug('LAST VALUES ({}-{}) => {}'
+                                  .format(s_type, table, last_values))
                     if onerow_table and last_values:
                         ts = last_values[0][cols_tsql.index(KEY_TIMESTAMP)]
                         last_data[s_type] = {KEY_TIMESTAMP: ts}
                         for mag in s_mags:
-                            last_data[s_type].update({mag: last_values[0][cols_tsql.index(cols_table[mag])]})
+                            idx = cols_tsql.index(cols_table[mag])
+                            last_data[s_type].update({mag: last_values[0][idx]})
                     elif last_values:  # ds18b20 multiple rows (1x sensor_id)
                         ts = last_values[-1][cols_tsql.index(KEY_TIMESTAMP)]
                         last_data[s_type] = {KEY_TIMESTAMP: ts}
                         idx_s_ids = cols_tsql.index(cols_table['temp'])
                         idx_values = cols_tsql.index('temperature')
                         for row in last_values:
-                            last_data[s_type].update({row[idx_s_ids]: row[idx_values]})
+                            last_data[s_type].update(
+                                {row[idx_s_ids]: row[idx_values]})
                 if last_data:
                     self.last_sensor_data = last_data
                     self._last_valid_request = now(self._timezone)
-                    f_log = _LOGGER.info if self._last_request_was_invalid else _LOGGER.debug
-                    f_log('SQL_UPDATE last_data={} [{}]'.format(last_data, self._last_valid_request))
+                    if self._last_request_was_invalid:
+                        f_log = _LOGGER.info
+                    else:
+                        f_log = _LOGGER.debug
+                    f_log('SQL_UPDATE last_data={} [{}]'
+                          .format(last_data, self._last_valid_request))
                     self._last_request_was_invalid = False
+                    # s.flush()
                 else:
-                    _LOGGER.warning('SQL_UPDATE NO LAST_DATA! => session={}'.format(s))
+                    _LOGGER.warning('SQL_UPDATE NO LAST_DATA! => session={}'
+                                    .format(s))
                     self._last_request_was_invalid = True
-            except (OperationalError, TimeoutError, InternalError, OSError, SQLAlchemyError) as e:
+                    # self._mysql_session = None
+            except (OperationalError, TimeoutError, InternalError,
+                    OSError, SQLAlchemyError) as e:
                 if not self._last_request_was_invalid:
                     _LOGGER.error('{}: {}'.format(e.__class__, e))
-                self._mysql_session = None
+                # self._mysql_session = None
                 self._last_request_was_invalid = True
             except Exception as e:
                 if not self._last_request_was_invalid:
-                    _LOGGER.error('UNKNOWN ERROR {} [{}] trying to update from SQL DB'.format(e, e.__class__))
-                self._mysql_session = None
+                    _LOGGER.error('UNKNOWN ERROR {} [{}] trying to update '
+                                  'from SQL DB'.format(e, e.__class__))
+                # self._mysql_session = None
                 self._last_request_was_invalid = True
+            self._updating = False
