@@ -32,6 +32,10 @@ panel_iframe:
     title: Grafana
     url: !secret grafana_url
     icon: mdi:chart-areaspline
+  grafana_access_2:
+    title: Ambiente
+    url: !secret grafana_url_interior
+    icon: mdi:chart-areaspline
   enerpi:
     title: enerPI
     url: !secret enerpi_url
