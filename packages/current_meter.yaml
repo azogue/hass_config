@@ -7,11 +7,14 @@ homeassistant:
     sensor.enerpi_power:
       icon: mdi:flash
       friendly_name: Main power
+      homebridge_hidden: true
     camera.enerpi_power:
       friendly_name: Main power (24h)
+      homebridge_hidden: true
     sensor.enerpi_ldr:
       icon: mdi:lightbulb
       friendly_name: Hall illuminance
+      homebridge_hidden: true
     camera.enerpi_ldr:
       friendly_name: Hall illuminance (24h)
 

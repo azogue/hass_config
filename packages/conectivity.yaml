@@ -38,6 +38,9 @@ homeassistant:
       homebridge_hidden: true
     binary_sensor.services_notok:
       homebridge_hidden: true
+    sensor.ssl_certificate_expiry:
+      homebridge_hidden: true
+
 
 binary_sensor:
   - platform: command_line
@@ -153,8 +156,7 @@ sensor:
 
 - platform: command_line
   name: IP externa
-#  command: python3 -c "import requests; print(requests.get('http://remote-host/sensor_data.txt').text)"
-  command: cat /home/homeassistant/.homeassistant/external_ip.txt
+  command: "cat /home/homeassistant/.homeassistant/external_ip.txt"
 
 - platform: cert_expiry
   host: !secret base_host
@@ -173,6 +175,7 @@ group:
     - binary_sensor.telegram_online
     - binary_sensor.ios_online
     - binary_sensor.kodi_online
+    - sensor.ssl_certificate_expiry
     - sensor.error_counter_notifiers
     - sensor.core_error_counter
     - sensor.warning_counter_core
