@@ -20,9 +20,8 @@ from homeassistant.components.media_player import (
     SUPPORT_NEXT_TRACK, SUPPORT_PAUSE, SUPPORT_PREVIOUS_TRACK, SUPPORT_SEEK,
     SUPPORT_PLAY_MEDIA, SUPPORT_VOLUME_MUTE, SUPPORT_VOLUME_SET, SUPPORT_STOP,
     SUPPORT_TURN_OFF, SUPPORT_PLAY, SUPPORT_VOLUME_STEP, SUPPORT_SHUFFLE_SET,
-    MediaPlayerDevice, PLATFORM_SCHEMA, MEDIA_PLAYER_SET_SHUFFLE_SCHEMA,
-    MEDIA_TYPE_MUSIC, MEDIA_TYPE_TVSHOW, MEDIA_TYPE_VIDEO,
-    MEDIA_TYPE_PLAYLIST, MEDIA_PLAYER_SCHEMA, DOMAIN)
+    MediaPlayerDevice, PLATFORM_SCHEMA, MEDIA_TYPE_MUSIC, MEDIA_TYPE_TVSHOW,
+    MEDIA_TYPE_VIDEO, MEDIA_TYPE_PLAYLIST, MEDIA_PLAYER_SCHEMA, DOMAIN)
 from homeassistant.const import (
     STATE_IDLE, STATE_OFF, STATE_PAUSED, STATE_PLAYING, CONF_HOST, CONF_NAME,
     CONF_PORT, CONF_SSL, CONF_PROXY_SSL, CONF_USERNAME, CONF_PASSWORD,
@@ -89,7 +88,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 SERVICE_ADD_MEDIA = 'kodi_add_to_playlist'
 SERVICE_RUN_METHOD = 'kodi_run_method'
 SERVICE_RUN_ADDON = 'kodi_execute_addon'
-SERVICE_SET_SHUFFLE = 'kodi_set_shuffle'  # this is the same as mp.shuffle_set
 
 DATA_KODI = 'kodi'
 
@@ -108,16 +106,11 @@ MEDIA_PLAYER_RUN_ADDON_SCHEMA = MEDIA_PLAYER_SCHEMA.extend({
     vol.Required(ATTR_ADDONID): cv.string,
 }, extra=vol.ALLOW_EXTRA)
 
-MEDIA_PLAYER_SET_SHUFFLE_SCHEMA = MEDIA_PLAYER_SCHEMA.extend({
-    vol.Exclusive('shuffle_on', 'shuffle'): cv.boolean,
-    vol.Exclusive('shuffle', 'shuffle'): cv.boolean,
-})
-
 MEDIA_PLAYER_ADD_MEDIA_SCHEMA = MEDIA_PLAYER_SCHEMA.extend({
     vol.Required(ATTR_MEDIA_TYPE): cv.string,
     vol.Optional(ATTR_MEDIA_ID): cv.string,
-    vol.Inclusive(ATTR_MEDIA_NAME, 'media_search'): cv.string,
-    vol.Inclusive(ATTR_MEDIA_ARTIST_NAME, 'media_search'): cv.string,
+    vol.Optional(ATTR_MEDIA_NAME): cv.string,
+    vol.Optional(ATTR_MEDIA_ARTIST_NAME): cv.string,
 })
 
 SERVICE_TO_METHOD = {
@@ -130,9 +123,6 @@ SERVICE_TO_METHOD = {
     SERVICE_RUN_ADDON: {
         'method': 'async_run_addon',
         'schema': MEDIA_PLAYER_RUN_ADDON_SCHEMA},
-    SERVICE_SET_SHUFFLE: {
-        'method': 'async_set_shuffle',
-        'schema': MEDIA_PLAYER_SET_SHUFFLE_SCHEMA},
 }
 
 
@@ -165,9 +155,6 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
     hass.data[DATA_KODI].append(entity)
     async_add_devices([entity], update_before_add=True)
-    descriptions = yield from hass.loop.run_in_executor(
-        None, load_yaml_config_file, os.path.join(
-            os.path.dirname(__file__), 'services.yaml'))
 
     @asyncio.coroutine
     def async_service_handler(service):
@@ -190,20 +177,22 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
             yield from getattr(player, method['method'])(**params)
 
         for player in target_players:
-            if not player.should_poll:
-                continue
-
-            update_coro = player.async_update_ha_state(True)
-            if hasattr(player, 'async_update'):
+            if player.should_poll:
+                update_coro = player.async_update_ha_state(True)
                 update_tasks.append(update_coro)
-            else:
-                yield from update_coro
 
         if update_tasks:
             yield from asyncio.wait(update_tasks, loop=hass.loop)
 
+    if hass.services.has_service(DOMAIN, SERVICE_ADD_MEDIA):
+        return
+
+    descriptions = yield from hass.loop.run_in_executor(
+        None, load_yaml_config_file, os.path.join(
+            os.path.dirname(__file__), 'services.yaml'))
+
     for service in SERVICE_TO_METHOD:
-        schema = SERVICE_TO_METHOD[service].get('schema')
+        schema = SERVICE_TO_METHOD[service]['schema']
         hass.services.async_register(
             DOMAIN, service, async_service_handler,
             description=descriptions.get(service), schema=schema)
@@ -720,9 +709,8 @@ class KodiDevice(MediaPlayerDevice):
                 {"item": {"file": str(media_id)}})
 
     @asyncio.coroutine
-    def async_set_shuffle(self, shuffle_on=None, shuffle=None):
+    def async_set_shuffle(self, shuffle):
         """Set shuffle mode, for the first player."""
-        shuffle = shuffle if shuffle is not None else shuffle_on
         if len(self._players) < 1:
             raise RuntimeError("Error: No active player.")
         yield from self.server.Player.SetShuffle(
@@ -783,7 +771,7 @@ class KodiDevice(MediaPlayerDevice):
 
     @asyncio.coroutine
     def async_add_media_to_playlist(
-            self, media_type, media_id=None, media_name='', artist_name=''):
+            self, media_type, media_id=None, media_name='ALL', artist_name=''):
         """Add a media to default playlist (i.e. playlistid=0).
 
         First the media type must be selected, then
@@ -818,8 +806,8 @@ class KodiDevice(MediaPlayerDevice):
         if media_id is not None:
             try:
                 yield from self.server.Playlist.Add(params)
-            except jsonrpc_base.jsonrpc.ProtocolError as e:
-                result = e.args[2]['error']
+            except jsonrpc_base.jsonrpc.ProtocolError as exc:
+                result = exc.args[2]['error']
                 _LOGGER.error('Run API method %s.Playlist.Add(%s) error: %s',
                               self.entity_id, media_type, result)
         else:
@@ -902,7 +890,8 @@ class KodiDevice(MediaPlayerDevice):
 
         albums = yield from self.async_get_albums(artist_id)
         try:
-            out = self._find(album_name, [a['label'] for a in albums['albums']])
+            out = self._find(
+                album_name, [a['label'] for a in albums['albums']])
             return albums['albums'][out[0][0]]['albumid']
         except KeyError:
             _LOGGER.warning('No albums were found with artist: %s, album: %s',
