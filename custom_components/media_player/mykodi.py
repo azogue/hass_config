@@ -36,7 +36,7 @@ REQUIREMENTS = ['jsonrpc-async==0.6', 'jsonrpc-websocket==0.5']
 _LOGGER = logging.getLogger(__name__)
 
 EVENT_KODI_RUN_METHOD_RESULT = 'kodi_run_method_result'
-EVENT_KODI_RUN_ADDON_RESULT = 'kodi_run_addon_result'
+EVENT_KODI_EXEC_ADDON_RESULT = 'kodi_execute_addon_result'
 
 CONF_TCP_PORT = 'tcp_port'
 CONF_TURN_OFF_ACTION = 'turn_off_action'
@@ -87,7 +87,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 
 SERVICE_ADD_MEDIA = 'kodi_add_to_playlist'
 SERVICE_RUN_METHOD = 'kodi_run_method'
-SERVICE_RUN_ADDON = 'kodi_execute_addon'
+SERVICE_EXEC_ADDON = 'kodi_execute_addon'
 
 DATA_KODI = 'kodi'
 
@@ -95,16 +95,8 @@ ATTR_MEDIA_TYPE = 'media_type'
 ATTR_MEDIA_NAME = 'media_name'
 ATTR_MEDIA_ARTIST_NAME = 'artist_name'
 ATTR_MEDIA_ID = 'media_id'
-ATTR_ADDONID = 'addonid'
 ATTR_METHOD = 'method'
-
-MEDIA_PLAYER_RUN_METHOD_SCHEMA = MEDIA_PLAYER_SCHEMA.extend({
-    vol.Required(ATTR_METHOD): cv.string,
-}, extra=vol.ALLOW_EXTRA)
-
-MEDIA_PLAYER_RUN_ADDON_SCHEMA = MEDIA_PLAYER_SCHEMA.extend({
-    vol.Required(ATTR_ADDONID): cv.string,
-}, extra=vol.ALLOW_EXTRA)
+ATTR_ADDONID = 'addonid'
 
 MEDIA_PLAYER_ADD_MEDIA_SCHEMA = MEDIA_PLAYER_SCHEMA.extend({
     vol.Required(ATTR_MEDIA_TYPE): cv.string,
@@ -112,6 +104,12 @@ MEDIA_PLAYER_ADD_MEDIA_SCHEMA = MEDIA_PLAYER_SCHEMA.extend({
     vol.Optional(ATTR_MEDIA_NAME): cv.string,
     vol.Optional(ATTR_MEDIA_ARTIST_NAME): cv.string,
 })
+MEDIA_PLAYER_RUN_METHOD_SCHEMA = MEDIA_PLAYER_SCHEMA.extend({
+    vol.Required(ATTR_METHOD): cv.string,
+}, extra=vol.ALLOW_EXTRA)
+MEDIA_PLAYER_EXEC_ADDON_SCHEMA = MEDIA_PLAYER_SCHEMA.extend({
+    vol.Required(ATTR_ADDONID): cv.string,
+}, extra=vol.ALLOW_EXTRA)
 
 SERVICE_TO_METHOD = {
     SERVICE_ADD_MEDIA: {
@@ -120,9 +118,9 @@ SERVICE_TO_METHOD = {
     SERVICE_RUN_METHOD: {
         'method': 'async_run_method',
         'schema': MEDIA_PLAYER_RUN_METHOD_SCHEMA},
-    SERVICE_RUN_ADDON: {
-        'method': 'async_run_addon',
-        'schema': MEDIA_PLAYER_RUN_ADDON_SCHEMA},
+    SERVICE_EXEC_ADDON: {
+        'method': 'async_exec_addon',
+        'schema': MEDIA_PLAYER_EXEC_ADDON_SCHEMA},
 }
 
 
@@ -220,14 +218,12 @@ def cmd(func):
     return wrapper
 
 
-def _clean_ordered_dict(params):
-    new_d = {}
+def _ordereddict_to_dict(params):
+    """Recursive method to clean kwargs before calling the Kodi API."""
     for key, value in params.items():
         if isinstance(value, OrderedDict):
-            new_d[key] = _clean_ordered_dict(value)
-        else:
-            new_d[key] = value
-    return new_d
+            params[key] = _ordereddict_to_dict(value)
+    return dict(params)
 
 
 class KodiDevice(MediaPlayerDevice):
@@ -721,22 +717,23 @@ class KodiDevice(MediaPlayerDevice):
         """Run Kodi JSONRPC API method with params."""
         import jsonrpc_base
         _LOGGER.debug('Run API method "%s", kwargs=%s', method, kwargs)
-        params, ok = None, False
+        params, result_ok = None, False
         try:
             if kwargs:
-                params = _clean_ordered_dict(kwargs)
+                params = _ordereddict_to_dict(kwargs)
                 result = yield from getattr(self.server, method)(params)
             else:
                 result = yield from getattr(self.server, method)()
-            ok = True
-        except jsonrpc_base.jsonrpc.ProtocolError as e:
-            result = e.args[2]['error']
+            result_ok = True
+        except jsonrpc_base.jsonrpc.ProtocolError as exc:
+            result = exc.args[2]['error']
             _LOGGER.error('Run API method %s.%s(%s) error: %s',
                           self.entity_id, method, params, result)
 
         if isinstance(result, dict):
             event_data = {'entity_id': self.entity_id,
-                          'result': result, 'result_ok': ok,
+                          'result': result,
+                          'result_ok': result_ok,
                           'input': {'method': method, 'params': params}}
             _LOGGER.debug('EVENT kodi_run_method_result: %s', event_data)
             self.hass.bus.async_fire(EVENT_KODI_RUN_METHOD_RESULT,
@@ -744,28 +741,29 @@ class KodiDevice(MediaPlayerDevice):
         return result
 
     @asyncio.coroutine
-    def async_run_addon(self, addonid, **kwargs):
-        """Run Kodi addon with optional params."""
+    def async_exec_addon(self, addonid, **kwargs):
+        """Execute Kodi addon with optional params."""
         import jsonrpc_base
-        _LOGGER.debug('Kodi run addon "%s", kwargs=%s', addonid, kwargs)
+        _LOGGER.debug('Kodi execute addon "%s", kwargs=%s', addonid, kwargs)
         params = {"addonid": addonid}
-        ok = False
+        result_ok = False
         if kwargs:
-            params.update(_clean_ordered_dict(kwargs))
+            params.update(_ordereddict_to_dict(kwargs))
         try:
             result = yield from self.server.Addons.ExecuteAddon(params)
-            ok = True
-        except jsonrpc_base.jsonrpc.ProtocolError as e:
-            result = e.args[2]['error']
-            _LOGGER.error('Run addon %s.%s(%s) error: %s',
+            result_ok = True
+        except jsonrpc_base.jsonrpc.ProtocolError as exc:
+            result = exc.args[2]['error']
+            _LOGGER.error('Execute addon %s.%s(%s) error: %s',
                           self.entity_id, addonid, params, result)
 
         if isinstance(result, dict):
             event_data = {'entity_id': self.entity_id,
-                          'result': result, 'result_ok': ok,
+                          'result': result,
+                          'result_ok': result_ok,
                           'input': params}
-            _LOGGER.debug('EVENT kodi_run_addon_result: %s', event_data)
-            self.hass.bus.async_fire(EVENT_KODI_RUN_ADDON_RESULT,
+            _LOGGER.debug('EVENT kodi_execute_addon_result: %s', event_data)
+            self.hass.bus.async_fire(EVENT_KODI_EXEC_ADDON_RESULT,
                                      event_data=event_data)
         return result
 
