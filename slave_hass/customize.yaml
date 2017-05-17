@@ -1,14 +1,22 @@
 # SENSORS
-sensor.temperatura_estudio:
-  friendly_name: Temperatura (DS)
-  icon: mdi:thermometer
-sensor.dht22_temperature:
-  friendly_name: Temperatura (DHT)
-  icon: mdi:thermometer
-sensor.dht22_humidity:
+#sensor.temperatura_estudio:
+#  friendly_name: Temperatura (DS)
+#  icon: mdi:thermometer
+#sensor.dht22_temperature:
+#  friendly_name: Temperatura (DHT)
+#  icon: mdi:thermometer
+#sensor.dht22_humidity:
+#  friendly_name: Humedad
+#  icon: mdi:water-percent
+#  homebridge_sensor_type: humidity
+sensor.estudio_temperature:
+  friendly_name: Temperatura
+sensor.estudio_humidity:
   friendly_name: Humedad
   icon: mdi:water-percent
-  homebridge_sensor_type: humidity
+sensor.estudio_pressure:
+  friendly_name: Presión
+  icon: mdi:weather-cloudy
 sensor.temperature:
   friendly_name: Temperatura SenseHat
   icon: mdi:thermometer
@@ -18,7 +26,7 @@ sensor.humidity:
   friendly_name: Humedad SenseHat
   homebridge_hidden: true
 sensor.pressure:
-  friendly_name: Presión
+  friendly_name: Presión SenseHat
   icon: mdi:weather-cloudy
   homebridge_hidden: true
 

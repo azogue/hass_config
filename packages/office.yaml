@@ -53,29 +53,42 @@ sensor:
         friendly_name: Humedad SenseHat
         unit_of_measurement: '%'
       pressure_rpi2h:
-        friendly_name: Presión
+        friendly_name: Presión SenseHat
         unit_of_measurement: 'mb'
       temperature_rpi2h:
         friendly_name: Temperatura SenseHat
         unit_of_measurement: '°C'
-      temperatura_estudio_rpi2h:
-        friendly_name: Temperatura (DS)
+
+      estudio_temperature_rpi2h:
+        friendly_name: Temperatura
         unit_of_measurement: '°C'
-      dht22_temperature_rpi2h:
-        friendly_name: Temperatura (DHT)
-        unit_of_measurement: '°C'
-      dht22_humidity_rpi2h:
+      estudio_humidity_rpi2h:
         friendly_name: Humedad
         unit_of_measurement: '%'
+      estudio_pressure_rpi2h:
+        friendly_name: Presión
+        unit_of_measurement: "mb"
+#      temperatura_estudio_rpi2h:
+#        friendly_name: Temperatura (DS)
+#        unit_of_measurement: '°C'
+#      dht22_temperature_rpi2h:
+#        friendly_name: Temperatura (DHT)
+#        unit_of_measurement: '°C'
+#      dht22_humidity_rpi2h:
+#        friendly_name: Humedad
+#        unit_of_measurement: '%'
 
 group:
   Estudio RPi2h:
     name: Estudio
     control: hidden
     entities:
-      - sensor.temperatura_estudio_rpi2h
-      - sensor.dht22_temperature_rpi2h
-      - sensor.dht22_humidity_rpi2h
+      - sensor.estudio_temperature_rpi2h
+      - sensor.estudio_humidity_rpi2h
+      - sensor.estudio_pressure_rpi2h
+#      - sensor.temperatura_estudio_rpi2h
+#      - sensor.dht22_temperature_rpi2h
+#      - sensor.dht22_humidity_rpi2h
       - sensor.temperature_rpi2h
       - sensor.humidity_rpi2h
       - sensor.pressure_rpi2h
@@ -89,9 +102,12 @@ group:
     name: Estudio
     control: hidden
     entities:
-      - sensor.temperatura_estudio_rpi2h
-      - sensor.dht22_temperature_rpi2h
-      - sensor.dht22_humidity_rpi2h
+      - sensor.estudio_temperature_rpi2h
+      - sensor.estudio_humidity_rpi2h
+      - sensor.estudio_pressure_rpi2h
+#      - sensor.temperatura_estudio_rpi2h
+#      - sensor.dht22_temperature_rpi2h
+#      - sensor.dht22_humidity_rpi2h
       - switch.impresora
 
   Host Estudio:

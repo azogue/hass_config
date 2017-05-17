@@ -93,21 +93,41 @@ binary_sensor:
 ##    initial: on
 
 sensor:
-  - platform: myonewire
-    names:
-      28-800000015326: Temperatura Estudio
-    scan_interval: 60
-    maximum: 50
-    minimum: 5
+#  - platform: myonewire
+#    names:
+#      28-800000015326: Temperatura Estudio
+#    scan_interval: 60
+#    maximum: 50
+#    minimum: 5
+#
+#  - platform: dht
+#    sensor: DHT22
+#    pin: 22
+#    name: dht22
+#    scan_interval: 60
+#    monitored_conditions:
+#      - temperature
+#      - humidity
 
-  - platform: dht
-    sensor: DHT22
-    pin: 22
-    name: dht22
-    scan_interval: 60
-    monitored_conditions:
-      - temperature
-      - humidity
+# BME280 in RPI
+  - platform: command_line
+    name: estudio_temperature
+    command: "/usr/local/bin/read_bme280 --temperature --i2c-address 0x77"
+    unit_of_measurement: "°C"
+    value_template: '{{ value |replace(" C", "") | round(2) }}'
+    scan_interval: 30
+  - platform: command_line
+    name: estudio_humidity
+    command: "/usr/local/bin/read_bme280 --humidity --i2c-address 0x77"
+    unit_of_measurement: "%"
+    value_template: '{{ value |replace("％", "") | round(2) }}'
+    scan_interval: 30
+  - platform: command_line
+    name: estudio_pressure
+    command: "/usr/local/bin/read_bme280 --pressure --i2c-address 0x77"
+    unit_of_measurement: "mb"
+    value_template: '{{ value |replace(" hPa", "") | round(2) }}'
+    scan_interval: 30
 
   - platform: mysensehat
     scan_interval: 40
@@ -182,9 +202,12 @@ weblink:
 
 group:
   Estudio:
-    - sensor.temperatura_estudio
-    - sensor.dht22_temperature
-    - sensor.dht22_humidity
+#    - sensor.temperatura_estudio
+#    - sensor.dht22_temperature
+#    - sensor.dht22_humidity
+    - sensor.estudio_temperature
+    - sensor.estudio_humidity
+    - sensor.estudio_pressure
 
   Estudio_sensehat:
     name: SenseHat
