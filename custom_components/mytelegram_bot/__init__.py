@@ -74,7 +74,7 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Required(CONF_PLATFORM): cv.string,
         vol.Required(CONF_API_KEY): cv.string,
         vol.Required(CONF_ALLOWED_CHAT_IDS):
-            vol.All(cv.ensure_list, [cv.positive_int]),
+            vol.All(cv.ensure_list, [vol.Coerce(int)]),
         vol.Optional(ATTR_PARSER, default=PARSER_MD): cv.string,
         vol.Optional(CONF_TRUSTED_NETWORKS, default=DEFAULT_TRUSTED_NETWORKS):
             vol.All(cv.ensure_list, [ip_network])
@@ -82,7 +82,7 @@ CONFIG_SCHEMA = vol.Schema({
 }, extra=vol.ALLOW_EXTRA)
 
 BASE_SERVICE_SCHEMA = vol.Schema({
-    vol.Optional(ATTR_TARGET): vol.All(cv.ensure_list, [cv.positive_int]),
+    vol.Optional(ATTR_TARGET): vol.All(cv.ensure_list, [vol.Coerce(int)]),
     vol.Optional(ATTR_PARSER): cv.string,
     vol.Optional(ATTR_DISABLE_NOTIF): cv.boolean,
     vol.Optional(ATTR_DISABLE_WEB_PREV): cv.boolean,
@@ -116,14 +116,14 @@ SERVICE_SCHEMA_EDIT_MESSAGE = SERVICE_SCHEMA_SEND_MESSAGE.extend({
 SERVICE_EDIT_CAPTION = 'edit_caption'
 SERVICE_SCHEMA_EDIT_CAPTION = vol.Schema({
     vol.Required(ATTR_MESSAGEID): vol.Any(cv.positive_int, cv.string),
-    vol.Required(ATTR_CHAT_ID): cv.positive_int,
+    vol.Required(ATTR_CHAT_ID): vol.Coerce(int),
     vol.Required(ATTR_CAPTION): cv.string,
     vol.Optional(ATTR_KEYBOARD_INLINE): cv.ensure_list,
 }, extra=vol.ALLOW_EXTRA)
 SERVICE_EDIT_REPLYMARKUP = 'edit_replymarkup'
 SERVICE_SCHEMA_EDIT_REPLYMARKUP = vol.Schema({
     vol.Required(ATTR_MESSAGEID): vol.Any(cv.positive_int, cv.string),
-    vol.Required(ATTR_CHAT_ID): cv.positive_int,
+    vol.Required(ATTR_CHAT_ID): vol.Coerce(int),
     vol.Required(ATTR_KEYBOARD_INLINE): cv.ensure_list,
 }, extra=vol.ALLOW_EXTRA)
 SERVICE_ANSWER_CALLBACK_QUERY = 'answer_callback_query'
@@ -481,9 +481,12 @@ class BaseTelegramBotEntity:
         self.hass = hass
 
     def _get_message_data(self, msg_data):
-        if (not msg_data or
-                ('text' not in msg_data and 'data' not in msg_data) or
-                'from' not in msg_data or
+        if not msg_data:
+            return None
+        bad_fields = (not hasattr(msg_data, 'text') and
+                      not hasattr(msg_data, 'data') and
+                      not hasattr(msg_data, 'chat'))
+        if (bad_fields or not hasattr(msg_data, 'from') or
                 msg_data['from'].get('id') not in self.allowed_chat_ids):
             # Message is not correct.
             _LOGGER.error("Incoming message does not have required data (%s)",
@@ -491,6 +494,7 @@ class BaseTelegramBotEntity:
             return None
         return {
             ATTR_USER_ID: msg_data['from']['id'],
+            ATTR_CHAT_ID: msg_data['chat']['id'],
             ATTR_FROM_FIRST: msg_data['from']['first_name'],
             ATTR_FROM_LAST: msg_data['from']['last_name']}
 
@@ -503,12 +507,18 @@ class BaseTelegramBotEntity:
             if event_data is None:
                 return False
 
-            if data['text'][0] == '/':
-                pieces = data['text'].split(' ')
-                event_data[ATTR_COMMAND] = pieces[0]
-                event_data[ATTR_ARGS] = pieces[1:]
-            else:
-                event_data[ATTR_TEXT] = data['text']
+            if 'text' in data:
+                if data['text'][0] == '/':
+                    pieces = data['text'].split(' ')
+                    event_data[ATTR_COMMAND] = pieces[0]
+                    event_data[ATTR_ARGS] = pieces[1:]
+                else:
+                    event_data[ATTR_TEXT] = data['text']
+                    event = EVENT_TELEGRAM_TEXT
+            else:  # new type of message (send as text)
+                # Some other thing...
+                _LOGGER.warning("Message without text data received: %s", data)
+                event_data[ATTR_TEXT] = str(data)
                 event = EVENT_TELEGRAM_TEXT
 
             self.hass.bus.async_fire(event, event_data)
