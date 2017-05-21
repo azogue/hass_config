@@ -56,7 +56,7 @@ switch:
     on_cec_command: activate
 
 media_player:
-  - platform: mykodi
+  - platform: kodi
     host: !secret kodi_host
     port: !secret kodi_port
     name: Kodi

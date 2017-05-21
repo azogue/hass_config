@@ -17,18 +17,17 @@ notify:
     gcm_api_key: !secret gcm_api_key
     gcm_sender_id: !secret gcm_sender_id
 
-  # Custom smtp platform for HTML mailing
-  - platform: richsmtp
+  - platform: smtp
     name: gmail
     server: smtp.gmail.com
     port: 587
     sender: !secret hass_email
+    sender_name: !secret name
     starttls: 1
     username: !secret hass_email
     password: !secret hass_email_pw
     recipient: !secret myemail
     timeout: 60
-    product_name: UgePiso
 
   - platform: mytelegram
     name: telegram_bot
@@ -43,6 +42,7 @@ mytelegram_bot:
   allowed_chat_ids:
     - !secret telegram_bot_chat_id_admin
     - !secret telegram_bot_chat_id_2
+    - !secret telegram_bot_group
 
 ####################################################
 #                     iOS platform                 #

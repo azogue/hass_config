@@ -1,5 +1,5 @@
 homeassistant:
-  name: Piso
+  name: !secret name
   latitude: !secret latitude
   longitude: !secret longitude
   unit_system: metric
