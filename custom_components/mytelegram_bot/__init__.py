@@ -36,6 +36,7 @@ ATTR_COMMAND = 'command'
 ATTR_USER_ID = 'user_id'
 ATTR_ARGS = 'args'
 ATTR_MSG = 'message'
+ATTR_EDITED_MSG = 'edited_message'
 ATTR_CHAT_INSTANCE = 'chat_instance'
 ATTR_CHAT_ID = 'chat_id'
 ATTR_MSGID = 'id'
@@ -271,6 +272,7 @@ class TelegramNotificationService:
         self._parse_mode = self._parsers.get(parser)
         self.bot = Bot(token=api_key)
         self.hass = hass
+        _LOGGER.info('ALLOWED CHAT IDS: {}'.format(self.allowed_chat_ids))
 
     def _get_msg_ids(self, msg_data, chat_id):
         """Get the message id to edit.
@@ -481,31 +483,40 @@ class BaseTelegramBotEntity:
         self.hass = hass
 
     def _get_message_data(self, msg_data):
+        """Return boolean msg_data_is_ok and dict msg_data."""
         if not msg_data:
-            return None
-        bad_fields = (not hasattr(msg_data, 'text') and
-                      not hasattr(msg_data, 'data') and
-                      not hasattr(msg_data, 'chat'))
-        if (bad_fields or not hasattr(msg_data, 'from') or
-                msg_data['from'].get('id') not in self.allowed_chat_ids):
+            return False, None
+        bad_fields = ('text' not in msg_data and
+                      'data' not in msg_data and
+                      'chat' not in msg_data)
+        if bad_fields or 'from' not in msg_data:
             # Message is not correct.
             _LOGGER.error("Incoming message does not have required data (%s)",
                           msg_data)
-            return None
-        return {
+            return False, None
+        if msg_data['from'].get('id') not in self.allowed_chat_ids:
+            # Origin is not allowed.
+            _LOGGER.error("Incoming message is not allowed (%s)", msg_data)
+            return True, None
+
+        return True, {
             ATTR_USER_ID: msg_data['from']['id'],
             ATTR_CHAT_ID: msg_data['chat']['id'],
             ATTR_FROM_FIRST: msg_data['from']['first_name'],
-            ATTR_FROM_LAST: msg_data['from']['last_name']}
+            ATTR_FROM_LAST: msg_data['from']['last_name']
+        }
 
     def process_message(self, data):
         """Check for basic message rules and fire an event if message is ok."""
-        if ATTR_MSG in data:
+        if ATTR_MSG in data or ATTR_EDITED_MSG in data:
             event = EVENT_TELEGRAM_COMMAND
-            data = data.get(ATTR_MSG)
-            event_data = self._get_message_data(data)
+            if ATTR_MSG in data:
+                data = data.get(ATTR_MSG)
+            else:
+                data = data.get(ATTR_EDITED_MSG)
+            message_ok, event_data = self._get_message_data(data)
             if event_data is None:
-                return False
+                return message_ok
 
             if 'text' in data:
                 if data['text'][0] == '/':
@@ -526,9 +537,9 @@ class BaseTelegramBotEntity:
         elif ATTR_CALLBACK_QUERY in data:
             event = EVENT_TELEGRAM_CALLBACK
             data = data.get('callback_query')
-            event_data = self._get_message_data(data)
+            message_ok, event_data = self._get_message_data(data)
             if event_data is None:
-                return False
+                return message_ok
 
             event_data[ATTR_DATA] = data[ATTR_DATA]
             event_data[ATTR_MSG] = data[ATTR_MSG]
@@ -540,4 +551,4 @@ class BaseTelegramBotEntity:
         else:
             # Some other thing...
             _LOGGER.warning('SOME OTHER THING RECEIVED --> "%s"', data)
-            return False
+            return True
