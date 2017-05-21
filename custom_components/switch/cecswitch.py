@@ -76,13 +76,10 @@ class CECSwitch(SwitchDevice):
     def _run_kodi_cec(self, command="toggle"):
         """Run Kodi CEC add-on with parameters with a service call."""
         _LOGGER.debug('RUN_KODI_CEC')
-        # data = {"method": "Addons.ExecuteAddon",
-        #         "params": {"addonid": "script.json-cec",
-        #                    "params": {"command": command}}}
-        data = {"entity_id": self._kodi_player,
-                "addonid": "script.json-cec",
-                "params": {"command": command}}
-        out = self.hass.services.call("media_player", "kodi_execute_addon",
+        data = {"method": "Addons.ExecuteAddon",
+                "params": {"addonid": "script.json-cec",
+                           "params": {"command": command}}}
+        out = self.hass.services.call("media_player", "kodi_call_method",
                                       service_data=data)
         _LOGGER.warning('DEBUG KODI CEC: out:{}'.format(out))
         return True
