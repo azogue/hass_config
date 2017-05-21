@@ -121,3 +121,28 @@ group:
       - binary_sensor.esp2_pir
       - binary_sensor.esp2_vibro
 
+automation:
+- alias: Invisibilidad de grupo en pruebas
+  trigger:
+    platform: state
+    entity_id: binary_sensor.esp2_online
+    state: 'off'
+    for:
+      minutes: 5
+  action:
+    - service: group.set_visibility
+      entity_id: group.esp8266_2
+      data:
+        visible: False
+
+- alias: Visibilidad de grupo en pruebas
+  trigger:
+    platform: state
+    entity_id: binary_sensor.esp2_online
+    to: 'on'
+  action:
+    - service: group.set_visibility
+      entity_id: group.esp8266_2
+      data:
+        visible: True
+

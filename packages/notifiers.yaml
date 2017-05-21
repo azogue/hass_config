@@ -33,6 +33,10 @@ notify:
     name: telegram_bot
     chat_id: !secret telegram_bot_chat_id_admin
 
+  - platform: mytelegram
+    name: telegram_group
+    chat_id: !secret telegram_bot_group
+
 ####################################################
 #                     Telegram BOT                 #
 ####################################################

@@ -24,6 +24,8 @@ homeassistant:
       friendly_name: Reset KODI
       icon: mdi:restart
 
+    script.update_library:
+      icon: mdi:refresh
     script.recent_episodes:
       icon: mdi:play-circle
     script.recent_movies:
@@ -125,11 +127,20 @@ script:
           disable_notification: true
       - service: shell_command.cmd_kill_kodi
 
+  update_library:
+    alias: Update Kodi Library
+    sequence:
+      - alias: Call Kodi update
+        service: media_player.kodi_call_method
+        data:
+          entity_id: media_player.kodi
+          method: VideoLibrary.Scan
+
   recent_movies:
     alias: Últimas películas
     sequence:
       - alias: Call Kodi serv
-        service: media_player.kodi_run_method
+        service: media_player.kodi_call_method
         data:
           entity_id: media_player.kodi
           method: VideoLibrary.GetRecentlyAddedMovies
@@ -143,7 +154,7 @@ script:
     alias: Últimos episodios
     sequence:
       - alias: Call Kodi serv
-        service: media_player.kodi_run_method
+        service: media_player.kodi_call_method
         data:
           entity_id: media_player.kodi
           method: VideoLibrary.GetRecentlyAddedEpisodes
@@ -158,7 +169,7 @@ script:
     alias: Canales de TV
     sequence:
       - alias: Call Kodi serv
-        service: media_player.kodi_run_method
+        service: media_player.kodi_call_method
         data:
           entity_id: media_player.kodi
           method: PVR.GetChannels
@@ -179,6 +190,7 @@ group:
       - switch.toggle_config_kodi_ambilight
       - script.play_kodi_pvr
       - script.restart_kodi_osmc
+      - script.update_library
 
   Media select:
     control: hidden

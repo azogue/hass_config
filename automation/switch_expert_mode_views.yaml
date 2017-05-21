@@ -46,5 +46,5 @@
         seconds: 10
     - service: input_boolean.turn_off
       entity_id: input_boolean.show_expert_mode
-#    - service: automation.trigger
-#      entity_id: automation.visibilidad_modo_experto_off
+    - service: automation.trigger
+      entity_id: automation.visibilidad_modo_experto_off
