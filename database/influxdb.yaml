@@ -10,136 +10,137 @@ password: !secret influxdb_pass
 # verify_ssl: true
 default_measurement: state
 max_retries: 3
-# blacklist:
-#     - entity.id1
-#     - entity.id2
-whitelist:
- - input_select.alarm_mode
- - input_select.room_altavoces
+include:
+  entities:
+   - input_select.alarm_mode
+   - input_select.room_altavoces
 
- - light.dormitorio
- - light.estudio
- - light.salon
+   - light.dormitorio
+   - light.estudio
+   - light.salon
 
- - switch.altavoz
- - switch.caldera
- - switch.calefactor
- - switch.camara
- - switch.cocina
- - switch.impresora
- - switch.kodi_tv_salon
- - switch.toggle_config_kodi_ambilight
- - switch.toggle_kodi_ambilight
+   - switch.altavoz
+   - switch.caldera
+   - switch.calefactor
+   - switch.camara
+   - switch.cocina
+   - switch.impresora
+   - switch.kodi_tv_salon
+   - switch.toggle_config_kodi_ambilight
+   - switch.toggle_kodi_ambilight
 
- - media_player.dormitorio_mopidy
- - media_player.kodi
+   - media_player.dormitorio_mopidy
+   - media_player.kodi
 
- - sensor.enerpi
- - sensor.enerpi_ldr
- - sensor.enerpi_power
+   - sensor.enerpi
+   - sensor.enerpi_ldr
+   - sensor.enerpi_power
 
- - sensor.temperatura_dormitorio_rpi2mpd
- - sensor.humedad_dormitorio_rpi2mpd
- - sensor.presion_dormitorio_rpi2mpd
+   - sensor.temperatura_dormitorio_rpi2mpd
+   - sensor.humedad_dormitorio_rpi2mpd
+   - sensor.presion_dormitorio_rpi2mpd
 
- - sensor.t_salon
- - sensor.salon_temperature
- - sensor.salon_humidity
- - sensor.salon_pressure
+   - sensor.t_salon
+   - sensor.salon_temperature
+   - sensor.salon_humidity
+   - sensor.salon_pressure
 
- - sensor.esp1_temperature
- - sensor.esp1_humidity
- - sensor.esp1_light
+   - sensor.esp1_temperature
+   - sensor.esp1_humidity
+   - sensor.esp1_light
 
- - sensor.esp2_temperature
- - sensor.esp2_humidity
- - sensor.esp2_pressure
- - sensor.esp2_light
+   - sensor.esp2_temperature
+   - sensor.esp2_humidity
+   - sensor.esp2_pressure
+   - sensor.esp2_light
 
- - sensor.galeria_dht22_temperature
- - sensor.galeria_dht22_humidity
+   - sensor.galeria_dht22_temperature
+   - sensor.galeria_dht22_humidity
 
- - sensor.calefaccion
- - sensor.galeria_acs
- - sensor.galeria_impulsion_calefaccion
- - sensor.galeria_retorno_calefaccion
+   - sensor.calefaccion
+   - sensor.galeria_acs
+   - sensor.galeria_impulsion_calefaccion
+   - sensor.galeria_retorno_calefaccion
 
- - sensor.temperatura_estudio_rpi2h
- - sensor.dht22_temperature_rpi2h
- - sensor.dht22_humidity_rpi2h
- - sensor.temperature_rpi2h
- - sensor.humidity_rpi2h
- - sensor.pressure_rpi2h
+   - sensor.estudio_temperature_rpi2h
+   - sensor.estudio_humidity_rpi2h
+   - sensor.estudio_pressure_rpi2h
+#   - sensor.temperatura_estudio_rpi2h
+#   - sensor.dht22_temperature_rpi2h
+#   - sensor.dht22_humidity_rpi2h
+   - sensor.temperature_rpi2h
+   - sensor.humidity_rpi2h
+   - sensor.pressure_rpi2h
 
- - sensor.villena_humidity
- - sensor.villena_pressure
- - sensor.villena_temperature
+   - sensor.villena_humidity
+   - sensor.villena_pressure
+   - sensor.villena_temperature
 
- - switch.alarm_clock_status
- - input_boolean.manual_trigger_lacafetera
- - input_boolean.switch_motion_lights
+   - switch.alarm_clock_status
+   - input_boolean.manual_trigger_lacafetera
+   - input_boolean.switch_motion_lights
 
- - switch.motioncam_escam
- - switch.motioncam_estudio
+   - switch.motioncam_escam
+   - switch.motioncam_estudio
 
- - binary_sensor.cocina_online
- - binary_sensor.esp1_light
- - binary_sensor.esp1_pir
- - binary_sensor.esp2_online
- - binary_sensor.esp2_light
- - binary_sensor.esp2_pir
- - binary_sensor.esp2_vibro
- - binary_sensor.heating
- - binary_sensor.motioncam_estudio
- - binary_sensor.motioncam_salon
- - binary_sensor.pir_dormitorio_rpi2mpd
- - binary_sensor.pir_estudio_rpi2h
- - binary_sensor.pir_salon
- - binary_sensor.services_notok
- - binary_sensor.vibration_sensor_rpi2h
+   - binary_sensor.cocina_online
+   - binary_sensor.esp1_light
+   - binary_sensor.esp1_pir
+   - binary_sensor.esp2_online
+   - binary_sensor.esp2_light
+   - binary_sensor.esp2_pir
+   - binary_sensor.esp2_vibro
+   - binary_sensor.heating
+   - binary_sensor.motioncam_estudio
+   - binary_sensor.motioncam_salon
+   - binary_sensor.pir_dormitorio_rpi2mpd
+   - binary_sensor.pir_estudio_rpi2h
+   - binary_sensor.pir_salon
+   - binary_sensor.services_notok
+   - binary_sensor.vibration_sensor_rpi2h
 
- - switch.use_esp1_binary_sensors
- - switch.use_esp1_leds
- - switch.use_esp2_binary_sensors
- - switch.use_esp2_leds
- - switch.use_esp1_pir
- - switch.use_esp1_vibro
- - switch.use_pir_dormitorio_rpi2mpd
- - switch.use_pir_estudio_rpi2h
- - switch.use_pir_salon
- - switch.use_sound_sensor_rpi2h
- - switch.use_vibration_sensor_rpi2h
+   - switch.use_esp1_binary_sensors
+   - switch.use_esp1_leds
+   - switch.use_esp2_binary_sensors
+   - switch.use_esp2_leds
+   - switch.use_esp1_pir
+   - switch.use_esp1_vibro
+   - switch.use_pir_dormitorio_rpi2mpd
+   - switch.use_pir_estudio_rpi2h
+   - switch.use_pir_salon
+   - switch.use_sound_sensor_rpi2h
+   - switch.use_vibration_sensor_rpi2h
 
- - sensor.speedtest_download
- - sensor.speedtest_ping
- - sensor.speedtest_upload
+   - sensor.speedtest_download
+   - sensor.speedtest_ping
+   - sensor.speedtest_upload
 
- - sensor.cpu_use
- - sensor.cpu_use_rpi2h
- - sensor.cpu_use_rpi2mpd
- - sensor.disk_use_home
- - sensor.disk_use__rpi2h
- - sensor.disk_use__rpi2mpd
- - sensor.ram_free
- - sensor.ram_free_rpi2h
- - sensor.ram_free_rpi2mpd
- - sensor.hass_cpu_temperature
- - sensor.kodi_cpu_temperature
- - sensor.influxdb_cpu_temperature
- - sensor.hass_cpu_temperature_rpi2h
- - sensor.hass_cpu_temperature_rpi2mpd
- - sensor.warning_counter_core
- - sensor.core_error_counter
- - sensor.error_counter_notifiers
+   - sensor.cpu_use
+   - sensor.cpu_use_rpi2h
+   - sensor.cpu_use_rpi2mpd
+   - sensor.disk_use_home
+   - sensor.disk_use__rpi2h
+   - sensor.disk_use__rpi2mpd
+   - sensor.ram_free
+   - sensor.ram_free_rpi2h
+   - sensor.ram_free_rpi2mpd
+   - sensor.hass_cpu_temperature
+   - sensor.kodi_cpu_temperature
+   - sensor.influxdb_cpu_temperature
+   - sensor.hass_cpu_temperature_rpi2h
+   - sensor.hass_cpu_temperature_rpi2mpd
+   - sensor.warning_counter_core
+   - sensor.core_error_counter
+   - sensor.error_counter_notifiers
 
- - switch.show_expert_mode
- - switch.switch_master_alarm
- - switch.systemd_appdaemon
- - switch.systemd_homebridge
+   - switch.show_expert_mode
+   - switch.switch_master_alarm
+   - switch.systemd_appdaemon
+   - switch.systemd_homebridge
 
- - group.eugenio
- - group.mary
- - group.ipad
+   - group.eugenio
+   - group.mary
+   - group.ipad
 
 #  tags:
 #    source: hass
