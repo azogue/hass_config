@@ -12,7 +12,5 @@ logs:
 
   custom_components.notify.mytelegram: info
   custom_components.mytelegram_bot: info
-  custom_components.media_player: info
-  custom_components.notify.richsmtp: info
-#  custom_components.sensor.enerweb: info
+  # custom_components.sensor.enerweb: info
   # custom_components.enerpi: info
