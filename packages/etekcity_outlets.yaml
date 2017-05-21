@@ -49,7 +49,7 @@ switch:
         pulselength: 185
         code_on: 4527555
         code_off: 4527564
-        signal_repetitions: 30
+        signal_repetitions: 40
       camara:
         pulselength: 185
         code_on: 4527875
@@ -59,7 +59,7 @@ switch:
         pulselength: 185
         code_on: 4529411
         code_off: 4529420
-        signal_repetitions: 20
+        signal_repetitions: 30
       calefactor:
         pulselength: 185
         code_on: 4535555
@@ -71,7 +71,7 @@ switch:
         pulselength: 186
         code_on: 4478259
         code_off: 4478268
-        signal_repetitions: 20
+        signal_repetitions: 50
   #    new_switch_2:
   #      pulselength: 186
   #      code_on: 4478403
