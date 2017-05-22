@@ -73,17 +73,6 @@ class CECSwitch(SwitchDevice):
         self._command_on = command_on
         self._state = False
 
-    def _run_kodi_cec(self, command="toggle"):
-        """Run Kodi CEC add-on with parameters with a service call."""
-        _LOGGER.debug('RUN_KODI_CEC')
-        data = {"method": "Addons.ExecuteAddon",
-                "params": {"addonid": "script.json-cec",
-                           "params": {"command": command}}}
-        out = self.hass.services.call("media_player", "kodi_call_method",
-                                      service_data=data)
-        _LOGGER.warning('DEBUG KODI CEC: out:{}'.format(out))
-        return True
-
     @property
     def should_poll(self):
         """Poll for status regularly."""
@@ -92,8 +81,6 @@ class CECSwitch(SwitchDevice):
     @property
     def is_on(self):
         """Return true if switch is on."""
-        _LOGGER.debug('{}: STATE IS ON? {}'
-                      .format(as_local(utcnow()), self._state))
         return self._state
 
     @property
@@ -109,18 +96,17 @@ class CECSwitch(SwitchDevice):
     def toggle(self):
         """Toggle the switch."""
         if self._state:
-            _LOGGER.info('TOGGLE FROM ON TO OFF')
             self.turn_off()
         else:
-            _LOGGER.info('TOGGLE FROM OFF TO ON')
             self.turn_on()
 
     def turn_on(self):
         """Turn the switch on."""
         data = {"entity_id": self._kodi_player,
+                "method": "Addons.ExecuteAddon",
                 "addonid": "script.json-cec",
                 "params": {"command": self._command_on}}
-        self.hass.services.call("media_player", "kodi_execute_addon",
+        self.hass.services.call("media_player", "kodi_call_method",
                                 service_data=data)
         self._state = True
         self.schedule_update_ha_state()
