@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """
-Component to send and receive telegram messages, including callback queries.
-
-Either by polling or webhook.
+Component to send and receive Telegram messages.
+For more details about this platform, please refer to the documentation at
+https://home-assistant.io/components/telegram_bot/
 """
 import asyncio
 import io
@@ -10,8 +10,10 @@ from functools import partial
 from ipaddress import ip_network
 import logging
 import os
+
 import requests
 import voluptuous as vol
+
 from homeassistant.components.notify import (
     ATTR_MESSAGE, ATTR_TITLE, ATTR_DATA)
 from homeassistant.config import load_yaml_config_file
@@ -20,47 +22,51 @@ from homeassistant.const import (
 import homeassistant.helpers.config_validation as cv
 from homeassistant.setup import async_prepare_setup_platform
 
-DOMAIN = 'mytelegram_bot'
-REQUIREMENTS = ['python-telegram-bot==5.3.1']
+REQUIREMENTS = ['python-telegram-bot==6.0.1']
 
 _LOGGER = logging.getLogger(__name__)
 
-EVENT_TELEGRAM_COMMAND = 'telegram_command'
-EVENT_TELEGRAM_TEXT = 'telegram_text'
-EVENT_TELEGRAM_CALLBACK = 'telegram_callback'
-
-PARSER_MD = 'markdown'
-PARSER_HTML = 'html'
-ATTR_TEXT = 'text'
-ATTR_COMMAND = 'command'
-ATTR_USER_ID = 'user_id'
 ATTR_ARGS = 'args'
-ATTR_MSG = 'message'
-ATTR_EDITED_MSG = 'edited_message'
-ATTR_CHAT_INSTANCE = 'chat_instance'
-ATTR_CHAT_ID = 'chat_id'
-ATTR_MSGID = 'id'
-ATTR_FROM_FIRST = 'from_first'
-ATTR_FROM_LAST = 'from_last'
-ATTR_SHOW_ALERT = 'show_alert'
-ATTR_MESSAGEID = 'message_id'
-ATTR_PARSER = 'parse_mode'
-ATTR_DISABLE_NOTIF = 'disable_notification'
-ATTR_DISABLE_WEB_PREV = 'disable_web_page_preview'
-ATTR_REPLY_TO_MSGID = 'reply_to_message_id'
-ATTR_REPLYMARKUP = 'reply_markup'
 ATTR_CALLBACK_QUERY = 'callback_query'
 ATTR_CALLBACK_QUERY_ID = 'callback_query_id'
-ATTR_TARGET = 'target'
+ATTR_CAPTION = 'caption'
+ATTR_CHAT_ID = 'chat_id'
+ATTR_CHAT_INSTANCE = 'chat_instance'
+ATTR_COMMAND = 'command'
+ATTR_DISABLE_NOTIF = 'disable_notification'
+ATTR_DISABLE_WEB_PREV = 'disable_web_page_preview'
+ATTR_EDITED_MSG = 'edited_message'
+ATTR_FILE = 'file'
+ATTR_FROM_FIRST = 'from_first'
+ATTR_FROM_LAST = 'from_last'
 ATTR_KEYBOARD = 'keyboard'
 ATTR_KEYBOARD_INLINE = 'inline_keyboard'
-ATTR_URL = 'url'
-ATTR_FILE = 'file'
-ATTR_CAPTION = 'caption'
-ATTR_USERNAME = 'username'
+ATTR_MESSAGEID = 'message_id'
+ATTR_MSG = 'message'
+ATTR_MSGID = 'id'
+ATTR_PARSER = 'parse_mode'
 ATTR_PASSWORD = 'password'
+ATTR_REPLY_TO_MSGID = 'reply_to_message_id'
+ATTR_REPLYMARKUP = 'reply_markup'
+ATTR_SHOW_ALERT = 'show_alert'
+ATTR_TARGET = 'target'
+ATTR_TEXT = 'text'
+ATTR_URL = 'url'
+ATTR_USER_ID = 'user_id'
+ATTR_USERNAME = 'username'
+
 CONF_ALLOWED_CHAT_IDS = 'allowed_chat_ids'
 CONF_TRUSTED_NETWORKS = 'trusted_networks'
+
+DOMAIN = 'mytelegram_bot'
+
+EVENT_TELEGRAM_CALLBACK = 'telegram_callback'
+EVENT_TELEGRAM_COMMAND = 'telegram_command'
+EVENT_TELEGRAM_TEXT = 'telegram_text'
+
+PARSER_HTML = 'html'
+PARSER_MD = 'markdown'
+
 DEFAULT_TRUSTED_NETWORKS = [
     ip_network('149.154.167.197/32'),
     ip_network('149.154.167.198/31'),
@@ -79,7 +85,7 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(ATTR_PARSER, default=PARSER_MD): cv.string,
         vol.Optional(CONF_TRUSTED_NETWORKS, default=DEFAULT_TRUSTED_NETWORKS):
             vol.All(cv.ensure_list, [ip_network])
-    })
+    }),
 }, extra=vol.ALLOW_EXTRA)
 
 BASE_SERVICE_SCHEMA = vol.Schema({
@@ -215,8 +221,11 @@ def async_setup(hass, config):
             def _render_template_attr(data, attribute):
                 attribute_templ = data.get(attribute)
                 if attribute_templ:
-                    attribute_templ.hass = hass
-                    data[attribute] = attribute_templ.async_render()
+                    if not isinstance(attribute_templ, str):
+                        attribute_templ.hass = hass
+                        data[attribute] = attribute_templ.async_render()
+                    else:
+                        data[attribute] = attribute_templ
 
             msgtype = service.service
             kwargs = dict(service.data)
