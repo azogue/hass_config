@@ -16,6 +16,7 @@ sudo apt-get install build-essential libi2c-dev i2c-tools python-dev libffi-dev
 pip3 install smbus-cffi
 ```
 """
+import asyncio
 import logging
 from datetime import timedelta
 
@@ -28,9 +29,7 @@ from homeassistant.const import (
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 from homeassistant.util.temperature import celsius_to_fahrenheit
-from time import sleep
 
-# Update this requirement to upstream as soon as it supports Python 3.
 REQUIREMENTS = ['smbus-cffi>=0.5.1']
 
 _LOGGER = logging.getLogger(__name__)
@@ -43,6 +42,7 @@ CONF_OVERSAMPLING_HUM = 'oversampling_humidity'
 CONF_OPERATION_MODE = 'operation_mode'
 CONF_T_STANDBY = 'time_standby'
 CONF_FILTER_MODE = 'filter_mode'
+CONF_DELTA_TEMP = 'delta_temperature'
 
 DEFAULT_NAME = 'BME280 Sensor'
 DEFAULT_I2C_ADDRESS = '0x76'
@@ -53,6 +53,7 @@ DEFAULT_OVERSAMPLING_HUM = 1        # Humidity oversampling x 1
 DEFAULT_OPERATION_MODE = 3          # Normal mode (forced mode: 2)
 DEFAULT_T_STANDBY = 5               # Tstandby 1000ms
 DEFAULT_FILTER_MODE = 0             # Filter off
+DEFAULT_DELTA_TEMP = 0.
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=3)
 
@@ -84,27 +85,39 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
                  default=DEFAULT_T_STANDBY): vol.Coerce(int),
     vol.Optional(CONF_FILTER_MODE,
                  default=DEFAULT_FILTER_MODE): vol.Coerce(int),
+    vol.Optional(CONF_DELTA_TEMP,
+                 default=DEFAULT_DELTA_TEMP): vol.Coerce(float),
 })
 
 
-def setup_platform(hass, config, add_devices, discovery_info=None):
+# noinspection PyUnusedLocal
+@asyncio.coroutine
+def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up the BME280 sensor."""
     SENSOR_TYPES[SENSOR_TEMPERATURE][1] = hass.config.units.temperature_unit
     name = config.get(CONF_NAME)
     i2c_address = config.get(CONF_I2C_ADDRESS)
-    i2c_bus = config.get(CONF_I2C_BUS)
+
+    try:
+        # noinspection PyUnresolvedReferences
+        import smbus
+        bus = smbus.SMBus(config.get(CONF_I2C_BUS))
+    except ImportError as exc:
+        _LOGGER.error("ImportError: %s", exc)
+        return False
+
     sensor = BME280(
-        i2c_address, i2c_bus,
+        bus, i2c_address,
         osrs_t=config.get(CONF_OVERSAMPLING_TEMP),
         osrs_p=config.get(CONF_OVERSAMPLING_PRES),
         osrs_h=config.get(CONF_OVERSAMPLING_HUM),
         mode=config.get(CONF_OPERATION_MODE),
         t_sb=config.get(CONF_T_STANDBY),
-        filter_mode=int(config.get(CONF_FILTER_MODE))
+        filter_mode=config.get(CONF_FILTER_MODE),
+        delta_temp=config.get(CONF_DELTA_TEMP)
     )
     if not sensor.detected:
-        _LOGGER.error("BME280 sensor not detected at %s:%s",
-                      i2c_bus, i2c_address)
+        _LOGGER.error("BME280 sensor not detected at %s", i2c_address)
         return False
 
     dev = []
@@ -115,27 +128,11 @@ def setup_platform(hass, config, add_devices, discovery_info=None):
     except KeyError:
         pass
 
-    add_devices(dev)
+    async_add_devices(dev)
 
 
-# TODO remove calibration and exit en ha_stop
 class BME280:
     """BME280 sensor working in i2C bus."""
-
-    # Sensor location
-    i2c_add = None
-    i2c_bus = None
-    bus = None
-    detected = False
-
-    # BME280 parameters
-    ctrl_meas_reg = None
-    config_reg = None
-    ctrl_hum_reg = None
-
-    mode = None
-    _with_pressure = False
-    _with_humidity = False
 
     # Calibration data
     _calibration_t = None
@@ -143,49 +140,45 @@ class BME280:
     _calibration_p = None
     _temp_fine = None
 
-    # Sensor data
-    temperature = None
-    humidity = None
-    pressure = None
-
-    def __init__(self,
+    def __init__(self, bus,
                  i2c_address=DEFAULT_I2C_ADDRESS,
-                 i2c_bus=DEFAULT_I2C_BUS,
-                 osrs_t=1,  # Temperature oversampling x 1
-                 osrs_p=1,  # Pressure oversampling x 1
-                 osrs_h=1,  # Humidity oversampling x 1
-                 mode=3,  # Normal mode
-                 t_sb=5,  # Tstandby 1000ms
-                 filter_mode=0,  # Filter off
+                 osrs_t=DEFAULT_OVERSAMPLING_TEMP,
+                 osrs_p=DEFAULT_OVERSAMPLING_PRES,
+                 osrs_h=DEFAULT_OVERSAMPLING_HUM,
+                 mode=DEFAULT_OPERATION_MODE,
+                 t_sb=DEFAULT_T_STANDBY,
+                 filter_mode=DEFAULT_FILTER_MODE,
+                 delta_temp=DEFAULT_DELTA_TEMP,
                  spi3w_en=0):  # 3-wire SPI Disable):
+        # Sensor location
+        self.bus = bus
+        self.i2c_add = int(i2c_address, 0)
+
+        # BME280 parameters
+        self.mode = mode
+        self.ctrl_meas_reg = (osrs_t << 5) | (osrs_p << 2) | self.mode
+        self.config_reg = (t_sb << 5) | (filter_mode << 2) | spi3w_en
+        self.ctrl_hum_reg = osrs_h
+
+        self._delta_temp = delta_temp
+        self._with_pressure = osrs_p > 0
+        self._with_humidity = osrs_h > 0
+
+        # Sensor data
+        self._temperature = None
+        self._humidity = None
+        self._pressure = None
+
         try:
-            import smbus
-
-            self.i2c_add = int(i2c_address, 0)
-            self.i2c_bus = i2c_bus
-            self.bus = smbus.SMBus(i2c_bus)
-            self.mode = mode
-            self.ctrl_meas_reg = (osrs_t << 5) | (osrs_p << 2) | self.mode
-            self.config_reg = (t_sb << 5) | (filter_mode << 2) | spi3w_en
-            self.ctrl_hum_reg = osrs_h
-
-            self._with_pressure = osrs_p > 0
-            self._with_humidity = osrs_h > 0
-            try:
-                self.update(True)
-                self.detected = True
-                _LOGGER.info(
-                    'Created BME280 sensor at i2c_{}:0x{:0x}, OS: {}xT, '
-                    '{}xP {}xH, mode {}, standby {}, filter {}'
-                        .format(self.i2c_bus, self.i2c_add,
-                                osrs_t, osrs_p, osrs_h, mode, t_sb,
-                                filter_mode))
-            except OSError as exc:
-                _LOGGER.warning("OSError trying to write data in i2c bus: %s",
-                                exc)
-        except ImportError as exc:
-            _LOGGER.error("ImportError: %s", exc)
-            smbus = None
+            self.update(True)
+            self.detected = True
+            _LOGGER.info(
+                'Created BME280 sensor at i2c:0x{:0x}, OS: {}xT, '
+                '{}xP {}xH, mode {}, standby {}, filter {}'
+                .format(self.i2c_add, osrs_t, osrs_p, osrs_h,
+                        mode, t_sb, filter_mode))
+        except OSError as exc:
+            _LOGGER.warning("OSError trying to write data in i2c bus: %s", exc)
 
     def _compensate_temperature(self, adc_t):
         """Formula from datasheet Bosch BME280 Environmental sensor.
@@ -199,7 +192,12 @@ class BME280:
               * (adc_t / 131072.0 - self.calibration_t[0] / 8192.0)
               * self.calibration_t[2])
         self._temp_fine = v1 + v2
-        return self._temp_fine / 5120.0
+        if self._delta_temp != 0.:  # temperature correction for self heating
+            temp = self._temp_fine / 5120.0 + self._delta_temp
+            self._temp_fine = temp * 5120.0
+        else:
+            temp = self._temp_fine / 5120.0
+        return temp
 
     def _compensate_pressure(self, adc_p):
         """Formula from datasheet Bosch BME280 Environmental sensor.
@@ -322,7 +320,7 @@ class BME280:
         # set to forced mode, i.e. "take next measurement"
         self.bus.write_byte_data(self.i2c_add, 0xF4, self.ctrl_meas_reg)
         while self.bus.read_byte_data(self.i2c_add, 0xF3) & 0x08:
-            sleep(0.001)
+            asyncio.sleep(0.005)
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self, first_reading=False):
@@ -343,11 +341,26 @@ class BME280:
         temp_raw = (data[3] << 12) | (data[4] << 4) | (data[5] >> 4)
         hum_raw = (data[6] << 8) | data[7]
 
-        self.temperature = self._compensate_temperature(temp_raw)
+        self._temperature = self._compensate_temperature(temp_raw)
         if self._with_humidity:
-            self.humidity = self._compensate_humidity(hum_raw)
+            self._humidity = self._compensate_humidity(hum_raw)
         if self._with_pressure:
-            self.pressure = self._compensate_pressure(pres_raw)
+            self._pressure = self._compensate_pressure(pres_raw)
+
+    @property
+    def temperature(self):
+        """Return temperature in celsius."""
+        return self._temperature
+
+    @property
+    def humidity(self):
+        """Return relative humidity in percentage."""
+        return self._humidity
+
+    @property
+    def pressure(self):
+        """Return pressure in hPa."""
+        return self._pressure
 
 
 class BME280Sensor(Entity):
@@ -362,7 +375,6 @@ class BME280Sensor(Entity):
         self.type = sensor_type
         self._state = None
         self._unit_of_measurement = SENSOR_TYPES[sensor_type][1]
-        self.update()
 
     @property
     def name(self):
@@ -379,7 +391,8 @@ class BME280Sensor(Entity):
         """Return the unit of measurement of the sensor."""
         return self._unit_of_measurement
 
-    def update(self):
+    @asyncio.coroutine
+    def async_update(self):
         """Get the latest data from the BME280 and update the states."""
         self.bme280_client.update()
         if self.type == SENSOR_TEMPERATURE and self.bme280_client.temperature:
