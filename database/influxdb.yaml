@@ -36,9 +36,9 @@ include:
    - sensor.enerpi_ldr
    - sensor.enerpi_power
 
-   - sensor.temperatura_dormitorio_rpi2mpd
-   - sensor.humedad_dormitorio_rpi2mpd
-   - sensor.presion_dormitorio_rpi2mpd
+   - sensor.dormitorio_temperature_rpi2mpd
+   - sensor.dormitorio_humidity_rpi2mpd
+   - sensor.dormitorio_pressure_rpi2mpd
 
    - sensor.t_salon
    - sensor.salon_temperature

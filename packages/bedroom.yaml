@@ -48,9 +48,9 @@ group:
     name: Dormitorio
     control: hidden
     entities:
-      - sensor.temperatura_dormitorio_rpi2mpd
-      - sensor.humedad_dormitorio_rpi2mpd
-      - sensor.presion_dormitorio_rpi2mpd
+      - sensor.dormitorio_temperature_rpi2mpd
+      - sensor.dormitorio_humidity_rpi2mpd
+      - sensor.dormitorio_pressure_rpi2mpd
       - binary_sensor.pir_dormitorio_rpi2mpd
       - switch.altavoz
       - switch.calefactor
@@ -59,9 +59,9 @@ group:
     name: Dormitorio
     control: hidden
     entities:
-      - sensor.temperatura_dormitorio_rpi2mpd
-      - sensor.humedad_dormitorio_rpi2mpd
-      - sensor.presion_dormitorio_rpi2mpd
+      - sensor.dormitorio_temperature_rpi2mpd
+      - sensor.dormitorio_humidity_rpi2mpd
+      - sensor.dormitorio_pressure_rpi2mpd
       - switch.altavoz
       - switch.calefactor
 

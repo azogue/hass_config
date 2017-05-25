@@ -9,14 +9,14 @@
 #  friendly_name: Humedad
 #  icon: mdi:water-percent
 
-sensor.temperatura_dormitorio:
+sensor.dormitorio_temperature:
   friendly_name: Temperatura
   icon: mdi:thermometer
-sensor.humedad_dormitorio:
+sensor.dormitorio_humidity:
   friendly_name: Humedad
   icon: mdi:water-percent
   homebridge_sensor_type: humidity
-sensor.presion_dormitorio:
+sensor.dormitorio_pressure:
   friendly_name: Presión atmosférica
   icon: mdi:weather-cloudy
 

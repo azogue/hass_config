@@ -84,24 +84,39 @@ sensor:
   #    - humidity
 
   # BME280 in RPI
-  - platform: command_line
-    name: salon_temperature
-    command: "/usr/local/bin/read_bme280 --temperature --i2c-address 0x77"
-    unit_of_measurement: "°C"
-    value_template: '{{ value |replace(" C", "") | round(2) }}'
+  - platform: bme280
+    name: salon
+    i2c_address: 0x77
+    operation_mode: 2  # forced
+    time_standby: 5
+    oversampling_temperature: 4
+    oversampling_pressure: 4
+    oversampling_humidity: 4
+    delta_temperature: -0.3
+    monitored_conditions:
+      - temperature
+      - humidity
+      - pressure
     scan_interval: 30
-  - platform: command_line
-    name: salon_humidity
-    command: "/usr/local/bin/read_bme280 --humidity --i2c-address 0x77"
-    unit_of_measurement: "%"
-    value_template: '{{ value |replace("％", "") | round(2) }}'
-    scan_interval: 30
-  - platform: command_line
-    name: salon_pressure
-    command: "/usr/local/bin/read_bme280 --pressure --i2c-address 0x77"
-    unit_of_measurement: "mb"
-    value_template: '{{ value |replace(" hPa", "") | round(2) }}'
-    scan_interval: 30
+
+#  - platform: command_line
+#    name: salon_temperature
+#    command: "/usr/local/bin/read_bme280 --temperature --i2c-address 0x77"
+#    unit_of_measurement: "°C"
+#    value_template: '{{ value |replace(" C", "") | round(2) - 1}}'
+#    scan_interval: 30
+#  - platform: command_line
+#    name: salon_humidity
+#    command: "/usr/local/bin/read_bme280 --humidity --i2c-address 0x77"
+#    unit_of_measurement: "%"
+#    value_template: '{{ value |replace("％", "") | round(2) }}'
+#    scan_interval: 30
+#  - platform: command_line
+#    name: salon_pressure
+#    command: "/usr/local/bin/read_bme280 --pressure --i2c-address 0x77"
+#    unit_of_measurement: "mb"
+#    value_template: '{{ value |replace(" hPa", "") | round(2) }}'
+#    scan_interval: 30
 
   # Weather sensors:
   - platform: myopenweathermap
