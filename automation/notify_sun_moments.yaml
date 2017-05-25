@@ -21,12 +21,22 @@
     event: sunset
     offset: '+00:00:00'
   action:
-    service: notify.ios_iphone
+    service: mytelegram_bot.send_message
     data:
       title: 'Empieza la noche!'
-      message: 'Acaba de ponerse el sol..'
-      data:
-        push:
-          badge: 0
-          sound: "US-EN-Morgan-Freeman-Setting-The-Mood.wav"
-          category: "CONFIRM"
+      message: 'Acaba de ponerse el sol... ¿Encendemos luces?'
+      target: !secret telegram_bot_group
+      disable_notification: true
+      inline_keyboard:
+        - Luz salón:/service_call light.toggle group.luces_salon, Luz dormitorio:/service_call light.toggle group.luces_dormitorio
+        - Luz cocina:/service_call switch.toggle switch.cocina, Luz estudio:/service_call light.toggle group.luces_estudio, +:/init
+
+#    service: notify.ios_iphone
+#    data:
+#      title: 'Empieza la noche!'
+#      message: 'Acaba de ponerse el sol..'
+#      data:
+#        push:
+#          badge: 0
+#          sound: "US-EN-Morgan-Freeman-Setting-The-Mood.wav"
+#          category: "CONFIRM"
