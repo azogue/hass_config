@@ -20,6 +20,7 @@ from homeassistant.config import load_yaml_config_file
 from homeassistant.const import (
     CONF_PLATFORM, CONF_API_KEY, CONF_TIMEOUT, ATTR_LATITUDE, ATTR_LONGITUDE)
 import homeassistant.helpers.config_validation as cv
+from homeassistant.exceptions import TemplateError
 from homeassistant.setup import async_prepare_setup_platform
 
 REQUIREMENTS = ['python-telegram-bot==6.0.1']
@@ -104,16 +105,16 @@ SERVICE_SCHEMA_SEND_MESSAGE = BASE_SERVICE_SCHEMA.extend({
 SERVICE_SEND_PHOTO = 'send_photo'
 SERVICE_SEND_DOCUMENT = 'send_document'
 SERVICE_SCHEMA_SEND_FILE = BASE_SERVICE_SCHEMA.extend({
-    vol.Optional(ATTR_URL): cv.string,
-    vol.Optional(ATTR_FILE): cv.string,
-    vol.Optional(ATTR_CAPTION): cv.string,
+    vol.Optional(ATTR_URL): cv.template,
+    vol.Optional(ATTR_FILE): cv.template,
+    vol.Optional(ATTR_CAPTION): cv.template,
     vol.Optional(ATTR_USERNAME): cv.string,
     vol.Optional(ATTR_PASSWORD): cv.string,
 })
 SERVICE_SEND_LOCATION = 'send_location'
 SERVICE_SCHEMA_SEND_LOCATION = BASE_SERVICE_SCHEMA.extend({
-    vol.Required(ATTR_LONGITUDE): float,
-    vol.Required(ATTR_LATITUDE): float,
+    vol.Required(ATTR_LONGITUDE): cv.template,
+    vol.Required(ATTR_LATITUDE): cv.template,
 })
 SERVICE_EDIT_MESSAGE = 'edit_message'
 SERVICE_SCHEMA_EDIT_MESSAGE = SERVICE_SCHEMA_SEND_MESSAGE.extend({
@@ -124,7 +125,7 @@ SERVICE_EDIT_CAPTION = 'edit_caption'
 SERVICE_SCHEMA_EDIT_CAPTION = vol.Schema({
     vol.Required(ATTR_MESSAGEID): vol.Any(cv.positive_int, cv.string),
     vol.Required(ATTR_CHAT_ID): vol.Coerce(int),
-    vol.Required(ATTR_CAPTION): cv.string,
+    vol.Required(ATTR_CAPTION): cv.template,
     vol.Optional(ATTR_KEYBOARD_INLINE): cv.ensure_list,
 }, extra=vol.ALLOW_EXTRA)
 SERVICE_EDIT_REPLYMARKUP = 'edit_replymarkup'
@@ -136,7 +137,7 @@ SERVICE_SCHEMA_EDIT_REPLYMARKUP = vol.Schema({
 SERVICE_ANSWER_CALLBACK_QUERY = 'answer_callback_query'
 SERVICE_SCHEMA_ANSWER_CALLBACK_QUERY = vol.Schema({
     vol.Required(ATTR_MESSAGE): cv.template,
-    vol.Required(ATTR_CALLBACK_QUERY_ID): cv.positive_int,
+    vol.Required(ATTR_CALLBACK_QUERY_ID): vol.Coerce(int),
     vol.Optional(ATTR_SHOW_ALERT): cv.boolean,
 }, extra=vol.ALLOW_EXTRA)
 
@@ -152,17 +153,32 @@ SERVICE_MAP = {
 }
 
 
-def load_data(url=None, file=None, username=None, password=None):
+def load_data(url=None, file=None,
+              username=None, password=None,
+              num_retries=5):
     """Load photo/document into ByteIO/File container from a source."""
     try:
         if url is not None:
             # Load photo from URL
-            if username is not None and password is not None:
-                req = requests.get(url, auth=(username, password), timeout=15)
-            else:
-                req = requests.get(url, timeout=15)
-            return io.BytesIO(req.content)
-
+            retry_num = 0
+            while retry_num < num_retries:
+                params = {"timeout": 15}
+                if username is not None and password is not None:
+                    params["auth"] = (username, password)
+                req = requests.get(url, **params)
+                if not req.ok:
+                    _LOGGER.warning("Status code %s (retry #%s) loading %s.",
+                                    req.status_code, retry_num + 1, url)
+                else:
+                    data = io.BytesIO(req.content)
+                    if data.read():
+                        data.seek(0)
+                        return data
+                    _LOGGER.warning("Empty data (retry #%s) in %s).",
+                                    retry_num + 1, url)
+                retry_num += 1
+            _LOGGER.warning("Can't load photo in %s after %s retries.",
+                            url, retry_num)
         elif file is not None:
             # Load photo from file
             return open(file, "rb")
@@ -216,20 +232,30 @@ def async_setup(hass, config):
         @asyncio.coroutine
         def async_send_telegram_message(service):
             """Handle sending Telegram Bot message service calls."""
-
             def _render_template_attr(data, attribute):
                 attribute_templ = data.get(attribute)
                 if attribute_templ:
-                    if not isinstance(attribute_templ, str):
-                        attribute_templ.hass = hass
-                        data[attribute] = attribute_templ.async_render()
-                    else:
+                    if any([isinstance(attribute_templ, vtype)
+                            for vtype in [float, int, str]]):
                         data[attribute] = attribute_templ
+                    else:
+                        attribute_templ.hass = hass
+                        try:
+                            data[attribute] = attribute_templ.async_render()
+                        except TemplateError as exc:
+                            _LOGGER.error("TemplateError in %s: %s -> %s",
+                                          attribute, attribute_templ, exc)
+                            data[attribute] = attribute_templ.template
 
             msgtype = service.service
             kwargs = dict(service.data)
             _render_template_attr(kwargs, ATTR_MESSAGE)
             _render_template_attr(kwargs, ATTR_TITLE)
+            _render_template_attr(kwargs, ATTR_URL)
+            _render_template_attr(kwargs, ATTR_FILE)
+            _render_template_attr(kwargs, ATTR_CAPTION)
+            _render_template_attr(kwargs, ATTR_LONGITUDE)
+            _render_template_attr(kwargs, ATTR_LATITUDE)
             _LOGGER.debug("NEW telegram_message %s: %s", msgtype, kwargs)
 
             if msgtype == SERVICE_SEND_MESSAGE:
@@ -300,27 +326,21 @@ class TelegramNotificationService:
         return message_id, inline_message_id
 
     def _get_target_chat_ids(self, target):
-        """Validate chat_id targets or return default target (fist defined).
+        """Validate chat_id targets or return default target (first).
 
-        :param target: optional list of strings or ints (['12234'] or [12234])
+        :param target: optional list of integers ([12234,-12345])
         :return list of chat_id targets (integers)
         """
         if target is not None:
-            if isinstance(target, int):
-                if target in self.allowed_chat_ids:
-                    return [target]
-                _LOGGER.warning("BAD TARGET %s, using default: %s",
+            try:
+                chat_ids = [int(t) for t in target
+                            if int(t) in self.allowed_chat_ids]
+                if len(chat_ids) > 0:
+                    return chat_ids
+                _LOGGER.warning("ALL BAD TARGETS: %s", target)
+            except (ValueError, TypeError):
+                _LOGGER.warning("BAD TARGET DATA %s, using default: %s",
                                 target, self._default_user)
-            else:
-                try:
-                    chat_ids = [int(t) for t in target
-                                if int(t) in self.allowed_chat_ids]
-                    if len(chat_ids) > 0:
-                        return chat_ids
-                    _LOGGER.warning("ALL BAD TARGETS: %s", target)
-                except (ValueError, TypeError):
-                    _LOGGER.warning("BAD TARGET DATA %s, using default: %s",
-                                    target, self._default_user)
         return [self._default_user]
 
     def _get_msg_kwargs(self, data):
@@ -343,9 +363,9 @@ class TelegramNotificationService:
                     if ':/' in key:
                         # commands like: 'Label:/cmd' become ('Label', '/cmd')
                         label = key.split(':/')[0]
-                        data = key[len(label) + 1:]
+                        command = key[len(label) + 1:]
                         buttons.append(
-                            InlineKeyboardButton(label, callback_data=data))
+                            InlineKeyboardButton(label, callback_data=command))
                     else:
                         # commands like: '/cmd' become ('CMD', '/cmd')
                         label = key.strip()[1:].upper()
@@ -472,17 +492,23 @@ class TelegramNotificationService:
         params = self._get_msg_kwargs(kwargs)
         caption = kwargs.get(ATTR_CAPTION)
         func_send = self.bot.sendPhoto if is_photo else self.bot.sendDocument
-        for chat_id in self._get_target_chat_ids(target):
-            file = load_data(
-                url=kwargs.get(ATTR_URL),
-                file=kwargs.get(ATTR_FILE),
-                username=kwargs.get(ATTR_USERNAME),
-                password=kwargs.get(ATTR_PASSWORD),
-            )
-            _LOGGER.debug("send file %s to chat_id %s. Caption: %s.\nkwargs=%s, target=%s",
-                          file, chat_id, caption, kwargs, target)
-            self._send_msg(func_send, "Error sending file",
-                           chat_id, file, caption=caption, **params)
+
+        file = load_data(
+            url=kwargs.get(ATTR_URL),
+            file=kwargs.get(ATTR_FILE),
+            username=kwargs.get(ATTR_USERNAME),
+            password=kwargs.get(ATTR_PASSWORD),
+        )
+        if file:
+            for chat_id in self._get_target_chat_ids(target):
+                _LOGGER.debug("send file to chat_id %s. Caption: %s.",
+                              chat_id, caption)
+                self._send_msg(func_send, "Error sending file",
+                               chat_id, io.BytesIO(file.read()),
+                               caption=caption, **params)
+                file.seek(0)
+        else:
+            _LOGGER.error("Can't send file with kwargs: %s", kwargs)
 
     def send_location(self, latitude, longitude, target=None, **kwargs):
         """Send a location."""
