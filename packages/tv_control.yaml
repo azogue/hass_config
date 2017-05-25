@@ -26,6 +26,8 @@ homeassistant:
 
     script.update_library:
       icon: mdi:refresh
+    script.stop_kodi:
+      icon: mdi:stop
     script.recent_episodes:
       icon: mdi:play-circle
     script.recent_movies:
@@ -105,7 +107,7 @@ script:
         service: mytelegram_bot.send_message
         data_template:
           title: '*TV PVR ON*'
-          target: !secret telegram_bot_chat_id_admin
+          target: !secret telegram_bot_group
           disable_notification: true
           message: >
             Encendido de caja tonta en canal '{% if (now().hour < 14) or ((now().hour == 14) and (now().minute < 50)) %}laSexta HD{% elif (now().hour < 16) %}antena3 HD{% elif (now().hour < 20) %}24h{% elif (now().hour == 20) and (now().minute < 50) %}laSexta HD{% elif (now().hour == 20) or ((now().hour == 21) and (now().minute < 15)) %}antena3 HD{% else %}laSexta HD{% endif %}'.
@@ -123,9 +125,17 @@ script:
       - service: mytelegram_bot.send_message
         data:
           title: 'Reiniciando KODI OSMC'
+          target: !secret telegram_bot_group
           message: "KODI debería 'morir' y 'resucitar' en unos segundos"
           disable_notification: true
       - service: shell_command.cmd_kill_kodi
+
+  stop_kodi:
+    alias: Stop playback in Kodi
+    sequence:
+        service: media_player.media_stop
+        data:
+          entity_id: media_player.kodi
 
   update_library:
     alias: Update Kodi Library
@@ -189,8 +199,9 @@ group:
       - switch.toggle_kodi_ambilight
       - switch.toggle_config_kodi_ambilight
       - script.play_kodi_pvr
-      - script.restart_kodi_osmc
+      - script.stop_kodi
       - script.update_library
+      - script.restart_kodi_osmc
 
   Media select:
     control: hidden
@@ -199,3 +210,16 @@ group:
       - script.recent_movies
       - script.pvr_channels
       - input_select.kodi_results
+
+automation:
+- alias: Refresca canales TV para despertar Kodi
+  trigger:
+    - platform: state
+      entity_id: media_player.kodi
+      to: 'off'
+      for:
+        minutes: 2
+  action:
+    - service: script.turn_on
+      entity_id: script.pvr_channels
+
