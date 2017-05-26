@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 Component to send and receive Telegram messages.
+
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/telegram_bot/
 """
@@ -157,7 +158,8 @@ SERVICE_MAP = {
 }
 
 
-def load_data(url=None, file=None, username=None, password=None,
+def load_data(url=None, filepath=None,
+              username=None, password=None,
               authentication=None, num_retries=5):
     """Load photo/document into ByteIO/File container from a source."""
     try:
@@ -185,9 +187,9 @@ def load_data(url=None, file=None, username=None, password=None,
                 retry_num += 1
             _LOGGER.warning("Can't load photo in %s after %s retries.",
                             url, retry_num)
-        elif file is not None:
+        elif filepath is not None:
             # Load photo from file
-            return open(file, "rb")
+            return open(filepath, "rb")
         else:
             _LOGGER.warning("Can't load photo. No photo found in params!")
 
@@ -238,6 +240,7 @@ def async_setup(hass, config):
         @asyncio.coroutine
         def async_send_telegram_message(service):
             """Handle sending Telegram Bot message service calls."""
+
             def _render_template_attr(data, attribute):
                 attribute_templ = data.get(attribute)
                 if attribute_templ:
@@ -249,19 +252,16 @@ def async_setup(hass, config):
                         try:
                             data[attribute] = attribute_templ.async_render()
                         except TemplateError as exc:
-                            _LOGGER.error("TemplateError in %s: %s -> %s",
-                                          attribute, attribute_templ, exc)
+                            _LOGGER.error(
+                                "TemplateError in %s: %s -> %s",
+                                attribute, attribute_templ.template, exc)
                             data[attribute] = attribute_templ.template
 
             msgtype = service.service
             kwargs = dict(service.data)
-            _render_template_attr(kwargs, ATTR_MESSAGE)
-            _render_template_attr(kwargs, ATTR_TITLE)
-            _render_template_attr(kwargs, ATTR_URL)
-            _render_template_attr(kwargs, ATTR_FILE)
-            _render_template_attr(kwargs, ATTR_CAPTION)
-            _render_template_attr(kwargs, ATTR_LONGITUDE)
-            _render_template_attr(kwargs, ATTR_LATITUDE)
+            for attribute in [ATTR_MESSAGE, ATTR_TITLE, ATTR_URL, ATTR_FILE,
+                              ATTR_CAPTION, ATTR_LONGITUDE, ATTR_LATITUDE]:
+                _render_template_attr(kwargs, attribute)
             _LOGGER.debug("NEW telegram_message %s: %s", msgtype, kwargs)
 
             if msgtype == SERVICE_SEND_MESSAGE:
@@ -334,25 +334,21 @@ class TelegramNotificationService:
     def _get_target_chat_ids(self, target):
         """Validate chat_id targets or return default target (first).
 
-        :param target: optional list of integers ([12234,-12345])
+        :param target: optional list of integers ([12234, -12345])
         :return list of chat_id targets (integers)
         """
-        if target is not None:
-            try:
-                chat_ids = [int(t) for t in target
-                            if int(t) in self.allowed_chat_ids]
-                if len(chat_ids) > 0:
-                    return chat_ids
-                _LOGGER.warning("ALL BAD TARGETS: %s", target)
-            except (ValueError, TypeError):
-                _LOGGER.warning("BAD TARGET DATA %s, using default: %s",
-                                target, self._default_user)
+        if target:
+            chat_ids = [t for t in target if t in self.allowed_chat_ids]
+            if chat_ids:
+                return chat_ids
+            _LOGGER.warning("Unallowed targets: %s, using default: %s",
+                            target, self._default_user)
         return [self._default_user]
 
     def _get_msg_kwargs(self, data):
         """Get parameters in message data kwargs."""
 
-        def _extract_inline_keyboard_buttons(row_keyboard):
+        def _make_row_inline_keyboard(row_keyboard):
             """Make a list of InlineKeyboardButtons.
 
             It can accept:
@@ -419,7 +415,7 @@ class TelegramNotificationService:
                 keys = data.get(ATTR_KEYBOARD_INLINE)
                 keys = keys if isinstance(keys, list) else [keys]
                 params[ATTR_REPLYMARKUP] = InlineKeyboardMarkup(
-                    [_extract_inline_keyboard_buttons(row) for row in keys])
+                    [_make_row_inline_keyboard(row) for row in keys])
         return params
 
     def _send_msg(self, func_send, msg_error, *args_rep, **kwargs_rep):
@@ -493,15 +489,12 @@ class TelegramNotificationService:
 
     def send_file(self, is_photo=True, target=None, **kwargs):
         """Send a photo or a document."""
-        _LOGGER.debug(
-            "send photo %s to target %s. kwargs=%s", is_photo, target, kwargs)
         params = self._get_msg_kwargs(kwargs)
         caption = kwargs.get(ATTR_CAPTION)
         func_send = self.bot.sendPhoto if is_photo else self.bot.sendDocument
-
         file = load_data(
             url=kwargs.get(ATTR_URL),
-            file=kwargs.get(ATTR_FILE),
+            filepath=kwargs.get(ATTR_FILE),
             username=kwargs.get(ATTR_USERNAME),
             password=kwargs.get(ATTR_PASSWORD),
             authentication=kwargs.get(ATTR_AUTHENTICATION),
@@ -551,10 +544,9 @@ class BaseTelegramBotEntity:
             _LOGGER.error("Incoming message does not have required data (%s)",
                           msg_data)
             return False, None
-        if msg_data['from'].get('id') not in self.allowed_chat_ids \
-                or ('chat' in msg_data
-                    and msg_data['chat'].get('id')
-                    not in self.allowed_chat_ids):
+        if (msg_data['from'].get('id') not in self.allowed_chat_ids or
+                ('chat' in msg_data and
+                 msg_data['chat'].get('id') not in self.allowed_chat_ids)):
             # Origin is not allowed.
             _LOGGER.error("Incoming message is not allowed (%s)", msg_data)
             return True, None
