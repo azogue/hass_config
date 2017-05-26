@@ -100,11 +100,6 @@
 // MQTT topics
 #define mqtt_temp_topic                     "sensor/temp_"
 #define mqtt_temp_ds_topic                  "sensor/temp_ds_"
-#define mqtt_temp_ds1_topic                 "sensor/temp_ds_1_"
-#define mqtt_temp_ds2_topic                 "sensor/temp_ds_2_"
-#define mqtt_temp_ds3_topic                 "sensor/temp_ds_3_"
-#define mqtt_temp_ds4_topic                 "sensor/temp_ds_4_"
-#define mqtt_temp_ds5_topic                 "sensor/temp_ds_5_"
 #define mqtt_humid_topic                    "sensor/hum_"
 #define mqtt_pressure_topic                 "sensor/pres_"
 #define mqtt_movement_topic                 "sensor/pir_"
@@ -132,10 +127,10 @@
 //** comment to deactivate        **
 //**********************************
 // Master switches:
-//#define ESP_TEST1
+#define ESP_TEST1
 //#define ESP_COCINA
 //#define USE_ESP32
-#define ESP_GALERIA
+//#define ESP_GALERIA
 
 //**********************************
 
@@ -191,15 +186,10 @@
 #ifdef ESP_COCINA
 #define DHTTYPE                             DHT22  // DHT22 (AM2302) / DHT11
 #define DHTPIN                              2      //D4 (DHT sensor)
-//  #define LED_PIR                             4     //D2 - in dht11 breadboard
 #define LED_RGB_RED                         12     //D6
 #define LED_RGB_GREEN                       13     //D7
 #define LED_RGB_BLUE                        15     //D8
-#define PIN_PIR                             4      //D2 - dht22 box
-//  #define PIN_PIR                             5      //D1
-//  #define PIN_VIBRO                           4      //D2 - dht22 box
-//  #define PIN_VIBRO                           0      //D3 - dht11 breadboard
-//  #define PIN_LIGHT_SENSOR_DIGITAL            14     //D5
+#define PIN_PIR                             0      //D3
 #define PIN_LIGHT_SENSOR_ANALOG             A0     //A0
 #define NEGATE_SENSOR_ANALOG
 #endif
@@ -208,6 +198,8 @@
 //** Configuración *****************
 //**********************************
 #define VERBOSE                             true
+
+#define DELTA_TEMP_BME280                   -.3  // Temperature offset for BME280 (self-heating!)
 
 #define MQTT_POSTINTERVAL_DHT22_SEC         20
 #define MQTT_POSTINTERVAL_BME280_SEC        40
@@ -782,11 +774,12 @@ void sample_bme280_sensor_data(bool *sampled, bool *sample_ok)
 
     *sampled = true;
     *sample_ok = true;
+
+    bme.takeForcedMeasurement();
+
     temp = bme.readTemperature();
     humid = bme.readHumidity();
     pressure = bme.readPressure() / 100.0F;
-    // #define SEALEVELPRESSURE_HPA (1013.25)      // 1 atm std.
-    //bme.readAltitude(SEALEVELPRESSURE_HPA);
 
     if (VERBOSE) {
       Serial.print("Temp: ");
@@ -800,7 +793,10 @@ void sample_bme280_sensor_data(bool *sampled, bool *sample_ok)
       Serial.println(" mbar");
     }
     if (temp)
+    {
+      temp += DELTA_TEMP_BME280;
       bme_tempSamples.push_front(temp);
+    }
     if (humid)
       bme_humidSamples.push_front(humid);
     if (pressure)
@@ -812,6 +808,7 @@ void sample_bme280_sensor_data(bool *sampled, bool *sample_ok)
 #endif
 }
 
+#ifdef ONE_WIRE_BUS
 bool i_push_front_ds18b20_temp(uint8_t index, DeviceAddress address,
                                std::list<double> *temp_samples)
 {
@@ -833,6 +830,7 @@ bool i_push_front_ds18b20_temp(uint8_t index, DeviceAddress address,
   }
   return false;
 }
+#endif
 
 void sample_ds18b20_sensor_data(bool *sampled, bool *sample_ok)
 {
@@ -1004,15 +1002,15 @@ void setup_bme280_sensor()
     delay(10000);
     reset_exec();
   }
-  //    bme.setSampling(sensor_mode mode              = MODE_NORMAL,
-  //       sensor_sampling tempSampling  = SAMPLING_X16,
-  //       sensor_sampling pressSampling = SAMPLING_X16,
-  //       sensor_sampling humSampling   = SAMPLING_X16,
-  //       sensor_filter filter          = FILTER_OFF,
-  //       standby_duration duration     = STANDBY_MS_0_5
-  //       );
-
-  bme.setSampling(Adafruit_BME280::MODE_NORMAL, Adafruit_BME280::SAMPLING_X2, Adafruit_BME280::SAMPLING_X2, Adafruit_BME280::SAMPLING_X2, Adafruit_BME280::FILTER_OFF, Adafruit_BME280::STANDBY_MS_1000);
+  /* bme.setSampling(sensor_mode mode  = MODE_NORMAL,
+         sensor_sampling tempSampling  = SAMPLING_X16,
+         sensor_sampling pressSampling = SAMPLING_X16,
+         sensor_sampling humSampling   = SAMPLING_X16,
+         sensor_filter filter          = FILTER_OFF,
+         standby_duration duration     = STANDBY_MS_0_5
+  ); */
+  //bme.setSampling(Adafruit_BME280::MODE_NORMAL, Adafruit_BME280::SAMPLING_X2, Adafruit_BME280::SAMPLING_X2, Adafruit_BME280::SAMPLING_X2, Adafruit_BME280::FILTER_OFF, Adafruit_BME280::STANDBY_MS_1000);
+  bme.setSampling(Adafruit_BME280::MODE_FORCED, Adafruit_BME280::SAMPLING_X1, Adafruit_BME280::SAMPLING_X1, Adafruit_BME280::SAMPLING_X1, Adafruit_BME280::FILTER_OFF, Adafruit_BME280::STANDBY_MS_1000);
 
   delay(100); // let sensor boot up
 }
