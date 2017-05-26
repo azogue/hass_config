@@ -48,6 +48,334 @@ mytelegram_bot:
     - !secret telegram_bot_chat_id_2
     - !secret telegram_bot_group
 
+# Manual Testing
+#script:
+#  test_telegram_bot_1:
+#    alias: Test Telegram Bot simple message
+#    sequence:
+#      - service: mytelegram_bot.send_message
+#        data:
+#          title: '*Test msg 1*'
+#          target: !secret telegram_bot_chat_id_admin
+#          message: "Test de *texto* _simple_"
+#          disable_notification: true
+#      - delay:
+#          seconds: 1
+#      - service: persistent_notification.create
+#        data:
+#          title: 'Test simple message OK'
+#          message: "Did it arrive?"
+#          notification_id: "test_notif"
+#
+#  test_telegram_bot_2:
+#    alias: Test Telegram Bot multi-target simple message
+#    sequence:
+#      - service: mytelegram_bot.send_message
+#        data:
+#          title: '*Test msg 2*'
+#          target:
+#            - !secret telegram_bot_chat_id_admin
+#            - !secret telegram_bot_group
+#          message: "Test de *texto* _simple_"
+#          disable_notification: true
+#      - delay:
+#          seconds: 1
+#      - service: persistent_notification.create
+#        data:
+#          title: 'Test multi-target simple message OK'
+#          message: "Did they arrive?"
+#          notification_id: "test_notif"
+#
+#  test_telegram_bot_2bis:
+#    alias: Test Telegram Bot multi-target simple message xxx,xxx
+#    sequence:
+#      - service: mytelegram_bot.send_message
+#        data:
+#          title: '*Test msg 2*'
+#          target: !secret telegram_bot_test_targets
+#          message: "Test de *texto* _simple_"
+#          disable_notification: true
+#      - delay:
+#          seconds: 1
+#      - service: persistent_notification.create
+#        data:
+#          title: 'Test multi-target simple message OK'
+#          message: "Did they arrive?"
+#          notification_id: "test_notif"
+#
+#  test_telegram_bot_3:
+#    alias: Test Telegram Bot multi-target location
+#    sequence:
+#      - service: mytelegram_bot.send_location
+#        data:
+#          caption: '*Test loc 1*'
+#          target:
+#            - !secret telegram_bot_chat_id_admin
+#            - !secret telegram_bot_group
+#          latitude: 32.87336
+#          longitude: 117.22743
+#          disable_notification: true
+#      - delay:
+#          seconds: 1
+#      - service: persistent_notification.create
+#        data:
+#          title: 'Test multi-target location OK'
+#          message: "Did they arrive?"
+#          notification_id: "test_notif"
+#
+#  test_telegram_bot_4:
+#    alias: Test Telegram Bot multi-target location template
+#    sequence:
+#      - service: mytelegram_bot.send_location
+#        data:
+#          caption: '*Test loc 2*'
+#          target:
+#            - !secret telegram_bot_chat_id_admin
+#            - !secret telegram_bot_group
+#          latitude: '{{ states.device_tracker.iphone.attributes.latitude|float }}'
+#          longitude: '{{ states.device_tracker.iphone.attributes.longitude|float }}'
+#          disable_notification: true
+#      - delay:
+#          seconds: 1
+#      - service: persistent_notification.create
+#        data:
+#          title: 'Test multi-target location template OK'
+#          message: "Did they arrive?"
+#          notification_id: "test_notif"
+#
+#  test_telegram_bot_5:
+#    alias: Test Telegram Bot multi-target document
+#    sequence:
+#      - service: mytelegram_bot.send_document
+#        data:
+#          caption: '*Test doc 1*'
+#          target:
+#            - !secret telegram_bot_chat_id_admin
+#            - !secret telegram_bot_group
+#          file: '/home/homeassistant/.homeassistant/home-assistant.log'
+#          disable_notification: true
+#      - delay:
+#          seconds: 1
+#      - service: persistent_notification.create
+#        data:
+#          title: 'Test multi-target document OK'
+#          message: "Did they arrive?"
+#          notification_id: "test_notif"
+#
+#  test_telegram_bot_6:
+#    alias: Test Telegram Bot multi-target image
+#    sequence:
+#      - service: mytelegram_bot.send_photo
+#        data:
+#          target:
+#            - !secret telegram_bot_chat_id_admin
+#            - !secret telegram_bot_group
+#          caption: '*Test img 1*'
+#          url: 'https://ugepiso.no-ip.org{{ states.camera.picamera_estudio.attributes.entity_picture}}'
+#          disable_notification: true
+#      - delay:
+#          seconds: 1
+#      - service: persistent_notification.create
+#        data:
+#          title: 'Test multi-target image OK'
+#          message: "Did they arrive?"
+#          notification_id: "test_notif"
+#
+#  test_telegram_bot_7:
+#    alias: Test Telegram Bot local camera image 1
+#    sequence:
+#      - service: mytelegram_bot.send_photo
+#        data:
+#          target:
+#            - !secret telegram_bot_chat_id_admin
+#            - !secret telegram_bot_group
+#          caption: '*Test img 2*'
+#          url: 'https://ugepiso.no-ip.org{{ states.camera.enerpi_tile_kwh.attributes.entity_picture}}'
+#          disable_notification: true
+#      - delay:
+#          seconds: 1
+#      - service: persistent_notification.create
+#        data:
+#          title: 'Test multi-target image OK'
+#          message: "Did they arrive?"
+#          notification_id: "test_notif"
+#
+#  test_telegram_bot_8:
+#    alias: Test Telegram Bot local camera image 2
+#    sequence:
+#      - service: mytelegram_bot.send_photo
+#        data:
+#          target:
+#            - !secret telegram_bot_chat_id_admin
+#            - !secret telegram_bot_group
+#          caption: '*Test img 2*'
+#          url: 'https://ugepiso.no-ip.org{{ states.camera.enerpi_tile_ldr.attributes.entity_picture}}'
+#          disable_notification: true
+#      - delay:
+#          seconds: 1
+#      - service: persistent_notification.create
+#        data:
+#          title: 'Test multi-target image OK'
+#          message: "Did they arrive?"
+#          notification_id: "test_notif"
+#
+#  test_telegram_bot_9:
+#    alias: Test Telegram Bot local camera image 3
+#    sequence:
+#      - service: mytelegram_bot.send_photo
+#        data:
+#          target:
+#            - !secret telegram_bot_chat_id_admin
+#            - !secret telegram_bot_group
+#          caption: '*Test img 2*'
+#          url: 'https://ugepiso.no-ip.org{{ states.camera.picamera_salon.attributes.entity_picture}}'
+#          disable_notification: true
+#      - delay:
+#          seconds: 1
+#      - service: persistent_notification.create
+#        data:
+#          title: 'Test multi-target image OK'
+#          message: "Did they arrive?"
+#          notification_id: "test_notif"
+#
+#  # Notify component
+#  test_notify_telegram_1:
+#    alias: Test notify.telegram simple message
+#    sequence:
+#      - service: notify.telegram_bot
+#        data:
+#          title: '*Test msg 1*'
+#          message: "Test de *texto* _simple_"
+#      - delay:
+#          seconds: 1
+#      - service: persistent_notification.create
+#        data:
+#          title: 'Test simple message OK'
+#          message: "Did it arrive?"
+#          notification_id: "test_notif_t"
+#
+#  test_notify_telegram_2:
+#    alias: Test notify.telegram location
+#    sequence:
+#      - service: notify.telegram_bot
+#        data:
+#          title: "Home Assistant"
+#          message: "Not used here but needed..."
+#          data:
+#            location:
+#              caption: '*Test loc 1*'
+#              latitude: 32.87336
+#              longitude: 117.22743
+#      - delay:
+#          seconds: 1
+#      - service: persistent_notification.create
+#        data:
+#          title: 'Test location OK'
+#          message: "Did it arrive?"
+#          notification_id: "test_notif_t"
+#
+#  test_notify_telegram_3:
+#    alias: Test notify.telegram location template
+#    sequence:
+#      - service: notify.telegram_bot
+#        data:
+#          title: "Home Assistant"
+#          message: "Not used here but needed..."
+#          data:
+#            location:
+#              caption: '*Not implemented in Telegram*'
+#              latitude: '{{ states.device_tracker.iphone.attributes.latitude|float }}'
+#              longitude: '{{ states.device_tracker.iphone.attributes.longitude|float }}'
+#      - delay:
+#          seconds: 1
+#      - service: persistent_notification.create
+#        data:
+#          title: 'Test multi-target location template OK'
+#          message: "Did they arrive?"
+#          notification_id: "test_notif_t"
+#
+#  test_notify_telegram_4:
+#    alias: Test notify.telegram document
+#    sequence:
+#      - service: notify.telegram_bot
+#        data:
+#          title: "Home Assistant"
+#          message: "Not used here but needed..."
+#          data:
+#            document:
+#              caption: 'Test doc 1'
+#              file: '/home/homeassistant/.homeassistant/home-assistant.log'
+#      - delay:
+#          seconds: 1
+#      - service: persistent_notification.create
+#        data:
+#          title: 'Test document OK'
+#          message: "Did it arrive?"
+#          notification_id: "test_notif_t"
+#
+#  test_notify_telegram_5:
+#    alias: Test notify.telegram multiple image
+#    sequence:
+#      - service: notify.telegram_bot
+#        data:
+#          title: "Home Assistant"
+#          message: "Not used here but needed..."
+#          data:
+#            photo:
+#              - url: 'https://upload.wikimedia.org/wikipedia/en/5/58/Penny_test.jpg'
+#                caption: 'Test img 1. C1'
+#              - url: 'https://ugepiso.no-ip.org{{ states.camera.escam_qf001.attributes.entity_picture}}'
+#                caption: 'Test img 1. C2'
+#
+#      - delay:
+#          seconds: 1
+#      - service: persistent_notification.create
+#        data:
+#          title: 'Test image OK'
+#          message: "Did it arrive?"
+#          notification_id: "test_notif_t"
+#
+#  test_notify_telegram_6:
+#    alias: Test notify.telegram image w caption
+#    sequence:
+#      - service: notify.telegram_bot
+#        data:
+#          title: "Home Assistant"
+#          message: "Not used here but needed..."
+#          data:
+#            photo:
+#              caption: 'Test img 3. C1'
+#              url: 'https://upload.wikimedia.org/wikipedia/en/5/58/Penny_test.jpg'
+#
+#      - delay:
+#          seconds: 1
+#      - service: persistent_notification.create
+#        data:
+#          title: 'Test image OK'
+#          message: "Did it arrive?"
+#          notification_id: "test_notif_t"
+#
+#group:
+#  Test notifications:
+#    control: hidden
+#    entities:
+#      - script.test_telegram_bot_1
+#      - script.test_telegram_bot_2
+#      - script.test_telegram_bot_2bis
+#      - script.test_telegram_bot_3
+#      - script.test_telegram_bot_4
+#      - script.test_telegram_bot_5
+#      - script.test_telegram_bot_6
+#      - script.test_telegram_bot_7
+#      - script.test_telegram_bot_8
+#      - script.test_telegram_bot_9
+#      - script.test_notify_telegram_1
+#      - script.test_notify_telegram_2
+#      - script.test_notify_telegram_3
+#      - script.test_notify_telegram_4
+#      - script.test_notify_telegram_5
+#      - script.test_notify_telegram_6
+
 ####################################################
 #                     iOS platform                 #
 ####################################################

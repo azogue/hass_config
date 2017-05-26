@@ -117,6 +117,7 @@ Master conf:
     - group.conectivity
 #    - group.all_automations
     - group.scripts
+#    - group.test_notifications
 #    - group.all_devices
 
 default_view:
