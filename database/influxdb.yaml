@@ -9,7 +9,6 @@ password: !secret influxdb_pass
 # ssl: true
 # verify_ssl: true
 default_measurement: state
-max_retries: 3
 include:
   entities:
    - input_select.alarm_mode
@@ -54,6 +53,10 @@ include:
    - sensor.esp2_pressure
    - sensor.esp2_light
 
+   - sensor.esp3_temperature
+   - sensor.esp3_humidity
+   - sensor.esp3_light
+
    - sensor.galeria_dht22_temperature
    - sensor.galeria_dht22_humidity
 
@@ -65,9 +68,6 @@ include:
    - sensor.estudio_temperature_rpi2h
    - sensor.estudio_humidity_rpi2h
    - sensor.estudio_pressure_rpi2h
-#   - sensor.temperatura_estudio_rpi2h
-#   - sensor.dht22_temperature_rpi2h
-#   - sensor.dht22_humidity_rpi2h
    - sensor.temperature_rpi2h
    - sensor.humidity_rpi2h
    - sensor.pressure_rpi2h
@@ -90,6 +90,10 @@ include:
    - binary_sensor.esp2_light
    - binary_sensor.esp2_pir
    - binary_sensor.esp2_vibro
+   - binary_sensor.esp3_online
+   - binary_sensor.esp3_light
+   - binary_sensor.esp3_pir
+   - binary_sensor.esp3_vibro
    - binary_sensor.heating
    - binary_sensor.motioncam_estudio
    - binary_sensor.motioncam_salon

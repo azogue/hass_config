@@ -37,6 +37,38 @@ homeassistant:
       icon: mdi:camera-burst
       homebridge_hidden: true
 
+    sensor.esp3_temperature:
+      friendly_name: Temperatura
+      icon: mdi:thermometer
+      homebridge_hidden: true
+    sensor.esp3_humidity:
+      friendly_name: Humedad
+      icon: mdi:water-percent
+      homebridge_hidden: true
+    sensor.esp3_light:
+      friendly_name: Iluminación
+      homebridge_hidden: true
+      icon: mdi:lightbulb-on
+    binary_sensor.esp3_pir:
+      friendly_name: Movimiento
+      homebridge_hidden: true
+    binary_sensor.esp3_vibro:
+      friendly_name: Vibración
+      homebridge_hidden: true
+    binary_sensor.esp3_light:
+      friendly_name: Luz
+      homebridge_hidden: true
+    binary_sensor.esp3_online:
+      homebridge_hidden: true
+    switch.use_esp3_leds:
+      friendly_name: Usar LEDs
+      icon: mdi:led-outline
+      homebridge_hidden: true
+    switch.use_esp3_binary_sensors:
+      friendly_name: Usar sensores binarios
+      icon: mdi:camera-burst
+      homebridge_hidden: true
+
 binary_sensor:
   - platform: mqtt
     state_topic: !secret mqtt_topic_esp2_pir
@@ -67,6 +99,35 @@ binary_sensor:
     payload_off: "off"
     device_class: connectivity
 
+  - platform: mqtt
+    state_topic: !secret mqtt_topic_esp3_pir
+    name: esp3_PIR
+  #  qos (Optional): The maximum QoS level of the state topic. Default is 0.
+    payload_on: "on"
+    payload_off: "off"
+    device_class: motion
+  - platform: mqtt
+    state_topic: !secret mqtt_topic_esp3_vibro
+    name: esp3_Vibro
+  #  qos (Optional): The maximum QoS level of the state topic. Default is 0.
+    payload_on: "on"
+    payload_off: "off"
+    device_class: vibration
+  - platform: mqtt
+    state_topic: !secret mqtt_topic_esp3_light
+    name: esp3_Light
+  #  qos (Optional): The maximum QoS level of the state topic. Default is 0.
+    payload_on: "on"
+    payload_off: "off"
+    device_class: light
+  - platform: mqtt
+    state_topic: !secret mqtt_topic_esp3_online
+    name: esp3 Online
+  #  qos (Optional): The maximum QoS level of the state topic. Default is 0.
+    payload_on: "on"
+    payload_off: "off"
+    device_class: connectivity
+
 sensor:
   - platform: mqtt
     state_topic: !secret mqtt_topic_esp2_temp
@@ -89,6 +150,22 @@ sensor:
     unit_of_measurement: '%'
     expire_after: 180
 
+  - platform: mqtt
+    state_topic: !secret mqtt_topic_esp3_temp
+    name: 'esp3_Temperature'
+    unit_of_measurement: 'ºC'
+    expire_after: 180
+  - platform: mqtt
+    state_topic: !secret mqtt_topic_esp3_hum
+    name: 'esp3_Humidity'
+    unit_of_measurement: '%'
+    expire_after: 180
+  - platform: mqtt
+    state_topic: !secret mqtt_topic_esp3_light_analog
+    name: 'esp3_Light'
+    unit_of_measurement: '%'
+    expire_after: 180
+
 switch:
   - platform: mqtt
     name: use_esp2_binary_sensors
@@ -101,6 +178,21 @@ switch:
     name: use_esp2_leds
     command_topic: !secret mqtt_topic_esp2_switch_leds_set
     state_topic: !secret mqtt_topic_esp2_switch_leds_state
+    payload_on: 'on'
+    payload_off: 'off'
+    retain: true
+
+  - platform: mqtt
+    name: use_esp3_binary_sensors
+    command_topic: !secret mqtt_topic_esp3_switch_binary_sensors_set
+    state_topic: !secret mqtt_topic_esp3_switch_binary_sensors_state
+    payload_on: 'on'
+    payload_off: 'off'
+    retain: true
+  - platform: mqtt
+    name: use_esp3_leds
+    command_topic: !secret mqtt_topic_esp3_switch_leds_set
+    state_topic: !secret mqtt_topic_esp3_switch_leds_state
     payload_on: 'on'
     payload_off: 'off'
     retain: true
@@ -121,6 +213,28 @@ group:
       - binary_sensor.esp2_pir
       - binary_sensor.esp2_vibro
 
+  esp8266_3:
+    name: Plancha
+    control: hidden
+    entities:
+      - binary_sensor.esp3_online
+      - sensor.esp3_temperature
+      - sensor.esp3_humidity
+      - sensor.esp3_light
+      - switch.use_esp3_leds
+      - switch.use_esp3_binary_sensors
+      - binary_sensor.esp3_light
+      - binary_sensor.esp3_pir
+      - binary_sensor.esp3_vibro
+
+  esp8266_3_simple:
+    name: Plancha
+    control: hidden
+    entities:
+      - sensor.esp3_temperature
+      - sensor.esp3_humidity
+      - sensor.esp3_light
+
 automation:
 - alias: Invisibilidad de grupo en pruebas
   trigger:
@@ -128,7 +242,7 @@ automation:
     entity_id: binary_sensor.esp2_online
     state: 'off'
     for:
-      minutes: 5
+      minutes: 2
   action:
     - service: group.set_visibility
       entity_id: group.esp8266_2
@@ -146,3 +260,26 @@ automation:
       data:
         visible: True
 
+- alias: Invisibilidad de grupo devboard
+  trigger:
+    platform: state
+    entity_id: binary_sensor.esp3_online
+    state: 'off'
+    for:
+      minutes: 2
+  action:
+    - service: group.set_visibility
+      entity_id: group.esp8266_3
+      data:
+        visible: False
+
+- alias: Visibilidad de grupo devboard
+  trigger:
+    platform: state
+    entity_id: binary_sensor.esp3_online
+    to: 'on'
+  action:
+    - service: group.set_visibility
+      entity_id: group.esp8266_3
+      data:
+        visible: True
