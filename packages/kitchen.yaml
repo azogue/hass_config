@@ -123,3 +123,38 @@ group:
       # From rf outlets
       - switch.cocina
 
+automation:
+- alias: Encendido LED Cocina
+  trigger:
+    platform: state
+    entity_id: binary_sensor.esp1_pir
+    to: 'on'
+  condition:
+    condition: and
+    conditions:
+      - condition: state
+        entity_id: group.family
+        state: 'home'
+      - condition: state
+        entity_id: switch.cocina
+        state: 'off'
+      - condition: template
+        value_template: '{{ states.sensor.esp1_light.state |float < 75 }}'
+  action:
+    - service: switch.turn_on
+      entity_id: switch.cocina
+
+- alias: Apagado LED Cocina
+  trigger:
+    platform: state
+    entity_id: binary_sensor.esp1_pir
+    state: 'off'
+    for:
+      minutes: 3
+  condition:
+    condition: state
+    entity_id: switch.cocina
+    state: 'on'
+  action:
+    - service: switch.turn_off
+      entity_id: switch.cocina
