@@ -28,15 +28,11 @@ mqtt:
   protocol: 3.1
 
 panel_iframe:
-#  grafana_access:
-#    title: Grafana
-#    url: !secret grafana_url
-#    icon: mdi:chart-areaspline
-  grafana_access_2:
-    title: Ambiente
-    url: !secret grafana_url_interior
+  grafana_access:
+    title: Grafana
+    url: !secret grafana_url
     icon: mdi:chart-areaspline
-  enerpi:
+  enerpiweb_access:
     title: enerPI
     url: !secret enerpi_url
     icon: mdi:power-plug
@@ -44,7 +40,7 @@ panel_iframe:
     title: Kodi
     url: !secret kodi_url
     icon: mdi:kodi
-  motioneye:
+  motioneye_access:
     title: MotionEye
     url: !secret motioneye_url
     icon: mdi:video
