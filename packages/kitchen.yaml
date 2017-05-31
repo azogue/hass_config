@@ -138,8 +138,16 @@ automation:
       - condition: state
         entity_id: switch.cocina
         state: 'off'
-      - condition: template
-        value_template: '{{ states.sensor.esp1_light.state |float < 75 }}'
+      - condition: or
+        conditions:
+          - condition: template
+            value_template: '{{ states.sensor.esp1_light.state |float < 70 }}'
+          - condition: time
+            after: '13:00:00'
+            before: '18:00:00'
+          - condition: time
+            after: '20:30:00'
+            before: '0:00:00'
   action:
     - service: switch.turn_on
       entity_id: switch.cocina
