@@ -77,7 +77,7 @@ binary_sensor:
 
   - platform: command_line
     name: Telegram Online
-    command: "/home/homeassistant/.homeassistant/shell/check_notifiers.sh mytelegram"
+    command: "/home/homeassistant/.homeassistant/shell/check_notifiers.sh telegram"
     device_class: connectivity
     payload_on: "success"
     payload_off: "fail"
