@@ -37,7 +37,7 @@ Status:
     - group.caldera
     - group.caldera_simple
 #    - group.camaras
-#    - group.tiempo_en_villena
+#    - group.weather
 
 Control:
   name: Home Control
@@ -63,6 +63,15 @@ kodi_control:
     - media_player.kodi
     - group.media_select
 
+alarm_clock:
+  name: Despertador
+  view: yes
+  icon: mdi:alarm
+  entities:
+    - group.despertador
+    - media_player.dormitorio_mopidy
+    - media_player.kodi
+
 enerpi_view:
   name: enerPI
   icon: mdi:flash
@@ -74,15 +83,6 @@ enerpi_view:
     - group.enerpi_tiles
 #    - group.enerpi_2x
     - group.enerpi_max_power_control
-
-alarm_clock:
-  name: Despertador
-  view: yes
-  icon: mdi:alarm
-  entities:
-    - group.despertador
-    - media_player.dormitorio_mopidy
-    - media_player.kodi
 
 Home Network:
   name: Red local del hogar
@@ -119,7 +119,7 @@ Master conf:
     - group.conectivity
 #    - group.all_automations
     - group.scripts
-#    - group.test_notifications
+    - group.test_notifications
 #    - group.all_devices
 
 default_view:
@@ -141,7 +141,7 @@ default_view:
     - group.cocina_simple
 #    - group.esp8266_2
 #    - group.esp8266_3
-#    - group.esp8266_3_simple
+    - group.esp8266_3_simple
     - group.galeria
     - group.caldera
     - group.caldera_simple
@@ -149,6 +149,6 @@ default_view:
     - camera.where_are_we
 #    - group.luces_salon
     - media_player.kodi
-    - group.tiempo_en_villena
-    - group.tiempo_en_villena_simple
+    - group.weather
+    - group.weather_simple
     - media_player.dormitorio_mopidy

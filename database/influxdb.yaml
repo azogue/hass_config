@@ -107,6 +107,9 @@ include:
    - switch.use_esp1_leds
    - switch.use_esp2_binary_sensors
    - switch.use_esp2_leds
+   - switch.use_esp3_binary_sensors
+   - switch.use_esp3_leds
+
    - switch.use_esp1_pir
    - switch.use_esp1_vibro
    - switch.use_pir_dormitorio_rpi2mpd

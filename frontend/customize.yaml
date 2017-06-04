@@ -49,9 +49,9 @@ group.inputs_alarm:
   order: 22
 group.camaras:
   order: 23
-group.tiempo_en_villena:
+group.weather:
   order: 24
-group.tiempo_en_villena_simple:
+group.weather_simple:
   order: 25
 group.enerpi:
   order: 26

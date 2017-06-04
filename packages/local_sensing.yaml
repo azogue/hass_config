@@ -119,7 +119,7 @@ sensor:
 #    scan_interval: 30
 
   # Weather sensors:
-  - platform: myopenweathermap
+  - platform: openweathermap
     api_key: !secret openweathermap_api_key
     forecast: 1
     name: Villena
@@ -160,20 +160,22 @@ group:
       - switch.camara
       - switch.kodi_tv_salon
 
-  Tiempo en Villena:
-    - sun.sun
-    - sensor.villena_temperature
-    - sensor.villena_humidity
-    - sensor.villena_wind_speed
-    - sensor.villena_pressure
-    - sensor.villena_condition
-    - sensor.villena_cloud_coverage
-    - sensor.villena_rain
-    - sensor.villena_forecast
-    - sensor.yr_symbol
+  weather:
+    name: !secret weather_location
+    entities:
+      - sun.sun
+      - sensor.villena_temperature
+      - sensor.villena_humidity
+      - sensor.villena_wind_speed
+      - sensor.villena_pressure
+      - sensor.villena_condition
+      - sensor.villena_cloud_coverage
+      - sensor.villena_rain
+      - sensor.villena_forecast
+      - sensor.yr_symbol
 
-  Tiempo en Villena_simple:
-    name: Tiempo en Villena
+  weather_simple:
+    name: !secret weather_location
     entities:
       - sensor.villena_temperature
       - sensor.villena_humidity
