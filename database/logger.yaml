@@ -2,6 +2,7 @@
 default: warn
 logs:
   homeassistant.bootstrap: info
+#  homeassistant.setup: info
   homeassistant.components.recorder: info
   homeassistant.components.history: info
   homeassistant.components.script: info
@@ -10,7 +11,7 @@ logs:
   homeassistant.components.media_player: info
   homeassistant.components.tts: debug
 
-  custom_components.notify.mytelegram: info
-  custom_components.mytelegram_bot: info
+  custom_components.notify.telegram: info
+  custom_components.telegram_bot: info
   # custom_components.sensor.enerweb: info
   # custom_components.enerpi: info
