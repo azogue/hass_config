@@ -156,7 +156,7 @@ automation:
   trigger:
     platform: state
     entity_id: binary_sensor.esp1_pir
-    state: 'off'
+    to: 'off'
     for:
       minutes: 3
   condition:

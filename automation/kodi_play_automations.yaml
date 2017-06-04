@@ -13,7 +13,7 @@
   action:
   - service: switch.turn_on
     entity_id: switch.kodi_tv_salon
-  - service: mytelegram_bot.send_message
+  - service: telegram_bot.send_message
     data:
       title: '*TV ON*'
       target: !secret telegram_bot_group
@@ -37,7 +37,7 @@
   action:
   - service: switch.turn_off
     entity_id: switch.kodi_tv_salon
-  - service: mytelegram_bot.send_message
+  - service: telegram_bot.send_message
     data:
       title: '*TV OFF*'
       target: !secret telegram_bot_group
@@ -62,7 +62,7 @@
   action:
   - service: switch.turn_off
     entity_id: switch.camara
-  - service: mytelegram_bot.send_message
+  - service: telegram_bot.send_message
     data:
       title: '*CAM Salón OFF*'
       target: !secret telegram_bot_group

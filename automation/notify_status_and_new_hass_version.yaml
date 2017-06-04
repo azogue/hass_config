@@ -10,6 +10,9 @@
       entity_id: switch.caldera
     - service: script.turn_on
       entity_id: script.notify_hass_start
+    - delay:
+        seconds: 30
+    - service: shell_command.restart_homebridge
 
 - alias: Startup Notification from appdaemon
   trigger:
@@ -22,6 +25,9 @@
       entity_id: switch.caldera
     - service: script.turn_on
       entity_id: script.notify_hass_start
+#    - delay:
+#        seconds: 30
+#    - service: shell_command.restart_homebridge
 
 - alias: Update notifications
   trigger:
@@ -51,7 +57,7 @@
     for:
       minutes: 2
   action:
-    - service: mytelegram_bot.send_message
+    - service: telegram_bot.send_message
       data:
         title: '*MySQL flush*'
         target: !secret telegram_bot_chat_id_admin

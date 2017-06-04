@@ -29,18 +29,18 @@ notify:
     recipient: !secret myemail
     timeout: 60
 
-  - platform: mytelegram
+  - platform: telegram
     name: telegram_bot
     chat_id: !secret telegram_bot_chat_id_admin
 
-  - platform: mytelegram
+  - platform: telegram
     name: telegram_group
     chat_id: !secret telegram_bot_group
 
 ####################################################
 #                     Telegram BOT                 #
 ####################################################
-mytelegram_bot:
+telegram_bot:
   platform: webhooks
   api_key: !secret telegram_bot_api_key
   allowed_chat_ids:
@@ -53,7 +53,7 @@ mytelegram_bot:
 #  test_telegram_bot_1:
 #    alias: Test Telegram Bot simple message
 #    sequence:
-#      - service: mytelegram_bot.send_message
+#      - service: telegram_bot.send_message
 #        data:
 #          title: '*Test msg 1*'
 #          target: !secret telegram_bot_chat_id_admin
@@ -70,7 +70,7 @@ mytelegram_bot:
 #  test_telegram_bot_2:
 #    alias: Test Telegram Bot multi-target simple message
 #    sequence:
-#      - service: mytelegram_bot.send_message
+#      - service: telegram_bot.send_message
 #        data:
 #          title: '*Test msg 2*'
 #          target:
@@ -89,7 +89,7 @@ mytelegram_bot:
 #  test_telegram_bot_2bis:
 #    alias: Test Telegram Bot multi-target simple message xxx,xxx
 #    sequence:
-#      - service: mytelegram_bot.send_message
+#      - service: telegram_bot.send_message
 #        data:
 #          title: '*Test msg 2*'
 #          target: !secret telegram_bot_test_targets
@@ -106,7 +106,7 @@ mytelegram_bot:
 #  test_telegram_bot_3:
 #    alias: Test Telegram Bot multi-target location
 #    sequence:
-#      - service: mytelegram_bot.send_location
+#      - service: telegram_bot.send_location
 #        data:
 #          caption: '*Test loc 1*'
 #          target:
@@ -126,7 +126,7 @@ mytelegram_bot:
 #  test_telegram_bot_4:
 #    alias: Test Telegram Bot multi-target location template
 #    sequence:
-#      - service: mytelegram_bot.send_location
+#      - service: telegram_bot.send_location
 #        data:
 #          caption: '*Test loc 2*'
 #          target:
@@ -146,7 +146,7 @@ mytelegram_bot:
 #  test_telegram_bot_5:
 #    alias: Test Telegram Bot multi-target document
 #    sequence:
-#      - service: mytelegram_bot.send_document
+#      - service: telegram_bot.send_document
 #        data:
 #          caption: '*Test doc 1*'
 #          target:
@@ -165,7 +165,7 @@ mytelegram_bot:
 #  test_telegram_bot_6:
 #    alias: Test Telegram Bot multi-target image
 #    sequence:
-#      - service: mytelegram_bot.send_photo
+#      - service: telegram_bot.send_photo
 #        data:
 #          target:
 #            - !secret telegram_bot_chat_id_admin
@@ -184,7 +184,7 @@ mytelegram_bot:
 #  test_telegram_bot_7:
 #    alias: Test Telegram Bot local camera image 1
 #    sequence:
-#      - service: mytelegram_bot.send_photo
+#      - service: telegram_bot.send_photo
 #        data:
 #          target:
 #            - !secret telegram_bot_chat_id_admin
@@ -203,7 +203,7 @@ mytelegram_bot:
 #  test_telegram_bot_8:
 #    alias: Test Telegram Bot local camera image 2
 #    sequence:
-#      - service: mytelegram_bot.send_photo
+#      - service: telegram_bot.send_photo
 #        data:
 #          target:
 #            - !secret telegram_bot_chat_id_admin
@@ -222,7 +222,7 @@ mytelegram_bot:
 #  test_telegram_bot_9:
 #    alias: Test Telegram Bot local camera image 3
 #    sequence:
-#      - service: mytelegram_bot.send_photo
+#      - service: telegram_bot.send_photo
 #        data:
 #          target:
 #            - !secret telegram_bot_chat_id_admin

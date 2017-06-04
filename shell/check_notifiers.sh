@@ -8,9 +8,9 @@ elif [ "$1" = "richsmtp" ]
 then
     RESNUM=$(/bin/grep ERROR /home/homeassistant/.homeassistant/home-assistant.log | /bin/grep -c "Error setting up platform richsmtp")
     [ "$RESNUM" -lt "1" ]  && echo "success"||echo "fail"
-elif [ "$1" = "mytelegram" ]
+elif [ "$1" = "telegram" ]
 then
-    RESNUM=$(/bin/grep ERROR /home/homeassistant/.homeassistant/home-assistant.log | /bin/grep -c "Error setting up platform mytelegram")
+    RESNUM=$(/bin/grep ERROR /home/homeassistant/.homeassistant/home-assistant.log | /bin/grep -c "Error setting up platform telegram")
     [ "$RESNUM" -lt "1" ]  && echo "success"||echo "fail"
 elif [ "$1" = "ios" ]
 then

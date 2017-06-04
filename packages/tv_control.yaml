@@ -104,7 +104,7 @@ script:
             {% endif %}
 
       - alias: Notificación de selección de canal
-        service: mytelegram_bot.send_message
+        service: telegram_bot.send_message
         data_template:
           title: '*TV PVR ON*'
           target: !secret telegram_bot_group
@@ -122,7 +122,7 @@ script:
           data:
             push:
               category: "CONFIRM"
-      - service: mytelegram_bot.send_message
+      - service: telegram_bot.send_message
         data:
           title: 'Reiniciando KODI OSMC'
           target: !secret telegram_bot_group

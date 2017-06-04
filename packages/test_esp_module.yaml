@@ -240,7 +240,7 @@ automation:
   trigger:
     platform: state
     entity_id: binary_sensor.esp2_online
-    state: 'off'
+    to: 'off'
     for:
       minutes: 2
   action:
@@ -264,7 +264,7 @@ automation:
   trigger:
     platform: state
     entity_id: binary_sensor.esp3_online
-    state: 'off'
+    to: 'off'
     for:
       minutes: 2
   action:

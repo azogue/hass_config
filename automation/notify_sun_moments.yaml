@@ -21,7 +21,7 @@
     event: sunset
     offset: '+00:00:00'
   action:
-    service: mytelegram_bot.send_message
+    service: telegram_bot.send_message
     data:
       title: 'Empieza la noche!'
       message: 'Acaba de ponerse el sol... ¿Encendemos luces?'

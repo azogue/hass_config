@@ -9,7 +9,7 @@ sequence:
     entity_id: switch.camara
 
   - alias: Notificación de buenas noches
-    service: mytelegram_bot.send_message
+    service: telegram_bot.send_message
     data:
       title: '*¡Buenas noches!*'
       target: !secret telegram_bot_chat_id_admin
