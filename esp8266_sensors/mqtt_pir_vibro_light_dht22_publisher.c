@@ -57,25 +57,13 @@
   - v1.1: Fixed some errors, Better error handling with DHT22, different publish frecuency for light & DHT22,
         negate digital_light sensor, and some refactoring.
   - v1.2: Added ESP32 support with a compilation flag, Compiles OK but it's NOT WORKING:
-  ```
-  Guru Meditation Error of type LoadProhibited occurred on core  1. Exception was unhandled.
-  Register dump:
-  PC      : 0x400d1de8  PS      : 0x00060c30  A0      : 0x800d214a  A1      : 0x3ffc7440
-  A2      : 0x3ffc1f98  A3      : 0x000000c8  A4      : 0x3f40156f  A5      : 0x3ffc7560
-  A6      : 0x3ffc7540  A7      : 0x00000008  A8      : 0x800d83c5  A9      : 0x3ffc7390
-  A10     : 0x00000000  A11     : 0x3ffc7486  A12     : 0x00000000  A13     : 0x3f40156f
-  A14     : 0x00000000  A15     : 0x00000000  SAR     : 0x0000001f  EXCCAUSE: 0x0000001c
-  EXCVADDR: 0x00000000  LBEG    : 0x400014fd  LEND    : 0x4000150d  LCOUNT  : 0xfffffffc
-
-  Backtrace: 0x400d1de8:0x3ffc7440 0x400d214a:0x3ffc7460 0x400d21dd:0x3ffc7580 0x400d1745:0x3ffc75a0 0x400d11a2:0x3ffc75c0 0x400d1227:0x3ffc75e0 0x400de7d2:0x3ffc7610
-
-  CPU halted.
-  ```
   - v1.3: MQTT subscribe at `control/module_MAC`/ `control/out_module_MAC`, JSON payload,
         set RGB color with `{"color": [100, 0, 255]}`; Auto reboot if no wifi or many dht errors;
         mqtt error descriptions; some fixes. PINOUT with esp8266_breadboard & dht11.
   - v1.4: BME280 temperature + humidity + pressure sensor (much better than the DHT variants!);
         switch ON/OFF Leds & binary sensors with mqtt (MQTT switches for HA)
+  - v1.5: BH1750 digital light sensor; HTU21 digital temp + humid sensor.
+  - v1.6:
 
   ### Librerías:
 
@@ -86,6 +74,12 @@
   - Adafruit_Unified_Sensor v1.0.2
   - DHT_sensor_library v1.3.0
   - Adafruit_BME280_Library v1.0.5
+
+  - Wire.h
+  - BH1750.h
+  - SparkFunHTU21D.h
+  - OneWire.h
+  - DallasTemperature.h
 */
 //**********************************
 //** USER SETTINGS *****************
@@ -106,6 +100,7 @@
 #define mqtt_vibro_topic                    "sensor/extra_"
 #define mqtt_light_topic                    "sensor/light_"
 #define mqtt_light_analog_topic             "sensor/light_analog_"
+#define mqtt_light_lux_topic                "sensor/light_lux_"
 
 #define MQTT_WILLTOPIC                      "control/online_"
 #define MQTT_WILLQOS                        2
@@ -127,71 +122,81 @@
 //** comment to deactivate        **
 //**********************************
 // Master switches:
-#define ESP_TEST1
+
+#define USE_ESP32
+
+//#define ESP_TEST1
+#define ESP_DEBUG
 //#define ESP_COCINA
-//#define USE_ESP32
+//#define TEST_ESP32
 //#define ESP_GALERIA
+#define PIN_I2C_SDA                  4     //D2
+#define PIN_I2C_SCL                  5     //D1
 
 //**********************************
 
-#ifdef USE_ESP32
-#define DHTTYPE                             DHT11  // DHT22 (AM2302) / DHT11
-#define DHTPIN                              17     //IO17
-#define LED_RGB_RED                         2      //IO02
-#define LED_RGB_GREEN                       4      //IO04
-#define LED_RGB_BLUE                        16     //IO16
+#ifdef ESP_DEBUG
+  #define WITH_BH1750
+  #define WITH_HTU21
+  #define WITH_BME280
+  #define LED_RGB_RED                         2      //IO02
+  #define LED_RGB_GREEN                       4      //IO04
+  #define LED_RGB_BLUE                        16     //IO16
+#endif
 
-#define PIN_PIR                             21     //IO21
-#define PIN_VIBRO                           22     //IO22
-#define PIN_LIGHT_SENSOR_DIGITAL            34     //IO34
-#define PIN_LIGHT_SENSOR_ANALOG             35
+#ifdef TEST_ESP32
+  #define DHTTYPE                             DHT11  // DHT22 (AM2302) / DHT11
+  #define DHTPIN                              17     //IO17
+  #define LED_RGB_RED                         2      //IO02
+  #define LED_RGB_GREEN                       4      //IO04
+  #define LED_RGB_BLUE                        16     //IO16
+
+  #define PIN_PIR                             21     //IO21
+  #define PIN_VIBRO                           22     //IO22
+  #define PIN_LIGHT_SENSOR_DIGITAL            34     //IO34
+  #define PIN_LIGHT_SENSOR_ANALOG             35
 #endif
 
 #ifdef ESP_TEST1
-#define LED_PIR                             16     //D0
-#define LED_VIBRO                           3      //RX - in dht11 breadboard
-#define LED_RGB_RED                         12     //D6
-#define LED_RGB_GREEN                       13     //D7
-#define LED_RGB_BLUE                        15     //D8
-#define PIN_PIR                             2      //D4
-#define PIN_VIBRO                           0      //D3 - dht11 breadboard
-#define PIN_LIGHT_SENSOR_DIGITAL            14     //D5
-#define PIN_LIGHT_SENSOR_ANALOG             A0     //A0
-
-#define PIN_I2C_BME280_SDA                  4     //D2
-#define PIN_I2C_BME280_SCL                  5     //D1
+  #define WITH_BME280
+  #define LED_PIR                             16     //D0
+  #define LED_VIBRO                           3      //RX - in dht11 breadboard
+  #define LED_RGB_RED                         12     //D6
+  #define LED_RGB_GREEN                       13     //D7
+  #define LED_RGB_BLUE                        15     //D8
+  #define PIN_PIR                             2      //D4
+  #define PIN_VIBRO                           0      //D3 - dht11 breadboard
+  #define PIN_LIGHT_SENSOR_DIGITAL            14     //D5
+  #define PIN_LIGHT_SENSOR_ANALOG             A0     //A0
 #endif
 
 #ifdef ESP_GALERIA
-#define ONE_WIRE_BUS                        2      //D4
+  #define ONE_WIRE_BUS                        2      //D4
 
-//#define DHTTYPE                             DHT22
-//#define DHTPIN                              4      //D2
+  //#define DHTTYPE                             DHT22
+  //#define DHTPIN                              4      //D2
 
-//#define LED_PIR                             16     //D0
-//#define LED_VIBRO                           3      //RX - in dht11 breadboard
-#define LED_RGB_RED                         12     //D6
-#define LED_RGB_GREEN                       13     //D7
-#define LED_RGB_BLUE                        15     //D8
+  //#define LED_PIR                             16     //D0
+  //#define LED_VIBRO                           3      //RX - in dht11 breadboard
+  #define LED_RGB_RED                         12     //D6
+  #define LED_RGB_GREEN                       13     //D7
+  #define LED_RGB_BLUE                        15     //D8
 
-#define PIN_PIR                             0      //D3
+  #define PIN_PIR                             0      //D3
 //#define PIN_VIBRO                           0      //D3 - dht11 breadboard
 //#define PIN_LIGHT_SENSOR_DIGITAL            14     //D5
 //#define PIN_LIGHT_SENSOR_ANALOG             A0     //A0
-
-//#define PIN_I2C_BME280_SDA                  4     //D2
-//#define PIN_I2C_BME280_SCL                  5     //D1
 #endif
 
 #ifdef ESP_COCINA
-#define DHTTYPE                             DHT22  // DHT22 (AM2302) / DHT11
-#define DHTPIN                              2      //D4 (DHT sensor)
-#define LED_RGB_RED                         12     //D6
-#define LED_RGB_GREEN                       13     //D7
-#define LED_RGB_BLUE                        15     //D8
-#define PIN_PIR                             0      //D3
-#define PIN_LIGHT_SENSOR_ANALOG             A0     //A0
-#define NEGATE_SENSOR_ANALOG
+  #define DHTTYPE                             DHT22  // DHT22 (AM2302) / DHT11
+  #define DHTPIN                              2      //D4 (DHT sensor)
+  #define LED_RGB_RED                         12     //D6
+  #define LED_RGB_GREEN                       13     //D7
+  #define LED_RGB_BLUE                        15     //D8
+  #define PIN_PIR                             0      //D3
+  #define PIN_LIGHT_SENSOR_ANALOG             A0     //A0
+  #define NEGATE_SENSOR_ANALOG
 #endif
 
 //**********************************
@@ -203,6 +208,8 @@
 
 #define MQTT_POSTINTERVAL_DHT22_SEC         20
 #define MQTT_POSTINTERVAL_BME280_SEC        40
+#define MQTT_POSTINTERVAL_BH1750_SEC        30
+#define MQTT_POSTINTERVAL_HTV21_SEC         30
 #define MQTT_POSTINTERVAL_DS18B20_SEC       20
 #define MQTT_POSTINTERVAL_LIGHT_SEC         45
 
@@ -222,29 +229,36 @@
 //**********************************
 //** Librerías *********************
 //**********************************
-#ifdef USE_ESP32
-#include "WiFiEsp.h"
-#else
-#include <ESP8266WiFi.h>
-#endif
-#include <PubSubClient.h>
 //#include <ArduinoJson.h>
+#include <PubSubClient.h>
 #include <elapsedMillis.h>
 #include <list>
+#ifdef USE_ESP32
+  #include "WiFi.h"
+#else
+  #include <ESP8266WiFi.h>
+#endif
 #ifdef DHTPIN
-#include <Adafruit_Sensor.h>  // - Adafruit Unified Sensor Library: https://github.com/adafruit/Adafruit_Sensor
-#include <DHT.h>              // - DHT Sensor Library: https://github.com/adafruit/DHT-sensor-library
-#include <DHT_U.h>
+  #include <Adafruit_Sensor.h>  // - Adafruit Unified Sensor Library: https://github.com/adafruit/Adafruit_Sensor
+  #include <DHT.h>              // - DHT Sensor Library: https://github.com/adafruit/DHT-sensor-library
+  #include <DHT_U.h>
 #endif
-#ifdef PIN_I2C_BME280_SDA
-#include <Wire.h>
-#include <Adafruit_Sensor.h>
-#include <Adafruit_BME280.h>
+#ifdef PIN_I2C_SDA
+  #include <Wire.h>
 #endif
-
+#ifdef WITH_BME280
+  #include <Adafruit_Sensor.h>
+  #include <Adafruit_BME280.h>
+#endif
+#ifdef WITH_BH1750
+  #include <BH1750.h>
+#endif
+#ifdef WITH_HTU21
+  #include "SparkFunHTU21D.h"
+#endif
 #ifdef ONE_WIRE_BUS
-#include <OneWire.h>
-#include <DallasTemperature.h>
+  #include <OneWire.h>
+  #include <DallasTemperature.h>
 #endif
 
 //**********************************
@@ -253,13 +267,15 @@
 #define DELAY_MS_BETWEEN_RETRIES            250
 #define DELAY_MS_BETWEEN_MQTT_PUB_STATE     35000
 
+//Unshifted 7-bit I2C address for the sensors
+#define HTU21D_ADDRESS                   0x40
+#define BME280_ADDR                      0x76
+#define BH1750_ADDR                      0x23
+
 char MAC_char[18];                          //MAC address in ascii
 //Wifi client
-#ifdef USE_ESP32
-WiFiEspClient wifiClient;
-#else
 WiFiClient wifiClient;
-#endif
+
 //MQTT client
 void callback_mqtt_message_received(char* topic, byte* payload, unsigned int length);
 PubSubClient client(MQTT_SERVER, MQTT_PORT, callback_mqtt_message_received, wifiClient);
@@ -271,42 +287,65 @@ bool use_binary_sensors = HIGH;
 bool in_default_state_binary_sensors = HIGH;
 
 #ifdef DHTPIN                               // DHT22/DHT11 sensor settings.
-DHT_Unified dht(DHTPIN, DHTTYPE);
-// Variables for recording samples of the DHT22 sensor.
-std::list<double> tempSamples;   //Collected results per interval
-std::list<double> humidSamples;  //Collected results per interval
-std::list<double> tempHistory;   //History over time.
-std::list<double> humidHistory;  //History over time.
+  DHT_Unified dht(DHTPIN, DHTTYPE);
+  // Variables for recording samples of the DHT22 sensor.
+  std::list<double> tempSamples;   //Collected results per interval
+  std::list<double> humidSamples;  //Collected results per interval
+  std::list<double> tempHistory;   //History over time.
+  std::list<double> humidHistory;  //History over time.
 #endif
 
-#ifdef PIN_I2C_BME280_SDA                   // BME280 sensor (I2C)
-Adafruit_BME280 bme;                        // I2C
-// Variables for recording samples of the DHT22 sensor.
-std::list<double> bme_tempSamples;   //Collected results per interval
-std::list<double> bme_humidSamples;  //Collected results per interval
-std::list<double> bme_pressureSamples;  //Collected results per interval
-std::list<double> bme_tempHistory;   //History over time.
-std::list<double> bme_humidHistory;  //History over time.
-std::list<double> bme_pressureHistory;  //History over time.
+//Temperature & Humidity & Pressure digital I2c sensor - Bosch BME280
+#ifdef WITH_BME280                   // BME280 sensor (I2C)
+  Adafruit_BME280 bme;                        // I2C
+  std::list<double> bme_tempSamples;   //Collected results per interval
+  std::list<double> bme_humidSamples;  //Collected results per interval
+  std::list<double> bme_pressureSamples;  //Collected results per interval
+  std::list<double> bme_tempHistory;   //History over time.
+  std::list<double> bme_humidHistory;  //History over time.
+  std::list<double> bme_pressureHistory;  //History over time.
 #endif
 
+//Temperature & Humidity digital I2c sensor - HTU21D / SHT21
+#ifdef WITH_HTU21
+  HTU21D htu21_sensor;
+  std::list<double> htu21_tempSamples;   //Collected results per interval
+  std::list<double> htu21_tempHistory;   //History over time.
+  std::list<double> htu21_humidSamples;  //Collected results per interval
+  std::list<double> htu21_humidHistory;  //History over time.
+#endif
+
+//Light digital I2c sensor - BH1750
+#ifdef WITH_BH1750
+  std::list<double> bh1750_lightSamples;   //Collected results per interval
+  std::list<double> bh1750_lightHistory;   //History over time.
+  BH1750 bh1750_light_sensor(BH1750_ADDR);
+#endif
+
+
 // ###################################################
-// DALLAS DS18b20 SENSORS                  ###########
+// DALLAS DS18b20 SENSORS
 // ###################################################
+/*
+DeviceAddress Probe01 = { 0x28, 0x88, 0x45, 0x01, 0x00, 0x00, 0x80, 0x6D };
+DeviceAddress Probe02 = { 0x28, 0x16, 0x42, 0x01, 0x00, 0x00, 0x80, 0x9E };
+DeviceAddress Probe03 = { 0x28, 0x5E, 0x59, 0x01, 0x00, 0x00, 0x80, 0x46 };
+*/
+
 #ifdef ONE_WIRE_BUS                         // DS18b20 temperature sensors
-OneWire oneWire(ONE_WIRE_BUS);
-DallasTemperature DS18B20(&oneWire);
+  OneWire oneWire(ONE_WIRE_BUS);
+  DallasTemperature DS18B20(&oneWire);
 
-#ifdef ESP_GALERIA
-#define NUM_SENSORS_DS18B20 3
-uint8_t ds18b20Probes[8 * NUM_SENSORS_DS18B20] = {
-  0x28, 0x5E, 0x59, 0x01, 0x00, 0x00, 0x80, 0x46,
-  0x28, 0x88, 0x45, 0x01, 0x00, 0x00, 0x80, 0x6D,
-  0x28, 0x16, 0x42, 0x01, 0x00, 0x00, 0x80, 0x9E,
-};
-std::list<double> ds18b20_tempSamples_arr[NUM_SENSORS_DS18B20];   //Collected results per interval
-std::list<double> ds18b20_tempHistory_arr[NUM_SENSORS_DS18B20];   //History over time
-#endif
+  #ifdef ESP_GALERIA
+    #define NUM_SENSORS_DS18B20 3
+    uint8_t ds18b20Probes[8 * NUM_SENSORS_DS18B20] = {
+      0x28, 0x5E, 0x59, 0x01, 0x00, 0x00, 0x80, 0x46,
+      0x28, 0x88, 0x45, 0x01, 0x00, 0x00, 0x80, 0x6D,
+      0x28, 0x16, 0x42, 0x01, 0x00, 0x00, 0x80, 0x9E,
+    };
+  #endif
+  std::list<double> ds18b20_tempSamples_arr[NUM_SENSORS_DS18B20];   //Collected results per interval
+  std::list<double> ds18b20_tempHistory_arr[NUM_SENSORS_DS18B20];   //History over time
 #endif
 
 // Contadores de tiempo
@@ -315,6 +354,8 @@ int last_sensor_error;
 int last_sensor_ok;
 int last_dht_sensed;         //The last time a sample was taken from the DHT22 sensor.
 int last_bme_sensed;         //The last time a sample was taken from the BME280 sensor.
+int last_bh1750_sensed;         //The last time a sample was taken from the BH1750 sensor.
+int last_htu21_sensed;         //The last time a sample was taken from the HTU21 sensor.
 int last_ds18b20_sensed;     //The last time a sample was taken from the DS18b20 sensors.
 int error_counter_dht;
 
@@ -377,12 +418,25 @@ void setup()
 #ifdef DHTPIN
   setup_dht_sensor();
 #endif
-#ifdef PIN_I2C_BME280_SDA
-  setup_bme280_sensor();
-#endif
+
 #ifdef ONE_WIRE_BUS
   setup_dallas_sensors();
 #endif
+
+// I2c sensors
+#ifdef PIN_I2C_SDA
+  Wire.begin();
+#endif
+#ifdef WITH_BME280
+  setup_bme280_sensor();
+#endif
+#ifdef WITH_HTU21
+  setup_htu21_sensor();
+#endif
+#ifdef WITH_BH1750
+  setup_bh1750_light_sensor();
+#endif
+
   setup_boolean_sensors();
 
   if (VERBOSE) {
@@ -400,6 +454,7 @@ void loop()
   bool sensor_ok = false;
   bool sensed_data = false;
   bool bin_publish = false;
+  bool sensor_publish = false;
   int mqtt_retries = 0;
 
   //Reconnect if disconnected.
@@ -444,11 +499,24 @@ void loop()
 #ifdef ONE_WIRE_BUS
   sample_ds18b20_sensor_data(&sensed_data, &sensor_ok);
 #endif
-#ifdef PIN_I2C_BME280_SDA
+#ifdef WITH_BME280
   sample_bme280_sensor_data(&sensed_data, &sensor_ok);
 #endif
+#ifdef WITH_HTU21
+  sample_htu21_sensor_data(&sensed_data, &sensor_ok);
+#endif
+#ifdef WITH_BH1750
+  sample_bh1750_sensor_data(&sensed_data, &sensor_ok);
+#endif
 
-  if (publish_analog_light_at_delta() || publish_dht22_sensor_data() || publish_bme280_sensor_data() || publish_ds18b20_sensor_data())
+  sensor_publish = publish_analog_light_at_delta();
+  sensor_publish = publish_dht22_sensor_data() || sensor_publish;
+  sensor_publish = publish_bme280_sensor_data() || sensor_publish;
+  sensor_publish = publish_htu21_sensor_data() || sensor_publish;
+  sensor_publish = publish_bh1750_sensor_data() || sensor_publish;
+
+//  if (publish_analog_light_at_delta() || publish_dht22_sensor_data() || publish_bme280_sensor_data() || publish_ds18b20_sensor_data())
+  if (sensor_publish)
   {
     set_state(STATE_OK_PUBLISH);
   }
@@ -766,7 +834,7 @@ void sample_bme280_sensor_data(bool *sampled, bool *sample_ok)
   *sampled = false;
   *sample_ok = false;
 
-#ifdef PIN_I2C_BME280_SDA
+#ifdef WITH_BME280
   // Collect the sensor data
   if (sinceStart - last_bme_sensed > RESULTS_SAMPLE_RATE * 1000)
   {
@@ -804,6 +872,65 @@ void sample_bme280_sensor_data(bool *sampled, bool *sample_ok)
     if (!temp | !humid | !pressure)
       *sample_ok = false;
     last_bme_sensed = sinceStart;
+  }
+#endif
+}
+
+void sample_bh1750_sensor_data(bool *sampled, bool *sample_ok)
+{
+  *sampled = false;
+  *sample_ok = false;
+
+#ifdef WITH_BH1750
+  // Collect the sensor data
+  if (sinceStart - last_bh1750_sensed > RESULTS_SAMPLE_RATE * 1000)
+  {
+    uint16_t light_level = bh1750_light_sensor.readLightLevel();
+
+    if (VERBOSE) {
+      Serial.print("Light: ");
+      Serial.print(light_level);
+      Serial.println(" lux");
+    }
+    if (light_level)
+    {
+      *sampled = true;
+      *sample_ok = true;
+      bh1750_lightSamples.push_front((double)light_level);
+      last_bh1750_sensed = sinceStart;
+    }
+  }
+#endif
+}
+
+void sample_htu21_sensor_data(bool *sampled, bool *sample_ok)
+{
+  *sampled = false;
+  *sample_ok = false;
+
+#ifdef WITH_HTU21
+  // Collect the sensor data
+  if (sinceStart - last_htu21_sensed > RESULTS_SAMPLE_RATE * 1000)
+  {
+    float humd = htu21_sensor.readHumidity();
+    float temp = htu21_sensor.readTemperature();
+
+    if (humd > 0 & humd <= 100. & temp > -25.)
+    {
+      *sampled = true;
+      *sample_ok = true;
+      if (VERBOSE) {
+        Serial.print("Temp: ");
+        Serial.print(temp);
+        Serial.print(" ^C, ");
+        Serial.print("Humidity: ");
+        Serial.print(humd);
+        Serial.println(" %");
+      }
+      htu21_tempSamples.push_front((double)temp);
+      htu21_humidSamples.push_front((double)humd);
+      last_htu21_sensed = sinceStart;
+    }
   }
 #endif
 }
@@ -913,6 +1040,8 @@ void setup_timers()
   last_dht_sensed = 0;                //The last time a sample was taken from the DHT22 sensor.
   last_ds18b20_sensed = 0;
   last_bme_sensed = 0;
+  last_bh1750_sensed = 0;
+  last_htu21_sensed = 0;
   error_counter_dht = 1;
 
   // Init values to wait some time before the 1st publish.
@@ -987,7 +1116,7 @@ void setup_dht_sensor()
 }
 #endif
 
-#ifdef PIN_I2C_BME280_SDA
+#ifdef WITH_BME280
 void setup_bme280_sensor()
 {
   bool bme_status;
@@ -1013,6 +1142,27 @@ void setup_bme280_sensor()
   bme.setSampling(Adafruit_BME280::MODE_FORCED, Adafruit_BME280::SAMPLING_X1, Adafruit_BME280::SAMPLING_X1, Adafruit_BME280::SAMPLING_X1, Adafruit_BME280::FILTER_OFF, Adafruit_BME280::STANDBY_MS_1000);
 
   delay(100); // let sensor boot up
+}
+#endif
+
+#ifdef WITH_BH1750
+void setup_bh1750_light_sensor()
+{
+  //bh1750_light_sensor.begin(BH1750_CONTINUOUS_HIGH_RES_MODE);
+
+  //bh1750_light_sensor.configure(BH1750_ONE_TIME_HIGH_RES_MODE);
+  //bh1750_light_sensor.configure(BH1750_ONE_TIME_HIGH_RES_MODE_2);
+
+  // OK:
+  //bh1750_light_sensor.configure(BH1750_CONTINUOUS_HIGH_RES_MODE);
+  bh1750_light_sensor.configure(BH1750_CONTINUOUS_HIGH_RES_MODE_2);
+}
+#endif
+
+#ifdef WITH_HTU21
+void setup_htu21_sensor()
+{
+  htu21_sensor.begin();
 }
 #endif
 
@@ -1114,14 +1264,14 @@ void setup_boolean_sensors()
 void connectWiFi()
 {
   elapsedMillis wifi_try = 0;
-#ifdef USE_ESP32
+//#ifdef USE_ESP32
   //char *pass = (char*) malloc(strlen(WiFiPSK));
   //strcpy(pass, WiFiPSK);
-  WiFi.begin((char *)WiFiSSID, (const char *)WiFiPSK);
-#else
+//  WiFi.begin((char *)WiFiSSID, (const char *)WiFiPSK);
+//#else
   WiFi.mode(WIFI_STA);
   WiFi.begin(WiFiSSID, WiFiPSK);
-#endif
+//#endif
 
   if (VERBOSE) {
     Serial.print("Attempting to connect to WPA SSID: ");
@@ -1305,7 +1455,7 @@ bool publish_dht22_sensor_data()
 bool publish_bme280_sensor_data()
 {
   bool publishing_t = false, publishing_h = false, publishing_p = false;
-#ifdef PIN_I2C_BME280_SDA
+#ifdef WITH_BME280
   //post MQTT BME280 data every X seconds
   if (sinceStart - last_temp_post > MQTT_POSTINTERVAL_BME280_SEC * 1000)
   {
@@ -1338,6 +1488,52 @@ bool publish_bme280_sensor_data()
   }
 #endif
   return publishing_t || publishing_h || publishing_p;
+}
+
+bool publish_htu21_sensor_data()
+{
+  bool publishing_t = false, publishing_h = false;
+#ifdef WITH_HTU21
+  //post MQTT data every X seconds
+  if (sinceStart - last_temp_post > MQTT_POSTINTERVAL_HTV21_SEC * 1000)
+  {
+    calc_sensor_stats(&htu21_tempSamples, &htu21_tempHistory);
+    if (htu21_tempHistory.size() > 0)
+      publishing_t = publish_mqtt_data("TEMP", mqtt_temp_topic,
+                                       String(htu21_tempHistory.front()).c_str(), false);
+    if (publishing_t)
+      last_temp_post = sinceStart;
+  }
+
+  if (sinceStart - last_humid_post > MQTT_POSTINTERVAL_HTV21_SEC * 1000)
+  {
+    calc_sensor_stats(&htu21_humidSamples, &htu21_humidHistory);
+    if (htu21_humidHistory.size() > 0)
+      publishing_h = publish_mqtt_data("HUMID", mqtt_humid_topic,
+                                       String(htu21_humidHistory.front()).c_str(), false);
+    if (publishing_h)
+      last_humid_post = sinceStart;
+  }
+#endif
+  return publishing_t || publishing_h;
+}
+
+bool publish_bh1750_sensor_data()
+{
+  bool publishing = false;
+#ifdef WITH_BH1750
+  //post MQTT BME280 data every X seconds
+  if (sinceStart - last_light_analog_post > MQTT_POSTINTERVAL_BH1750_SEC * 1000)
+  {
+    calc_sensor_stats(&bh1750_lightSamples, &bh1750_lightHistory);
+    if (bh1750_lightHistory.size() > 0)
+      publishing = publish_mqtt_data("LIGHT_LUX", mqtt_light_lux_topic,
+                                       String(bh1750_lightHistory.front()).c_str(), false);
+    if (publishing)
+      last_light_analog_post = sinceStart;
+  }
+#endif
+  return publishing;
 }
 
 bool publish_ds18b20_sensor_data()
