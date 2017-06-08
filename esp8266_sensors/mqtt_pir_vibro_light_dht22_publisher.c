@@ -63,7 +63,7 @@
   - v1.4: BME280 temperature + humidity + pressure sensor (much better than the DHT variants!);
         switch ON/OFF Leds & binary sensors with mqtt (MQTT switches for HA)
   - v1.5: BH1750 digital light sensor; HTU21 digital temp + humid sensor.
-  - v1.6:
+  - v1.6: SH1106 mini OLED 128x64 (in ESP32+OLED)
 
   ### Librerías:
 
@@ -80,6 +80,7 @@
   - SparkFunHTU21D.h
   - OneWire.h
   - DallasTemperature.h
+  - SH1106.h
 */
 //**********************************
 //** USER SETTINGS *****************
@@ -124,24 +125,28 @@
 // Master switches:
 
 #define USE_ESP32
+#define MINIOLED
 
 //#define ESP_TEST1
 #define ESP_DEBUG
 //#define ESP_COCINA
 //#define TEST_ESP32
 //#define ESP_GALERIA
-#define PIN_I2C_SDA                  4     //D2
-#define PIN_I2C_SCL                  5     //D1
+
+// en ESP32 LOLIN + OLED:
+#define PIN_I2C_SDA                  5
+#define PIN_I2C_SCL                  4
 
 //**********************************
 
 #ifdef ESP_DEBUG
   #define WITH_BH1750
-  #define WITH_HTU21
+  //#define WITH_HTU21
   #define WITH_BME280
-  #define LED_RGB_RED                         2      //IO02
-  #define LED_RGB_GREEN                       4      //IO04
-  #define LED_RGB_BLUE                        16     //IO16
+  #define PIN_PIR                               12
+  //#define LED_RGB_RED                         2      //IO02
+  //#define LED_RGB_GREEN                       4      //IO04
+  //#define LED_RGB_BLUE                        16     //IO16
 #endif
 
 #ifdef TEST_ESP32
@@ -203,6 +208,7 @@
 //** Configuración *****************
 //**********************************
 #define VERBOSE                             true
+#define OLED_CONTRAST                       1   // 255
 
 #define DELTA_TEMP_BME280                   -.3  // Temperature offset for BME280 (self-heating!)
 
@@ -211,7 +217,7 @@
 #define MQTT_POSTINTERVAL_BH1750_SEC        30
 #define MQTT_POSTINTERVAL_HTV21_SEC         30
 #define MQTT_POSTINTERVAL_DS18B20_SEC       20
-#define MQTT_POSTINTERVAL_LIGHT_SEC         45
+#define MQTT_POSTINTERVAL_LIGHT_SEC         30
 
 #define DELAY_MIN_MS_ENTRE_MOVS             5000
 #define DELAY_MIN_MS_ENTRE_VIBRO_SENSOR     4000
@@ -222,8 +228,8 @@
 #define PERSISTENT_STATE_MS_UNTIL_STANDBY   2000
 
 //Settings for recording samples
-#define RESULTS_SAMPLE_RATE                 8            // # seconds between samples
-#define SENSOR_HISTORY_RECORDS              10           // # records to keep
+#define RESULTS_SAMPLE_RATE                 5            // # seconds between samples
+#define SENSOR_HISTORY_RECORDS              20           // # records to keep
 #define NUM_MAX_ERRORS_DHT                  20           // Abort on max
 
 //**********************************
@@ -233,6 +239,9 @@
 #include <PubSubClient.h>
 #include <elapsedMillis.h>
 #include <list>
+#ifdef MINIOLED
+  #include "SH1106.h"
+#endif
 #ifdef USE_ESP32
   #include "WiFi.h"
 #else
@@ -317,11 +326,14 @@ bool in_default_state_binary_sensors = HIGH;
 
 //Light digital I2c sensor - BH1750
 #ifdef WITH_BH1750
+  BH1750 bh1750_light_sensor(BH1750_ADDR);
   std::list<double> bh1750_lightSamples;   //Collected results per interval
   std::list<double> bh1750_lightHistory;   //History over time.
-  BH1750 bh1750_light_sensor(BH1750_ADDR);
 #endif
 
+#ifdef MINIOLED
+  SH1106 display(0x3c, 5, 4);
+#endif
 
 // ###################################################
 // DALLAS DS18b20 SENSORS
@@ -350,8 +362,7 @@ DeviceAddress Probe03 = { 0x28, 0x5E, 0x59, 0x01, 0x00, 0x00, 0x80, 0x46 };
 
 // Contadores de tiempo
 elapsedMillis sinceStart;
-int last_sensor_error;
-int last_sensor_ok;
+int last_oled_update;
 int last_dht_sensed;         //The last time a sample was taken from the DHT22 sensor.
 int last_bme_sensed;         //The last time a sample was taken from the BME280 sensor.
 int last_bh1750_sensed;         //The last time a sample was taken from the BH1750 sensor.
@@ -406,13 +417,25 @@ void setup()
   setup_timers();
   setup_leds();
   set_state(STATE_INIT);
+#ifdef MINIOLED
+  setup_mini_oled();
+  draw_status_oled(1, false, false, false, false, true);
+  append_text_status_oled(5, 5, "SETUP", ArialMT_Plain_24);
+#endif
   connectWiFi();
+  draw_status_oled(15, true, false, false, false, true);
+  append_text_status_oled(5, 5, WiFiSSID, ArialMT_Plain_24);
 
   //Get the mac and convert it to a string.
   WiFi.macAddress(MAC_array);
   for (int i = 0; i < sizeof(MAC_array); ++i)
   {
     sprintf(MAC_char, "%s%02x", MAC_char, MAC_array[i]);
+  }
+  append_text_status_oled(0, 30, MAC_char, ArialMT_Plain_16);
+  if (VERBOSE) {
+    Serial.print("MAC ADRESS: ");
+    Serial.println(MAC_char);
   }
 
 #ifdef DHTPIN
@@ -425,8 +448,12 @@ void setup()
 
 // I2c sensors
 #ifdef PIN_I2C_SDA
-  Wire.begin();
+  #ifndef MINIOLED
+    Wire.begin();
+  #endif
+//  i2c_scanner();
 #endif
+
 #ifdef WITH_BME280
   setup_bme280_sensor();
 #endif
@@ -436,14 +463,10 @@ void setup()
 #ifdef WITH_BH1750
   setup_bh1750_light_sensor();
 #endif
-
   setup_boolean_sensors();
-
-  if (VERBOSE) {
-    Serial.print("MAC ADRESS: ");
-    Serial.println(MAC_char);
-  }
   set_state(STATE_CRITICAL);
+  if (VERBOSE)
+    Serial.println("SETUP COMPLETE");
 }
 
 //**********************************
@@ -453,94 +476,107 @@ void loop()
 {
   bool sensor_ok = false;
   bool sensed_data = false;
-  bool bin_publish = false;
-  bool sensor_publish = false;
-  int mqtt_retries = 0;
+  bool bin_publish, sensor_publish;
 
   //Reconnect if disconnected.
-  if (WiFi.status() != WL_CONNECTED)
-  {
-    set_state(STATE_CRITICAL);
-    connectWiFi();
-  }
+  check_wifi_status_and_reconnect();
 
   //Check the MQTT connection and process it
-  if (!client.connected())
-  {
-    while (!client.connected())
-    {
-      if (!client.connect((MQTT_USERID + String(MAC_char)).c_str(), MQTT_USER, MQTT_PASSWORD,
-                          (MQTT_WILLTOPIC + String(MAC_char)).c_str(), MQTT_WILLQOS,
-                          MQTT_WILLRETAIN, MQTT_STATE_OFF))
-      {
-        set_state(STATE_ERROR);
-        if (VERBOSE)
-        {
-          Serial.print(i_text_state_pubsubclient(client.state()));
-          Serial.print("MQTT retry # ");
-          Serial.println(mqtt_retries);
-        }
-        delay(DELAY_MS_BETWEEN_RETRIES);
-      }
-      mqtt_retries += 1;
-    }
-    client.subscribe((mqtt_control_topic + String(MAC_char) + mqtt_switch_bin_sensors_subtopic + mqtt_subtopic_set).c_str());
-    client.subscribe((mqtt_control_topic + String(MAC_char) + mqtt_switch_leds_subtopic + mqtt_subtopic_set).c_str());
-    client.subscribe((MQTT_WILLTOPIC + String(MAC_char)).c_str());
-    publish_switch_states();
-  }
-  client.loop();
+  check_mqtt_client_status_and_reconnect();
 
+  //Handle binary sensors (with IRQ)
   turn_off_motion_sensors_after_delay();
   bin_publish = publish_binary_sensors_if_flag_or_delta();
-#ifdef DHTPIN
-  sample_dht22_sensor_data(&sensed_data, &sensor_ok);
-#endif
-#ifdef ONE_WIRE_BUS
-  sample_ds18b20_sensor_data(&sensed_data, &sensor_ok);
-#endif
-#ifdef WITH_BME280
-  sample_bme280_sensor_data(&sensed_data, &sensor_ok);
-#endif
-#ifdef WITH_HTU21
-  sample_htu21_sensor_data(&sensed_data, &sensor_ok);
-#endif
-#ifdef WITH_BH1750
-  sample_bh1750_sensor_data(&sensed_data, &sensor_ok);
-#endif
 
+  // Sample sensor data
+  sample_dht22_sensor_data(&sensed_data, &sensor_ok);
+  sample_ds18b20_sensor_data(&sensed_data, &sensor_ok);
+  sample_bme280_sensor_data(&sensed_data, &sensor_ok);
+  sample_htu21_sensor_data(&sensed_data, &sensor_ok);
+  sample_bh1750_sensor_data(&sensed_data, &sensor_ok);
+
+  // MQTT sensor data publish
   sensor_publish = publish_analog_light_at_delta();
   sensor_publish = publish_dht22_sensor_data() || sensor_publish;
   sensor_publish = publish_bme280_sensor_data() || sensor_publish;
   sensor_publish = publish_htu21_sensor_data() || sensor_publish;
   sensor_publish = publish_bh1750_sensor_data() || sensor_publish;
 
-//  if (publish_analog_light_at_delta() || publish_dht22_sensor_data() || publish_bme280_sensor_data() || publish_ds18b20_sensor_data())
+  // OLED Display update
+  if ((sensed_data && sensor_ok) || sensor_publish || bin_publish)
+  {
+    float temp = -100, humid = -100, pressure = -100, light = -100;
+
+    draw_status_oled(200, true, true, sensed_data && sensor_ok, sensor_publish || bin_publish, true);
+    i_get_oled_values(sensor_publish, &temp, &humid, &pressure, &light);
+    draw_ambient_oled(temp, humid, pressure, light);
+    last_oled_update = sinceStart;
+  }
+
+  // RGB LED state
   if (sensor_publish)
-  {
     set_state(STATE_OK_PUBLISH);
-  }
   else if (sensed_data && sensor_ok)
-  {
     set_state(STATE_OK_MEASURE);
-  }
   else if (sensed_data)
-  {
     set_state(STATE_WARN);
-  }
   else if (bin_publish)
-  {
     set_state(STATE_BIN_PUBLISH);
-  }
   else
-  {
     auto_standby();
-  }
 }
 
 //**********************************
 //** METHODS
 //**********************************
+
+void i_get_oled_values(bool publishing, float *temp, float *humid, float *pressure, float *light)
+{
+#ifdef DHTPIN
+  if (publishing && tempHistory.size() > 0)
+    *temp = (float)tempHistory.front();
+  else if (publishing && tempSamples.size() > 0)
+    *temp = (float)tempSamples.front();
+  if (publishing && humidHistory.size() > 0)
+    *humid = (float)humidHistory.front();
+  else if (humidSamples.size() > 0)
+    *humid = (float)humidSamples.front();
+#endif
+#ifdef WITH_HTU21
+  if (publishing && htu21_tempHistory.size() > 0)
+    *temp = (float)htu21_tempHistory.front();
+  else if (htu21_tempSamples.size() > 0)
+    *temp = (float)htu21_tempSamples.front();
+  if (publishing && htu21_humidHistory.size() > 0)
+    *humid = (float)htu21_humidHistory.front();
+  else if (htu21_humidSamples.size() > 0)
+    *humid = (float)htu21_humidSamples.front();
+#endif
+#ifdef WITH_BME280
+  if (publishing && bme_tempHistory.size() > 0)
+    *temp = (float)bme_tempHistory.front();
+  else if (bme_tempSamples.size() > 0)
+    *temp = (float)bme_tempSamples.front();
+  if (publishing && bme_humidHistory.size() > 0)
+    *humid = (float)bme_humidHistory.front();
+  else if (bme_humidSamples.size() > 0)
+    *humid = (float)bme_humidSamples.front();
+  if (publishing && bme_pressureHistory.size() > 0)
+    *pressure = (float)bme_pressureHistory.front();
+  else if (bme_pressureSamples.size() > 0)
+    *pressure = (float)bme_pressureSamples.front();
+#endif
+#ifdef WITH_BH1750
+  if (publishing && bh1750_lightHistory.size() > 0)
+    *light = (float)bh1750_lightHistory.front();
+  if (bh1750_lightSamples.size() > 0)
+    *light = (float)bh1750_lightSamples.front();
+#endif
+#ifdef PIN_LIGHT_SENSOR_ANALOG
+  *light = read_analog_light_percentage();
+#endif
+}
+
 const char *i_text_state_pubsubclient(int state)
 {
   //Returns the current state of the client. If a connection attempt fails, this can be used to get more information about the failure.
@@ -803,7 +839,6 @@ void sample_dht22_sensor_data(bool *sampled, bool *sample_ok)
       }
       dht.begin();
       dht.temperature().getSensor(&sensor);
-      last_sensor_error = sinceStart;
       error_counter_dht += 1;
       *sample_ok = false;
 
@@ -812,7 +847,6 @@ void sample_dht22_sensor_data(bool *sampled, bool *sample_ok)
     }
     else
     {
-      last_sensor_ok = sinceStart;
       *sample_ok = true;
       error_counter_dht = 0;
 
@@ -1035,8 +1069,7 @@ void setup_timers()
 {
   sinceStart = 0;
   last_state_change = 0;
-  last_sensor_error = 0;
-  last_sensor_ok = 0;
+  last_oled_update = 0;
   last_dht_sensed = 0;                //The last time a sample was taken from the DHT22 sensor.
   last_ds18b20_sensed = 0;
   last_bme_sensed = 0;
@@ -1081,6 +1114,152 @@ void setup_leds()
 #endif
 #endif
 }
+
+#ifdef MINIOLED
+void setup_mini_oled()
+{
+  display.init();
+  display.clear();
+  display.flipScreenVertically();
+  display.setContrast(OLED_CONTRAST);
+}
+#endif
+
+#ifdef MINIOLED
+void drawStatusBool(uint8_t index, bool status)
+{
+  if (status)
+//    display.fillRect(DISPLAY_WIDTH - 12, index * DISPLAY_HEIGHT / 4, 10, DISPLAY_HEIGHT / 4);
+    display.fillCircle(DISPLAY_WIDTH - 10, index * DISPLAY_HEIGHT / 4 + DISPLAY_HEIGHT / 8, 6);
+  else
+//    (int16_t x, int16_t y, int16_t radius);
+    display.drawCircle(DISPLAY_WIDTH - 10, index * DISPLAY_HEIGHT / 4 + DISPLAY_HEIGHT / 8, 6);
+//    display.drawRect(DISPLAY_WIDTH - 12, index * DISPLAY_HEIGHT / 4, 10, DISPLAY_HEIGHT / 4);
+  display.display();
+}
+#endif
+
+void draw_ambient_oled(double temp, double humid, double pressure, double light)
+{
+#ifdef MINIOLED
+  //display.clear();
+  if (temp > -25)
+  {
+    String s_temp;
+    s_temp = String(temp, 1) + "C";
+    display.setFont(ArialMT_Plain_24);
+    display.drawString(0, 0, s_temp);
+  }
+  if (humid > 0)
+  {
+    String s_humid;
+    s_humid = String(humid, 1) + "%";
+    display.setFont(ArialMT_Plain_16);
+    display.drawString(0, 26, s_humid);
+  }
+  if (light > 0)
+  {
+    String s_light;
+    s_light = String(light, 0) + "lx";
+    display.setFont(ArialMT_Plain_16);
+    display.drawString(58, 26, s_light);
+  }
+  display.setFont(ArialMT_Plain_10);
+  if (pressure > 0)
+  {
+    String s_press;
+    s_press = String(pressure, 0) + "mb";
+    display.drawString(72, 8, s_press);
+  }
+  display.display();
+#endif
+}
+
+void draw_status_oled(uint8_t progress,
+                      bool wifi, bool mqtt, bool sensed, bool publish,
+                      bool clear_display)
+{
+#ifdef MINIOLED
+  if (clear_display)
+    display.clear();
+  if (progress <= 100)
+  {
+    display.drawProgressBar(0, DISPLAY_HEIGHT - 6, DISPLAY_WIDTH - 25, 5, progress);
+  }
+  else
+  {
+#ifdef PIN_PIR
+    display.setFont(ArialMT_Plain_10);
+    display.drawString(0, 50, String("MOV: "));
+    if (pir_state)
+      display.fillRect(40, 52, 60, 10);
+    else
+      display.drawRect(40, 52, 60, 10);
+#endif
+  }
+  display.setColor(BLACK);
+  display.fillRect(DISPLAY_WIDTH - 12, 0, 12, DISPLAY_HEIGHT);
+  display.setColor(WHITE);
+  drawStatusBool(0, wifi);
+  drawStatusBool(1, mqtt);
+  drawStatusBool(2, sensed);
+  drawStatusBool(3, publish);
+#endif
+}
+
+void append_text_status_oled(uint16_t x, uint16_t y, const char *text, const char *font)
+{
+#ifdef MINIOLED
+  display.setFont(font);
+  display.drawString(x, y, text);
+  display.display();
+#endif
+}
+
+#ifdef PIN_I2C_SDA
+void i2c_scanner()
+{
+  byte error, address;
+  int nDevices;
+
+  Serial.println("\nI2C Scanner:");
+  Serial.println("Scanning...");
+
+  nDevices = 0;
+  for(address = 1; address < 127; address++ )
+  {
+    // The i2c_scanner uses the return value of
+    // the Write.endTransmisstion to see if
+    // a device did acknowledge to the address.
+    Wire.beginTransmission(address);
+    error = Wire.endTransmission();
+
+    if (error == 0)
+    {
+      Serial.print("I2C device found at address 0x");
+      if (address<16)
+        Serial.print("0");
+      Serial.print(address,HEX);
+      Serial.println("  !");
+
+      nDevices++;
+    }
+    else if (error==4)
+    {
+      Serial.print("Unknown error at address 0x");
+      if (address<16)
+        Serial.print("0");
+      Serial.println(address,HEX);
+    }
+  }
+  if (nDevices == 0)
+    Serial.println("No I2C devices found\n");
+  else
+    Serial.println("done\n");
+
+  delay(200);
+}
+#endif
 
 #ifdef DHTPIN
 void setup_dht_sensor()
@@ -1148,11 +1327,10 @@ void setup_bme280_sensor()
 #ifdef WITH_BH1750
 void setup_bh1750_light_sensor()
 {
+  // not working?:
   //bh1750_light_sensor.begin(BH1750_CONTINUOUS_HIGH_RES_MODE);
-
   //bh1750_light_sensor.configure(BH1750_ONE_TIME_HIGH_RES_MODE);
   //bh1750_light_sensor.configure(BH1750_ONE_TIME_HIGH_RES_MODE_2);
-
   // OK:
   //bh1750_light_sensor.configure(BH1750_CONTINUOUS_HIGH_RES_MODE);
   bh1750_light_sensor.configure(BH1750_CONTINUOUS_HIGH_RES_MODE_2);
@@ -1295,6 +1473,23 @@ void connectWiFi()
   set_state(STATE_STANDBY);
 }
 
+void check_wifi_status_and_reconnect()
+{
+  if (WiFi.status() != WL_CONNECTED)
+  {
+    if (VERBOSE)
+      Serial.print(".");
+    set_state(STATE_CRITICAL);
+    draw_status_oled(5, false, false, false, false, true);
+    connectWiFi();
+    draw_status_oled(25, true, false, false, false, true);
+    append_text_status_oled(5, 5, WiFiSSID, ArialMT_Plain_24);
+    append_text_status_oled(0, 35, MAC_char, ArialMT_Plain_16);
+    if (VERBOSE)
+       Serial.println("OK");
+  }
+}
+
 void printWifiStatus()
 {
   // print the SSID of the network you're attached to
@@ -1327,6 +1522,48 @@ void reset_exec()
 //**********************************
 //** MQTT
 //**********************************
+void check_mqtt_client_status_and_reconnect()
+{
+  int mqtt_retries = 0;
+
+  //Check the MQTT connection and process it
+  if (!client.connected())
+  {
+    Serial.print("No MQTT ");
+    draw_status_oled(50, true, false, false, false, true);
+    append_text_status_oled(5, 5, "No MQTT", ArialMT_Plain_24);
+    append_text_status_oled(0, 35, MAC_char, ArialMT_Plain_16);
+    while (!client.connected())
+    {
+      if (VERBOSE)
+        Serial.print("-");
+      if (!client.connect((MQTT_USERID + String(MAC_char)).c_str(), MQTT_USER, MQTT_PASSWORD,
+                          (MQTT_WILLTOPIC + String(MAC_char)).c_str(), MQTT_WILLQOS,
+                          MQTT_WILLRETAIN, MQTT_STATE_OFF))
+      {
+        set_state(STATE_ERROR);
+        if (VERBOSE)
+        {
+          Serial.print(i_text_state_pubsubclient(client.state()));
+          Serial.print("MQTT retry # ");
+          Serial.println(mqtt_retries);
+        }
+        delay(DELAY_MS_BETWEEN_RETRIES);
+      }
+      mqtt_retries += 1;
+    }
+    client.subscribe((mqtt_control_topic + String(MAC_char) + mqtt_switch_bin_sensors_subtopic + mqtt_subtopic_set).c_str());
+    client.subscribe((mqtt_control_topic + String(MAC_char) + mqtt_switch_leds_subtopic + mqtt_subtopic_set).c_str());
+    client.subscribe((MQTT_WILLTOPIC + String(MAC_char)).c_str());
+    if (VERBOSE)
+       Serial.println("OK");
+    publish_switch_states();
+    draw_status_oled(75, true, true, false, false, true);
+    append_text_status_oled(5, 30, ("MQTT ok #" + String(mqtt_retries)).c_str(), ArialMT_Plain_16);
+  }
+  client.loop();
+}
+
 void publish_switch_states()
 {
   if (!in_default_state_binary_sensors && (sinceStart - last_switch_bin_state_post > DELAY_MS_BETWEEN_MQTT_PUB_STATE))
