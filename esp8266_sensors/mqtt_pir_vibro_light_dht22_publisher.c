@@ -123,30 +123,28 @@
 //** comment to deactivate        **
 //**********************************
 // Master switches:
-
 #define USE_ESP32
-#define MINIOLED
+//#define MINIOLED
 
+#define TEST_ESP32_HVT
 //#define ESP_TEST1
-#define ESP_DEBUG
+//#define ESP32_DEBUG_OLED
 //#define ESP_COCINA
 //#define TEST_ESP32
 //#define ESP_GALERIA
 
 // en ESP32 LOLIN + OLED:
-#define PIN_I2C_SDA                  5
-#define PIN_I2C_SCL                  4
+#define PIN_I2C_SDA
+//#define PIN_I2C_SDA                  5
+//#define PIN_I2C_SCL                  4
 
 //**********************************
 
-#ifdef ESP_DEBUG
+#ifdef ESP32_DEBUG_OLED
   #define WITH_BH1750
   //#define WITH_HTU21
   #define WITH_BME280
   #define PIN_PIR                               12
-  //#define LED_RGB_RED                         2      //IO02
-  //#define LED_RGB_GREEN                       4      //IO04
-  //#define LED_RGB_BLUE                        16     //IO16
 #endif
 
 #ifdef TEST_ESP32
@@ -160,6 +158,15 @@
   #define PIN_VIBRO                           22     //IO22
   #define PIN_LIGHT_SENSOR_DIGITAL            34     //IO34
   #define PIN_LIGHT_SENSOR_ANALOG             35
+#endif
+
+#ifdef TEST_ESP32_HVT
+  #define WITH_BH1750
+  #define WITH_HTU21
+  #define WITH_BME280
+  #define LED_RGB_RED                         2      //IO02
+  #define LED_RGB_GREEN                       4      //IO04
+  #define LED_RGB_BLUE                        16     //IO16
 #endif
 
 #ifdef ESP_TEST1
@@ -423,8 +430,10 @@ void setup()
   append_text_status_oled(5, 5, "SETUP", ArialMT_Plain_24);
 #endif
   connectWiFi();
+#ifdef MINIOLED
   draw_status_oled(15, true, false, false, false, true);
   append_text_status_oled(5, 5, WiFiSSID, ArialMT_Plain_24);
+#endif
 
   //Get the mac and convert it to a string.
   WiFi.macAddress(MAC_array);
@@ -432,7 +441,9 @@ void setup()
   {
     sprintf(MAC_char, "%s%02x", MAC_char, MAC_array[i]);
   }
+#ifdef MINIOLED
   append_text_status_oled(0, 30, MAC_char, ArialMT_Plain_16);
+#endif
   if (VERBOSE) {
     Serial.print("MAC ADRESS: ");
     Serial.println(MAC_char);
@@ -451,7 +462,7 @@ void setup()
   #ifndef MINIOLED
     Wire.begin();
   #endif
-//  i2c_scanner();
+  i2c_scanner();
 #endif
 
 #ifdef WITH_BME280
@@ -1483,8 +1494,10 @@ void check_wifi_status_and_reconnect()
     draw_status_oled(5, false, false, false, false, true);
     connectWiFi();
     draw_status_oled(25, true, false, false, false, true);
+#ifdef MINIOLED
     append_text_status_oled(5, 5, WiFiSSID, ArialMT_Plain_24);
     append_text_status_oled(0, 35, MAC_char, ArialMT_Plain_16);
+#endif
     if (VERBOSE)
        Serial.println("OK");
   }
@@ -1530,9 +1543,11 @@ void check_mqtt_client_status_and_reconnect()
   if (!client.connected())
   {
     Serial.print("No MQTT ");
+#ifdef MINIOLED
     draw_status_oled(50, true, false, false, false, true);
-    append_text_status_oled(5, 5, "No MQTT", ArialMT_Plain_24);
     append_text_status_oled(0, 35, MAC_char, ArialMT_Plain_16);
+    append_text_status_oled(5, 5, "No MQTT", ArialMT_Plain_24);
+#endif
     while (!client.connected())
     {
       if (VERBOSE)
@@ -1558,8 +1573,10 @@ void check_mqtt_client_status_and_reconnect()
     if (VERBOSE)
        Serial.println("OK");
     publish_switch_states();
+#ifdef MINIOLED
     draw_status_oled(75, true, true, false, false, true);
     append_text_status_oled(5, 30, ("MQTT ok #" + String(mqtt_retries)).c_str(), ArialMT_Plain_16);
+#endif
   }
   client.loop();
 }
