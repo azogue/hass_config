@@ -151,8 +151,8 @@ class BME280:
                  delta_temp=DEFAULT_DELTA_TEMP,
                  spi3w_en=0):  # 3-wire SPI Disable):
         # Sensor location
-        self.bus = bus
-        self.i2c_add = int(i2c_address, 0)
+        self._bus = bus
+        self._i2c_add = int(i2c_address, 0)
 
         # BME280 parameters
         self.mode = mode
@@ -175,7 +175,7 @@ class BME280:
             _LOGGER.info(
                 'Created BME280 sensor at i2c:0x{:0x}, OS: {}xT, '
                 '{}xP {}xH, mode {}, standby {}, filter {}'
-                .format(self.i2c_add, osrs_t, osrs_p, osrs_h,
+                .format(self._i2c_add, osrs_t, osrs_p, osrs_h,
                         mode, t_sb, filter_mode))
         except OSError as exc:
             _LOGGER.warning("OSError trying to write data in i2c bus: %s", exc)
@@ -262,11 +262,15 @@ class BME280:
         calibration_h = []
         raw_data = []
 
-        for i in range(0x88, 0x88 + 24):
-            raw_data.append(self.bus.read_byte_data(self.i2c_add, i))
-        raw_data.append(self.bus.read_byte_data(self.i2c_add, 0xA1))
-        for i in range(0xE1, 0xE1 + 7):
-            raw_data.append(self.bus.read_byte_data(self.i2c_add, i))
+        try:
+            for i in range(0x88, 0x88 + 24):
+                raw_data.append(self._bus.read_byte_data(self._i2c_add, i))
+            raw_data.append(self._bus.read_byte_data(self._i2c_add, 0xA1))
+            for i in range(0xE1, 0xE1 + 7):
+                raw_data.append(self._bus.read_byte_data(self._i2c_add, i))
+        except OSError as exc:
+            _LOGGER.error("Can't populate calibration data: %s", exc)
+            return
 
         calibration_t.append((raw_data[1] << 8) | raw_data[0])
         calibration_t.append((raw_data[3] << 8) | raw_data[2])
@@ -318,25 +322,30 @@ class BME280:
         In normal mode simply does new measurements periodically.
         """
         # set to forced mode, i.e. "take next measurement"
-        self.bus.write_byte_data(self.i2c_add, 0xF4, self.ctrl_meas_reg)
-        while self.bus.read_byte_data(self.i2c_add, 0xF3) & 0x08:
+        self._bus.write_byte_data(self._i2c_add, 0xF4, self.ctrl_meas_reg)
+        while self._bus.read_byte_data(self._i2c_add, 0xF3) & 0x08:
             asyncio.sleep(0.005)
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self, first_reading=False):
         """Read raw data and update compensated variables."""
-        if first_reading:
-            self.bus.write_byte_data(self.i2c_add, 0xF2, self.ctrl_hum_reg)
-            self.bus.write_byte_data(self.i2c_add, 0xF5, self.config_reg)
-            self.bus.write_byte_data(self.i2c_add, 0xF4, self.ctrl_meas_reg)
-            self._populate_calibration_data()
+        try:
+            if first_reading:
+                self._bus.write_byte_data(self._i2c_add, 0xF2, self.ctrl_hum_reg)
+                self._bus.write_byte_data(self._i2c_add, 0xF5, self.config_reg)
+                self._bus.write_byte_data(self._i2c_add, 0xF4, self.ctrl_meas_reg)
+                self._populate_calibration_data()
 
-        if self.mode == 2:  # MODE_FORCED
-            self._take_forced_measurement()
+            if self.mode == 2:  # MODE_FORCED
+                self._take_forced_measurement()
 
-        data = []
-        for i in range(0xF7, 0xF7 + 8):
-            data.append(self.bus.read_byte_data(self.i2c_add, i))
+            data = []
+            for i in range(0xF7, 0xF7 + 8):
+                data.append(self._bus.read_byte_data(self._i2c_add, i))
+        except OSError as exc:
+            _LOGGER.warning("Bad update: %s", exc)
+            return
+
         pres_raw = (data[0] << 12) | (data[1] << 4) | (data[2] >> 4)
         temp_raw = (data[3] << 12) | (data[4] << 4) | (data[5] >> 4)
         hum_raw = (data[6] << 8) | data[7]
