@@ -258,7 +258,6 @@ def get_last_data_request(host,
 ##########################################
 # ENERPI TILES: REMOTE PNGs:
 ##########################################
-@asyncio.coroutine
 def _check_if_tile_changed(new_png_content_b, path_png_file):
     new_content = True
     if os.path.exists(path_png_file):
@@ -452,7 +451,8 @@ class EnerpiTileCam(LocalFile):
         if new_tile is not None:
             toc = time()
             self._last_tile_generation = dt.datetime.now()
-            changed = yield from _check_if_tile_changed(new_tile, self._file_path)
+            changed = yield from self.hass.async_add_job(
+                partial(_check_if_tile_changed, new_tile, self._file_path))
             LOGGER.debug('ENERPI: {} PNG TILE generated. Changed:{}; TOOK {:.2f} sec'
                          .format(self._mag, changed, toc - tic))
         else:
