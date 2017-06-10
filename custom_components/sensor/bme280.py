@@ -1,24 +1,12 @@
-# -*- coding: utf-8 -*-
 """
 Support for BME280 temperature, humidity and pressure sensor.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.bme280/
-
-- Enable I2C
-...
-- Add user homeassistant to group i2c
-...
-
-- Install [smbus-cffi](https://pypi.python.org/pypi/smbus-cffi/)
-```
-sudo apt-get install build-essential libi2c-dev i2c-tools python-dev libffi-dev
-pip3 install smbus-cffi
-```
 """
 import asyncio
-import logging
 from datetime import timedelta
+import logging
 
 import voluptuous as vol
 
@@ -30,7 +18,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 from homeassistant.util.temperature import celsius_to_fahrenheit
 
-REQUIREMENTS = ['smbus-cffi>=0.5.1']
+REQUIREMENTS = ['smbus-cffi==0.5.1']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -47,31 +35,31 @@ CONF_DELTA_TEMP = 'delta_temperature'
 DEFAULT_NAME = 'BME280 Sensor'
 DEFAULT_I2C_ADDRESS = '0x76'
 DEFAULT_I2C_BUS = 1
-DEFAULT_OVERSAMPLING_TEMP = 1       # Temperature oversampling x 1
-DEFAULT_OVERSAMPLING_PRES = 1       # Pressure oversampling x 1
-DEFAULT_OVERSAMPLING_HUM = 1        # Humidity oversampling x 1
-DEFAULT_OPERATION_MODE = 3          # Normal mode (forced mode: 2)
-DEFAULT_T_STANDBY = 5               # Tstandby 1000ms
-DEFAULT_FILTER_MODE = 0             # Filter off
+DEFAULT_OVERSAMPLING_TEMP = 1  # Temperature oversampling x 1
+DEFAULT_OVERSAMPLING_PRES = 1  # Pressure oversampling x 1
+DEFAULT_OVERSAMPLING_HUM = 1  # Humidity oversampling x 1
+DEFAULT_OPERATION_MODE = 3  # Normal mode (forced mode: 2)
+DEFAULT_T_STANDBY = 5  # Tstandby 5ms
+DEFAULT_FILTER_MODE = 0  # Filter off
 DEFAULT_DELTA_TEMP = 0.
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=3)
 
-SENSOR_TEMPERATURE = 'temperature'
-SENSOR_HUMIDITY = 'humidity'
-SENSOR_PRESSURE = 'pressure'
+SENSOR_TEMP = 'temperature'
+SENSOR_HUMID = 'humidity'
+SENSOR_PRESS = 'pressure'
 SENSOR_TYPES = {
-    SENSOR_TEMPERATURE: ['Temperature', None],
-    SENSOR_HUMIDITY: ['Humidity', '%'],
-    SENSOR_PRESSURE: ['Pressure', 'mb']
+    SENSOR_TEMP: ['Temperature', None],
+    SENSOR_HUMID: ['Humidity', '%'],
+    SENSOR_PRESS: ['Pressure', 'mb']
 }
+DEFAULT_MONITORED = [SENSOR_TEMP, SENSOR_HUMID, SENSOR_PRESS]
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_I2C_ADDRESS, default=DEFAULT_I2C_ADDRESS): cv.string,
-    vol.Optional(CONF_MONITORED_CONDITIONS,
-                 default=[SENSOR_TEMPERATURE, SENSOR_HUMIDITY, SENSOR_PRESSURE]
-                 ): vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
+    vol.Optional(CONF_MONITORED_CONDITIONS, default=DEFAULT_MONITORED):
+        vol.All(cv.ensure_list, [vol.In(SENSOR_TYPES)]),
     vol.Optional(CONF_I2C_BUS, default=DEFAULT_I2C_BUS): vol.Coerce(int),
     vol.Optional(CONF_OVERSAMPLING_TEMP,
                  default=DEFAULT_OVERSAMPLING_TEMP): vol.Coerce(int),
@@ -94,7 +82,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up the BME280 sensor."""
-    SENSOR_TYPES[SENSOR_TEMPERATURE][1] = hass.config.units.temperature_unit
+    SENSOR_TYPES[SENSOR_TEMP][1] = hass.config.units.temperature_unit
     name = config.get(CONF_NAME)
     i2c_address = config.get(CONF_I2C_ADDRESS)
 
@@ -134,12 +122,6 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 class BME280:
     """BME280 sensor working in i2C bus."""
 
-    # Calibration data
-    _calibration_t = None
-    _calibration_h = None
-    _calibration_p = None
-    _temp_fine = None
-
     def __init__(self, bus,
                  i2c_address=DEFAULT_I2C_ADDRESS,
                  osrs_t=DEFAULT_OVERSAMPLING_TEMP,
@@ -150,6 +132,7 @@ class BME280:
                  filter_mode=DEFAULT_FILTER_MODE,
                  delta_temp=DEFAULT_DELTA_TEMP,
                  spi3w_en=0):  # 3-wire SPI Disable):
+        """Initialize the sensor."""
         # Sensor location
         self._bus = bus
         self._i2c_add = int(i2c_address, 0)
@@ -164,6 +147,12 @@ class BME280:
         self._with_pressure = osrs_p > 0
         self._with_humidity = osrs_h > 0
 
+        # Calibration data
+        self._calibration_t = None
+        self._calibration_h = None
+        self._calibration_p = None
+        self._temp_fine = None
+
         # Sensor data
         self._temperature = None
         self._humidity = None
@@ -172,26 +161,26 @@ class BME280:
         try:
             self.update(True)
             self.detected = True
-            _LOGGER.info(
-                'Created BME280 sensor at i2c:0x{:0x}, OS: {}xT, '
-                '{}xP {}xH, mode {}, standby {}, filter {}'
-                .format(self._i2c_add, osrs_t, osrs_p, osrs_h,
-                        mode, t_sb, filter_mode))
+            _LOGGER.debug(
+                'Created BME280 sensor with oversampling: %sxT, '
+                '%sxP %sxH, mode %s, standby %s, filter %s',
+                osrs_t, osrs_p, osrs_h, mode, t_sb, filter_mode)
         except OSError as exc:
             _LOGGER.warning("OSError trying to write data in i2c bus: %s", exc)
 
     def _compensate_temperature(self, adc_t):
-        """Formula from datasheet Bosch BME280 Environmental sensor.
+        """Compensate temperature.
 
+        Formula from datasheet Bosch BME280 Environmental sensor.
         8.1 Compensation formulas in double precision floating point
         Edition BST-BME280-DS001-10 | Revision 1.1 | May 2015
         """
-        v1 = ((adc_t / 16384.0 - self.calibration_t[0] / 1024.0)
-              * self.calibration_t[1])
-        v2 = ((adc_t / 131072.0 - self.calibration_t[0] / 8192.0)
-              * (adc_t / 131072.0 - self.calibration_t[0] / 8192.0)
-              * self.calibration_t[2])
-        self._temp_fine = v1 + v2
+        var_1 = ((adc_t / 16384.0 - self._calibration_t[0] / 1024.0)
+                 * self._calibration_t[1])
+        var_2 = ((adc_t / 131072.0 - self._calibration_t[0] / 8192.0)
+                 * (adc_t / 131072.0 - self._calibration_t[0] / 8192.0)
+                 * self._calibration_t[2])
+        self._temp_fine = var_1 + var_2
         if self._delta_temp != 0.:  # temperature correction for self heating
             temp = self._temp_fine / 5120.0 + self._delta_temp
             self._temp_fine = temp * 5120.0
@@ -200,40 +189,43 @@ class BME280:
         return temp
 
     def _compensate_pressure(self, adc_p):
-        """Formula from datasheet Bosch BME280 Environmental sensor.
+        """Compensate pressure.
 
+        Formula from datasheet Bosch BME280 Environmental sensor.
         8.1 Compensation formulas in double precision floating point
         Edition BST-BME280-DS001-10 | Revision 1.1 | May 2015.
         """
-        v1 = (self._temp_fine / 2.0) - 64000.0
-        v2 = (((v1 / 4.0) * (v1 / 4.0)) / 2048) * self.calibration_p[5]
-        v2 += ((v1 * self.calibration_p[4]) * 2.0)
-        v2 = (v2 / 4.0) + (self.calibration_p[3] * 65536.0)
-        v1 = (((self.calibration_p[2]
-                * (((v1 / 4.0) * (v1 / 4.0)) / 8192)) / 8)
-              + ((self.calibration_p[1] * v1) / 2.0)
-              ) / 262144
-        v1 = ((32768 + v1) * self.calibration_p[0]) / 32768
+        var_1 = (self._temp_fine / 2.0) - 64000.0
+        var_2 = ((var_1 / 4.0) * (var_1 / 4.0)) / 2048
+        var_2 *= self._calibration_p[5]
+        var_2 += ((var_1 * self._calibration_p[4]) * 2.0)
+        var_2 = (var_2 / 4.0) + (self._calibration_p[3] * 65536.0)
+        var_1 = (((self._calibration_p[2]
+                   * (((var_1 / 4.0) * (var_1 / 4.0)) / 8192)) / 8)
+                 + ((self._calibration_p[1] * var_1) / 2.0))
+        var_1 /= 262144
+        var_1 = ((32768 + var_1) * self._calibration_p[0]) / 32768
 
-        if v1 == 0:
+        if var_1 == 0:
             return 0
 
-        pressure = ((1048576 - adc_p) - (v2 / 4096)) * 3125
+        pressure = ((1048576 - adc_p) - (var_2 / 4096)) * 3125
         if pressure < 0x80000000:
-            pressure = (pressure * 2.0) / v1
+            pressure = (pressure * 2.0) / var_1
         else:
-            pressure = (pressure / v1) * 2
+            pressure = (pressure / var_1) * 2
 
-        v1 = (self.calibration_p[8]
-              * (((pressure / 8.0) * (pressure / 8.0)) / 8192.0)) / 4096
-        v2 = ((pressure / 4.0) * self.calibration_p[7]) / 8192.0
-        pressure += ((v1 + v2 + self.calibration_p[6]) / 16.0)
+        var_1 = (self._calibration_p[8]
+                 * (((pressure / 8.0) * (pressure / 8.0)) / 8192.0)) / 4096
+        var_2 = ((pressure / 4.0) * self._calibration_p[7]) / 8192.0
+        pressure += ((var_1 + var_2 + self._calibration_p[6]) / 16.0)
 
         return pressure / 100
 
     def _compensate_humidity(self, adc_h):
-        """Formula from datasheet Bosch BME280 Environmental sensor.
+        """Compensate humidity.
 
+        Formula from datasheet Bosch BME280 Environmental sensor.
         8.1 Compensation formulas in double precision floating point
         Edition BST-BME280-DS001-10 | Revision 1.1 | May 2015.
         """
@@ -241,12 +233,12 @@ class BME280:
         if var_h == 0:
             return 0
 
-        var_h = ((adc_h - (self.calibration_h[3] * 64.0 +
-                           self.calibration_h[4] / 16384.0 * var_h))
-                 * (self.calibration_h[1] / 65536.0
-                    * (1.0 + self.calibration_h[5] / 67108864.0 * var_h
-                       * (1.0 + self.calibration_h[2] / 67108864.0 * var_h))))
-        var_h *= 1.0 - self.calibration_h[0] * var_h / 524288.0
+        var_h = ((adc_h - (self._calibration_h[3] * 64.0 +
+                           self._calibration_h[4] / 16384.0 * var_h))
+                 * (self._calibration_h[1] / 65536.0
+                    * (1.0 + self._calibration_h[5] / 67108864.0 * var_h
+                       * (1.0 + self._calibration_h[2] / 67108864.0 * var_h))))
+        var_h *= 1.0 - self._calibration_h[0] * var_h / 524288.0
 
         if var_h > 100.0:
             var_h = 100.0
@@ -256,7 +248,10 @@ class BME280:
         return var_h
 
     def _populate_calibration_data(self):
-        """From datasheet Bosch BME280 Environmental sensor."""
+        """Populate calibration data.
+
+        From datasheet Bosch BME280 Environmental sensor.
+        """
         calibration_t = []
         calibration_p = []
         calibration_h = []
@@ -310,12 +305,13 @@ class BME280:
                 if calibration_h[i] & 0x8000:
                     calibration_h[i] = (-calibration_h[i] ^ 0xFFFF) + 1
 
-        self.calibration_t = calibration_t
-        self.calibration_h = calibration_h
-        self.calibration_p = calibration_p
+        self._calibration_t = calibration_t
+        self._calibration_h = calibration_h
+        self._calibration_p = calibration_p
 
     def _take_forced_measurement(self):
-        """
+        """Take a forced measurement.
+
         In forced mode, the BME sensor goes back to sleep after each
         measurement and we need to set it to forced mode once at this point,
         so it will take the next measurement and then return to sleep again.
@@ -331,9 +327,12 @@ class BME280:
         """Read raw data and update compensated variables."""
         try:
             if first_reading:
-                self._bus.write_byte_data(self._i2c_add, 0xF2, self.ctrl_hum_reg)
-                self._bus.write_byte_data(self._i2c_add, 0xF5, self.config_reg)
-                self._bus.write_byte_data(self._i2c_add, 0xF4, self.ctrl_meas_reg)
+                self._bus.write_byte_data(
+                    self._i2c_add, 0xF2, self.ctrl_hum_reg)
+                self._bus.write_byte_data(
+                    self._i2c_add, 0xF5, self.config_reg)
+                self._bus.write_byte_data(
+                    self._i2c_add, 0xF4, self.ctrl_meas_reg)
                 self._populate_calibration_data()
 
             if self.mode == 2:  # MODE_FORCED
@@ -343,7 +342,7 @@ class BME280:
             for i in range(0xF7, 0xF7 + 8):
                 data.append(self._bus.read_byte_data(self._i2c_add, i))
         except OSError as exc:
-            _LOGGER.warning("Bad update: %s", exc)
+            _LOGGER.warning("Bad sensor update: %s", exc)
             return
 
         pres_raw = (data[0] << 12) | (data[1] << 4) | (data[2] >> 4)
@@ -403,19 +402,19 @@ class BME280Sensor(Entity):
     @asyncio.coroutine
     def async_update(self):
         """Get the latest data from the BME280 and update the states."""
-        self.bme280_client.update()
-        if self.type == SENSOR_TEMPERATURE and self.bme280_client.temperature:
+        yield from self.hass.async_add_job(self.bme280_client.update)
+        if self.type == SENSOR_TEMP and self.bme280_client.temperature:
             temperature = round(self.bme280_client.temperature, 2)
             if (temperature >= -20) and (temperature < 80):
                 self._state = temperature
                 if self.temp_unit == TEMP_FAHRENHEIT:
                     self._state = round(celsius_to_fahrenheit(temperature), 1)
-        elif self.type == SENSOR_HUMIDITY and self.bme280_client.humidity:
+        elif self.type == SENSOR_HUMID and self.bme280_client.humidity:
             humidity = round(self.bme280_client.humidity, 2)
             if (humidity >= 0) and (humidity <= 100):
                 self._state = humidity
-        elif self.type == SENSOR_PRESSURE and self.bme280_client.pressure:
+        elif self.type == SENSOR_PRESS and self.bme280_client.pressure:
             pressure = round(self.bme280_client.pressure, 2)
             self._state = pressure
         else:
-            _LOGGER.warning("Bad Update of sensor.%s_%s", self.name, self.type)
+            _LOGGER.warning("Bad Update of sensor.%s", self.name)
