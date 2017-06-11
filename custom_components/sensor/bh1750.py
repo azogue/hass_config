@@ -24,36 +24,36 @@ CONF_I2C_BUS = 'i2c_bus'
 CONF_OPERATION_MODE = 'operation_mode'
 CONF_DELAY = 'measurement_delay_ms'
 
+# Operation modes for BH1750 sensor (from the datasheet). Time typically 120ms
+# In one time measurements, device is set to Power Down after each sample.
+CONTINUOUS_LOW_RES_MODE = "continuous_low_res_mode",
+CONTINUOUS_HIGH_RES_MODE_1 = "continuous_high_res_mode_1",
+CONTINUOUS_HIGH_RES_MODE_2 = "continuous_high_res_mode_2",
+ONE_TIME_HIGH_RES_MODE_1 = "one_time_high_res_mode_1",
+ONE_TIME_HIGH_RES_MODE_2 = "one_time_high_res_mode_2",
+ONE_TIME_LOW_RES_MODE = "one_time_low_res_mode"
+OPERATION_MODES = {
+    CONTINUOUS_LOW_RES_MODE: (0x13, True),  # 4lx resolution
+    CONTINUOUS_HIGH_RES_MODE_1: (0x10, True),  # 0.5lx resolution.
+    CONTINUOUS_HIGH_RES_MODE_2: (0X11, True),  # 1lx resolution.
+    ONE_TIME_HIGH_RES_MODE_1: (0x20, False),  # 0.5lx resolution.
+    ONE_TIME_HIGH_RES_MODE_2: (0x21, False),  # 0.5lx resolution.
+    ONE_TIME_LOW_RES_MODE: (0x23, False),  # 4lx resolution.
+}
+
 SENSOR_UNIT = 'lx'
 DEFAULT_NAME = 'BH1750 Light Sensor'
 DEFAULT_I2C_ADDRESS = '0x23'
 DEFAULT_I2C_BUS = 1
-DEFAULT_MODE = "continuous_high_res_mode_1"
+DEFAULT_MODE = CONTINUOUS_HIGH_RES_MODE_1
 DEFAULT_DELAY_MS = 120
-
-# Operation modes for BH1750 sensor (from the datasheet). Time typically 120ms
-CONTINUOUS_LOW_RES_MODE = 0x13  # Start measurement at 1lx resolution
-CONTINUOUS_HIGH_RES_MODE_1 = 0x10  # Start measurement at 0.5lx resolution.
-CONTINUOUS_HIGH_RES_MODE_2 = 0x11  # Start measurement at 1lx resolution.
-# In one time measurements, device is set to Power Down after each measurement.
-ONE_TIME_HIGH_RES_MODE_1 = 0x20  # Start measurement at 0.5lx resolution.
-ONE_TIME_HIGH_RES_MODE_2 = 0x21  # Start measurement at 0.5lx resolution.
-ONE_TIME_LOW_RES_MODE = 0x23  # Start measurement at 1lx resolution.
-
-OPERATION_MODES = {
-    "continuous_low_res_mode": CONTINUOUS_LOW_RES_MODE,
-    "continuous_high_res_mode_1": CONTINUOUS_HIGH_RES_MODE_1,
-    "continuous_high_res_mode_2": CONTINUOUS_HIGH_RES_MODE_2,
-    "one_time_high_res_mode_1": ONE_TIME_HIGH_RES_MODE_1,
-    "one_time_high_res_mode_2": ONE_TIME_HIGH_RES_MODE_2,
-    "one_time_low_res_mode": ONE_TIME_LOW_RES_MODE
-}
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     vol.Optional(CONF_I2C_ADDRESS, default=DEFAULT_I2C_ADDRESS): cv.string,
     vol.Optional(CONF_I2C_BUS, default=DEFAULT_I2C_BUS): vol.Coerce(int),
-    vol.Optional(CONF_OPERATION_MODE, default=DEFAULT_MODE): cv.string,
+    vol.Optional(CONF_OPERATION_MODE, default=DEFAULT_MODE):
+        vol.In(OPERATION_MODES.keys()),
     vol.Optional(CONF_DELAY, default=DEFAULT_DELAY_MS): cv.positive_int,
 })
 
@@ -77,7 +77,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         return False
 
     sensor = BH1750(bus, i2c_address, operation_mode, measurement_delay)
-    if not sensor.detected:
+    if not sensor.sample_ok:
         _LOGGER.error("BH1750 sensor not detected at %s", i2c_address)
         return False
 
@@ -99,13 +99,13 @@ class BH1750:
                  operation_mode=DEFAULT_MODE,
                  measurement_delay=DEFAULT_DELAY_MS):
         """Initialize the sensor."""
-        self.ok = False
+        self._ok = False
         self._bus = bus
         self._i2c_add = addr
         self._mode = None
         self._delay = measurement_delay / 1000.
-        self.operation_mode = OPERATION_MODES[operation_mode]
-        self.continuous_sampling = operation_mode.startswith('continuous')
+        self._operation_mode = OPERATION_MODES[operation_mode][0]
+        self._continuous_sampling = OPERATION_MODES[operation_mode][1]
         self._power_down()
         self._mtreg = None
         self.set_sensitivity()
@@ -120,10 +120,10 @@ class BH1750:
         self._mode = mode
         try:
             self._bus.write_byte(self._i2c_add, self._mode)
-            self.ok = True
+            self._ok = True
         except OSError as exc:
             _LOGGER.error("Bad writing in bus: %s", exc)
-            self.ok = False
+            self._ok = False
 
     def _power_down(self):
         self._set_mode(self.POWER_DOWN)
@@ -137,9 +137,9 @@ class BH1750:
         self._set_mode(self.RESET)
 
     @property
-    def detected(self) -> bool:
-        """Sensor is working ok."""
-        return self.ok
+    def sample_ok(self) -> bool:
+        """Return sensor ok state."""
+        return self._ok
 
     @property
     def sensitivity(self) -> int:
@@ -166,10 +166,10 @@ class BH1750:
         """Return current measurement result in lx."""
         try:
             data = self._bus.read_word_data(self._i2c_add, self._mode)
-            self.ok = True
+            self._ok = True
         except OSError as exc:
             _LOGGER.error("Bad reading in bus: %s", exc)
-            self.ok = False
+            self._ok = False
             return -1
 
         count = data >> 8 | (data & 0xff) << 8
@@ -177,30 +177,22 @@ class BH1750:
         ratio = 1 / (1.2 * (self._mtreg / 69.0) * mode2coeff)
         return ratio * count
 
-    def _wait_for_result(self, additional=0):
+    def _wait_for_result(self):
         """Wait for the sensor to be ready for measurement."""
         basetime = 0.018 if (self._mode & 0x03) == 0x03 else 0.128
-        time.sleep(basetime * (self._mtreg / 69.0) + additional)
-
-    def do_measurement(self, mode, additional_delay=0) -> float:
-        """Perform a complete measurement specified by parameter mode.
-
-        Return output value in lux.
-        """
-        _LOGGER.debug('Measurement mode: %s, ∆s: %s, last: %.1f',
-                      mode, additional_delay, self.light_level)
-        if not self.continuous_sampling \
-                or self.light_level < 0 \
-                or mode != self._mode:
-            self._reset()
-            self._set_mode(mode)
-            self._wait_for_result(additional=additional_delay)
-        return self._get_result()
+        time.sleep(basetime * (self._mtreg / 69.0) + self._delay)
 
     def update(self):
-        """Update the measured light level."""
-        self.light_level = self.do_measurement(
-            self.operation_mode, self._delay)
+        """Update the measured light level in lux."""
+        if not self._continuous_sampling \
+                or self.light_level < 0 \
+                or self._operation_mode != self._mode:
+            self._reset()
+            self._set_mode(self._operation_mode)
+            self._wait_for_result()
+        self.light_level = self._get_result()
+        _LOGGER.debug('Measurement mode: %s, ∆s: %s, last: %.1f',
+                      self._operation_mode, self._delay, self.light_level)
 
 
 class BH1750Sensor(Entity):

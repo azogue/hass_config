@@ -1,4 +1,3 @@
-#!/usr/bin/python3
 # -*- coding: utf-8 -*-
 """
 Support for HTU21D temperature and humidity sensor.
@@ -6,27 +5,20 @@ Support for HTU21D temperature and humidity sensor.
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.htu21d/
 
+DATASHEET: htu21d sensor
+http://www.datasheetspdf.com/datasheet/download.php?id=779951,
+http://www.datasheetspdf.com/PDF/HTU21D/779951/1
 http://www.te.com/commerce/DocumentDelivery/DDEController?Action=showdoc
 &DocId=Data+Sheet%7FHPC199_6%7FA%7Fpdf%7FEnglish%7FENG_DS_HPC199_6_A.pdf
 %7FCAT-HSC0004
 
-http://www.datasheetspdf.com/datasheet/download.php?id=779951,
-http://www.datasheetspdf.com/PDF/HTU21D/779951/1
-
-DATASHEET: htu21d sensor
-- Enable I2C
-...
-- Add user homeassistant to group i2c
-...
-
-- Install [smbus-cffi](https://pypi.python.org/pypi/smbus-cffi/)
-```
-sudo apt-get install build-essential libi2c-dev i2c-tools python-dev libffi-dev
-pip3 install smbus-cffi
-```
+http://www.te.com/commerce/DocumentDelivery/DDEController?Action=showdoc
+&DocId=Data+Sheet%7FHPC199_6%7FA%7Fpdf%7FEnglish%7FENG_DS_HPC199_6_A.pdf
+%7FCAT-HSC0004
 """
 import asyncio
 from datetime import timedelta
+from math import log10
 import logging
 import time
 
@@ -38,7 +30,7 @@ from homeassistant.const import CONF_NAME, TEMP_CELSIUS
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 
-REQUIREMENTS = ['smbus-cffi>=0.5.1']
+REQUIREMENTS = ['smbus-cffi==0.5.1']
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -94,6 +86,7 @@ class HTU21D:
     """Implement HTU21D communication."""
 
     def __init__(self, bus):
+        """Initialize the sensor handler."""
         # TODO quitar debug
         self.counter_updates = 0
         self.counter_ok = 0
@@ -172,7 +165,6 @@ class HTU21D:
         if self.valid_measurement:
             coef_a, coef_b, coef_c = 8.1332, 1762.39, 235.66
             part_press = 10 ** (coef_a - coef_b / (self.temperature + coef_c))
-            from math import log10
             dp = - coef_c
             dp -= coef_b / (log10(self.humidity * part_press / 100.) - coef_a)
             return dp
@@ -215,9 +207,12 @@ class HTU21D:
         self.counter_updates += 1
         if self.valid_measurement:
             self.counter_ok += 1
-        _LOGGER.debug('UPDATED: {:.2f} ºC, {:.2f} %. #{} / ok:{} - Tª rocío: {:.2f}'
+        _LOGGER.debug('BME280 values: {:.2f} ºC, {:.2f} %. '
+                      'Dew point: {:.2f} '
+                      '#{} / ok:{}'
                       .format(self.temperature, self.humidity,
-                              self.counter_updates, self.counter_ok, self.dew_point_temperature))
+                              self.dew_point_temperature,
+                              self.counter_updates, self.counter_ok))
 
 
 class HTU21DSensor(Entity):
@@ -261,14 +256,3 @@ class HTU21DSensor(Entity):
         _LOGGER.debug('sensor %s update #%s finished in %.3f: %s %s',
                       self.name, self._client.counter_updates, toc - tic,
                       self._state, self.unit_of_measurement)
-
-
-if __name__ == "__main__":
-    # noinspection PyUnresolvedReferences
-    import smbus
-
-    b = smbus.SMBus(1)
-    s = HTU21D(b)
-    s.update()
-    print("Temp: %s C" % s.temperature)
-    print("Humid: %s %% rH" % s.humidity)
