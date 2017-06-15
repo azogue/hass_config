@@ -26,11 +26,11 @@ CONF_DELAY = 'measurement_delay_ms'
 
 # Operation modes for BH1750 sensor (from the datasheet). Time typically 120ms
 # In one time measurements, device is set to Power Down after each sample.
-CONTINUOUS_LOW_RES_MODE = "continuous_low_res_mode",
-CONTINUOUS_HIGH_RES_MODE_1 = "continuous_high_res_mode_1",
-CONTINUOUS_HIGH_RES_MODE_2 = "continuous_high_res_mode_2",
-ONE_TIME_HIGH_RES_MODE_1 = "one_time_high_res_mode_1",
-ONE_TIME_HIGH_RES_MODE_2 = "one_time_high_res_mode_2",
+CONTINUOUS_LOW_RES_MODE = "continuous_low_res_mode"
+CONTINUOUS_HIGH_RES_MODE_1 = "continuous_high_res_mode_1"
+CONTINUOUS_HIGH_RES_MODE_2 = "continuous_high_res_mode_2"
+ONE_TIME_HIGH_RES_MODE_1 = "one_time_high_res_mode_1"
+ONE_TIME_HIGH_RES_MODE_2 = "one_time_high_res_mode_2"
 ONE_TIME_LOW_RES_MODE = "one_time_low_res_mode"
 OPERATION_MODES = {
     CONTINUOUS_LOW_RES_MODE: (0x13, True),  # 4lx resolution
@@ -53,7 +53,7 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
     vol.Optional(CONF_I2C_ADDRESS, default=DEFAULT_I2C_ADDRESS): cv.string,
     vol.Optional(CONF_I2C_BUS, default=DEFAULT_I2C_BUS): vol.Coerce(int),
     vol.Optional(CONF_OPERATION_MODE, default=DEFAULT_MODE):
-        vol.In(OPERATION_MODES.keys()),
+        vol.In(OPERATION_MODES),
     vol.Optional(CONF_DELAY, default=DEFAULT_DELAY_MS): cv.positive_int,
 })
 
