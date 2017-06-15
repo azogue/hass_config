@@ -1,20 +1,8 @@
-# -*- coding: utf-8 -*-
 """
 Support for HTU21D temperature and humidity sensor.
 
 For more details about this platform, please refer to the documentation at
 https://home-assistant.io/components/sensor.htu21d/
-
-DATASHEET: htu21d sensor
-http://www.datasheetspdf.com/datasheet/download.php?id=779951,
-http://www.datasheetspdf.com/PDF/HTU21D/779951/1
-http://www.te.com/commerce/DocumentDelivery/DDEController?Action=showdoc
-&DocId=Data+Sheet%7FHPC199_6%7FA%7Fpdf%7FEnglish%7FENG_DS_HPC199_6_A.pdf
-%7FCAT-HSC0004
-
-http://www.te.com/commerce/DocumentDelivery/DDEController?Action=showdoc
-&DocId=Data+Sheet%7FHPC199_6%7FA%7Fpdf%7FEnglish%7FENG_DS_HPC199_6_A.pdf
-%7FCAT-HSC0004
 """
 import asyncio
 from datetime import timedelta
@@ -26,9 +14,10 @@ import voluptuous as vol
 
 from homeassistant.components.sensor import PLATFORM_SCHEMA
 import homeassistant.helpers.config_validation as cv
-from homeassistant.const import CONF_NAME, TEMP_CELSIUS
+from homeassistant.const import CONF_NAME, TEMP_FAHRENHEIT
 from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
+from homeassistant.util.temperature import celsius_to_fahrenheit
 
 REQUIREMENTS = ['smbus-cffi==0.5.1']
 
@@ -38,7 +27,19 @@ CONF_I2C_BUS = 'i2c_bus'
 I2C_ADDRESS = 0x40
 DEFAULT_I2C_BUS = 1
 
-# I2C_SLAVE = 0x0703
+MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=5)
+
+DEFAULT_NAME = 'HTU21D Sensor'
+
+SENSOR_TEMPERATURE = 'temperature'
+SENSOR_HUMIDITY = 'humidity'
+
+PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
+    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+    vol.Optional(CONF_I2C_BUS, default=DEFAULT_I2C_BUS): vol.Coerce(int),
+})
+
+# Byte codes from the data sheet
 CMD_READ_TEMP_HOLD = 0xE3
 CMD_READ_HUM_HOLD = 0xE5
 CMD_READ_TEMP_NOHOLD = 0xF3
@@ -48,15 +49,6 @@ CMD_READ_USER_REG = 0xE7
 CMD_SOFT_RESET = 0xFE
 MEASUREMENT_WAIT_TIME = 0.055
 
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=5)
-
-DEFAULT_NAME = 'HTU21D Sensor'
-
-PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
-    vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-    vol.Optional(CONF_I2C_BUS, default=DEFAULT_I2C_BUS): vol.Coerce(int),
-})
-
 
 # noinspection PyUnusedLocal
 @asyncio.coroutine
@@ -64,6 +56,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up the HTU21D sensor."""
     name = config.get(CONF_NAME)
     bus_number = config.get(CONF_I2C_BUS)
+    temp_unit = hass.config.units.temperature_unit
     try:
         # noinspection PyUnresolvedReferences
         import smbus
@@ -77,8 +70,8 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
         _LOGGER.error("HTU21D sensor not detected in bus %s", bus_number)
         return False
 
-    dev = [HTU21DSensor(sensor, name, 'temperature', TEMP_CELSIUS),
-           HTU21DSensor(sensor, name, 'humidity', '%')]
+    dev = [HTU21DSensor(sensor, name, SENSOR_TEMPERATURE, temp_unit),
+           HTU21DSensor(sensor, name, SENSOR_HUMIDITY, '%')]
     async_add_devices(dev)
 
 
@@ -87,23 +80,14 @@ class HTU21D:
 
     def __init__(self, bus):
         """Initialize the sensor handler."""
-        # TODO quitar debug
-        self.counter_updates = 0
-        self.counter_ok = 0
-
         self._bus = bus
         self.ok = self._soft_reset()
         self.temperature = -255
         self.humidity = -255
-        self.update()
+        if self.ok:
+            self.update()
 
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        # TODO check cierre del bus I2c
-        _LOGGER.info('Exit: dir(bus): %s', str(dir(self._bus)))
-        self._bus.close()
-        # self._power_down()
-
-    def _soft_reset(self):
+    def _soft_reset(self) -> bool:
         try:
             self._bus.write_byte(I2C_ADDRESS, CMD_SOFT_RESET)
             time.sleep(MEASUREMENT_WAIT_TIME)
@@ -118,21 +102,21 @@ class HTU21D:
         return self.ok
 
     @staticmethod
-    def _calc_temp(sensor_temp):
+    def _calc_temp(sensor_temp) -> float:
         t_sensor_temp = sensor_temp / 65536.0
         return -46.85 + (175.72 * t_sensor_temp)
 
     @staticmethod
-    def _calc_humid(sensor_humid):
+    def _calc_humid(sensor_humid) -> float:
         t_sensor_humid = sensor_humid / 65536.0
         return -6.0 + (125.0 * t_sensor_humid)
 
     @staticmethod
-    def _temp_coefficient(rh_actual, temp_actual):
+    def _temp_coefficient(rh_actual, temp_actual) -> float:
         return rh_actual - 0.15 * (25 - temp_actual)
 
     @staticmethod
-    def _crc8check(value):
+    def _crc8check(value) -> bool:
         # Ported from Sparkfun Arduino HTU21D Library:
         # https://github.com/sparkfun/HTU21D_Breakout
         remainder = ((value[0] << 8) + value[1]) << 8
@@ -155,13 +139,13 @@ class HTU21D:
             return False
 
     @property
-    def valid_measurement(self):
+    def valid_measurement(self) -> bool:
         """Return True for a valid measurement data."""
         return self.ok and self.temperature > -100 and self.humidity > -1
 
     @property
-    def dew_point_temperature(self):
-        """Get the dew point temperature for the last measurement."""
+    def dew_point_temperature(self) -> float:
+        """Get the dew point temperature in ºC for the last measurement."""
         if self.valid_measurement:
             coef_a, coef_b, coef_c = 8.1332, 1762.39, 235.66
             part_press = 10 ** (coef_a - coef_b / (self.temperature + coef_c))
@@ -204,15 +188,9 @@ class HTU21D:
                 self.humidity = -255
         else:
             self.temperature = -255
-        self.counter_updates += 1
-        if self.valid_measurement:
-            self.counter_ok += 1
-        _LOGGER.debug('BME280 values: {:.2f} ºC, {:.2f} %. '
-                      'Dew point: {:.2f} '
-                      '#{} / ok:{}'
+        _LOGGER.debug("HTU21D values: {:.2f} ºC, {:.2f} %. Dew point: {:.2f}"
                       .format(self.temperature, self.humidity,
-                              self.dew_point_temperature,
-                              self.counter_updates, self.counter_ok))
+                              self.dew_point_temperature))
 
 
 class HTU21DSensor(Entity):
@@ -241,18 +219,15 @@ class HTU21DSensor(Entity):
         """Return the unit of measurement of the sensor."""
         return self._unit_of_measurement
 
-    # def update(self):
     @asyncio.coroutine
     def async_update(self):
-        """Get the latest data from the HTU21D and update the states."""
-        tic = time.time()
+        """Get the latest data from the HTU21D sensor and update the state."""
         yield from self.hass.async_add_job(self._client.update)
-        value = getattr(self._client, self._variable)
         if self._client.valid_measurement:
-            self._state = round(value, 1)
-        else:
-            _LOGGER.warning("Bad Update of sensor.%s: %s", self.name, value)
-        toc = time.time()
-        _LOGGER.debug('sensor %s update #%s finished in %.3f: %s %s',
-                      self.name, self._client.counter_updates, toc - tic,
-                      self._state, self.unit_of_measurement)
+            if self._variable == SENSOR_TEMPERATURE:
+                value = round(self._client.temperature, 1)
+                if self.unit_of_measurement == TEMP_FAHRENHEIT:
+                    value = celsius_to_fahrenheit(value)
+            else:
+                value = round(self._client.humidity, 1)
+            self._state = value
