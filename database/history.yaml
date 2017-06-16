@@ -7,12 +7,17 @@ include:
   entities:
     - sensor.calefaccion
 
-    - sensor.temperatura_dormitorio_rpi2mpd
-    - sensor.humedad_dormitorio_rpi2mpd
-    - sensor.presion_dormitorio_rpi2mpd
+    - sensor.dormitorio_temperature_rpi2mpd
+    - sensor.dormitorio_humidity_rpi2mpd
+    - sensor.dormitorio_pressure_rpi2mpd
+    - sensor.dormitorio_htu21d_temperature_rpi2mpd
+    - sensor.dormitorio_htu21d_humidity_rpi2mpd
+    - sensor.dormitorio_light_level_rpi2mpd
 
-    - sensor.dht22_humidity_rpi2h
-    - sensor.dht22_temperature_rpi2h
+    - sensor.estudio_temperature_rpi2h
+    - sensor.estudio_humidity_rpi2h
+    - sensor.estudio_pressure_rpi2h
+
 #      - sensor.enerpi
 #      - sensor.enerpi_ldr
 #      - sensor.enerpi_power
@@ -23,13 +28,13 @@ include:
     - sensor.galeria_retorno_calefaccion
 #      - sensor.iphone_battery_level
 #      - sensor.iphone_battery_state
-    - sensor.pressure_rpi2h
+
     - sensor.t_salon
     - sensor.salon_humidity
     - sensor.salon_temperature
     - sensor.salon_pressure
-    - sensor.temperatura_dormitorio_rpi2mpd
-    - sensor.temperatura_estudio_rpi2h
+    - sensor.salon_light_level
+
 #      - sensor.villena_cloud_coverage
 #      - sensor.villena_condition
 #      - sensor.villena_forecast

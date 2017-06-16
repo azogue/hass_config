@@ -13,7 +13,9 @@ homeassistant:
       homebridge_hidden: True
     sensor.hass_cpu_temperature_rpi2mpd:
       homebridge_hidden: True
-    sensor.humedad_dormitorio_rpi2mpd:
+    sensor.dormitorio_humidity_rpi2mpd:
+      homebridge_sensor_type: humidity
+    sensor.dormitorio_htu21d_humidity_rpi2mpd:
       homebridge_sensor_type: humidity
 
 binary_sensor:
@@ -26,15 +28,24 @@ binary_sensor:
 sensor:
   - platform: dummy
     sensors:
-      temperatura_dormitorio_rpi2mpd:
+      dormitorio_temperature_rpi2mpd:
         friendly_name: Temperatura
         unit_of_measurement: '°C'
-      humedad_dormitorio_rpi2mpd:
+      dormitorio_humidity_rpi2mpd:
         friendly_name: Humedad
         unit_of_measurement: '%'
-      presion_dormitorio_rpi2mpd:
+      dormitorio_pressure_rpi2mpd:
         friendly_name: Presión
         unit_of_measurement: 'mb'
+      dormitorio_light_level_rpi2mpd:
+        friendly_name: Iluminación
+        unit_of_measurement: 'lx'
+      dormitorio_htu21d_temperature_rpi2mpd:
+        friendly_name: Temperatura HTU
+        unit_of_measurement: '°C'
+      dormitorio_htu21d_humidity_rpi2mpd:
+        friendly_name: Humedad HTU
+        unit_of_measurement: '%'
 
 media_player:
   - platform: mpd
@@ -51,6 +62,9 @@ group:
       - sensor.dormitorio_temperature_rpi2mpd
       - sensor.dormitorio_humidity_rpi2mpd
       - sensor.dormitorio_pressure_rpi2mpd
+      - sensor.dormitorio_htu21d_temperature_rpi2mpd
+      - sensor.dormitorio_htu21d_humidity_rpi2mpd
+      - sensor.dormitorio_light_level_rpi2mpd
       - binary_sensor.pir_dormitorio_rpi2mpd
       - switch.altavoz
       - switch.calefactor
@@ -59,9 +73,12 @@ group:
     name: Dormitorio
     control: hidden
     entities:
-      - sensor.dormitorio_temperature_rpi2mpd
-      - sensor.dormitorio_humidity_rpi2mpd
-      - sensor.dormitorio_pressure_rpi2mpd
+      - sensor.dormitorio_htu21d_temperature_rpi2mpd
+      - sensor.dormitorio_htu21d_humidity_rpi2mpd
+#      - sensor.dormitorio_temperature_rpi2mpd
+#      - sensor.dormitorio_humidity_rpi2mpd
+#      - sensor.dormitorio_pressure_rpi2mpd
+      - sensor.dormitorio_light_level_rpi2mpd
       - switch.altavoz
       - switch.calefactor
 

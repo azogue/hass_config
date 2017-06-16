@@ -18,6 +18,7 @@ logger:
     homeassistant.components.http: warn
     homeassistant.components.binary_sensor: info
     custom_components.sensor.bme280: info
+#    custom_components.sensor.bh1750: debug
 
 http:
   api_password: !secret hass_pw
@@ -90,31 +91,24 @@ binary_sensor:
     27: PIR Dormitorio
   bouncetime: 50
   pull_mode: "UP"
-#
-#- platform: rpi_gpio
-#  name: sensores digitales
-#  ports:
-##    19: vibration_sensor_dormitorio_raw
-#    26: sound_sensor_dormitorio_raw
-#  bouncetime: 50
-#  pull_mode: "DOWN"
+
 
 sensor:
-#  - platform: myonewire
-#    names:
-#      28-80000001595e: Temperatura Dormitorio
-#    scan_interval: 40
-#    maximum: 50
-#    minimum: 5
-#
-#  - platform: dht
-#    sensor: DHT22
-#    pin: 24
-#    name: dht22_dormitorio
-#    scan_interval: 40
-#    monitored_conditions:
-#      - temperature
-#      - humidity
+# BH1750 in RPI
+  - platform: bh1750
+    name: dormitorio_light_level
+#    operation_mode: continuous_low_res_mode
+#    operation_mode: one_time_high_res_mode_2
+#    measurement_delay_ms: 0
+#    operation_mode: continuous_low_res_mode
+    operation_mode: continuous_high_res_mode_2
+    measurement_delay_ms: 180
+    scan_interval: 30
+
+# HTU21D in RPI
+  - platform: htu21
+    name: Dormitorio htu21d
+    scan_interval: 30
 
   - platform: bme280
     name: Dormitorio
@@ -130,28 +124,6 @@ sensor:
       - humidity
       - pressure
     scan_interval: 30
-
-  # BME280 in RPI
-#  - platform: command_line
-#    name: Temperatura Dormitorio
-#    command: "/usr/local/bin/read_bme280 --temperature --i2c-address 0x77"
-#    unit_of_measurement: "°C"
-#    value_template: '{{ value |replace(" C", "") | round(2) - 1}}'
-#    scan_interval: 30
-#
-#  - platform: command_line
-#    name: Humedad Dormitorio
-#    command: "/usr/local/bin/read_bme280 --humidity --i2c-address 0x77"
-#    unit_of_measurement: "%"
-#    value_template: '{{ value |replace("％", "") | round(2) }}'
-#    scan_interval: 30
-#
-#  - platform: command_line
-#    name: Presión Dormitorio
-#    command: "/usr/local/bin/read_bme280 --pressure --i2c-address 0x77"
-#    unit_of_measurement: "mb"
-#    value_template: '{{ value |replace(" hPa", "") | round(2) }}'
-#    scan_interval: 30
 
   - platform: systemmonitor
     resources:
@@ -247,8 +219,10 @@ group:
     - sensor.dormitorio_temperature
     - sensor.dormitorio_humidity
     - sensor.dormitorio_pressure
+    - sensor.dormitorio_light_level
+    - sensor.dormitorio_htu21d_temperature
+    - sensor.dormitorio_htu21d_humidity
     - binary_sensor.pir_dormitorio
-#    - media_player.mopidy
 
   RPi 2 monitor:
     control: hidden
@@ -265,7 +239,6 @@ group:
       - script.restart_hass
       - script.reboot
       - script.shutdown
-#      - script.tell_me_ambient_data
 
   Links:
     - weblink.master_hass

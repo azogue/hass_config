@@ -10,9 +10,15 @@ homeassistant:
     sensor.salon_humidity:
       friendly_name: Humedad
       icon: mdi:water-percent
+      homebridge_sensor_type: humidity
     sensor.salon_pressure:
       friendly_name: Presión
       icon: mdi:weather-cloudy
+
+    sensor.salon_light_level:
+      friendly_name: Iluminación
+      icon: mdi:lightbulb
+      device_class: light
 
     binary_sensor.pir_salon:
       friendly_name: Movimiento (salón)
@@ -83,6 +89,11 @@ sensor:
   #    - temperature
   #    - humidity
 
+  # BH1750 in RPI
+  - platform: bh1750
+    name: salon_light_level
+    scan_interval: 30
+
   # BME280 in RPI
   - platform: bme280
     name: salon
@@ -119,11 +130,11 @@ sensor:
 #    scan_interval: 30
 
   # Weather sensors:
-  - platform: openweathermap
+  - platform: myopenweathermap
     api_key: !secret openweathermap_api_key
     forecast: 1
     name: Villena
-    scan_interval: 120
+    scan_interval: 180
     monitored_conditions:
       - weather
       - temperature
@@ -144,6 +155,7 @@ group:
       - sensor.salon_temperature
       - sensor.salon_humidity
       - sensor.salon_pressure
+      - sensor.salon_light_level
       - binary_sensor.pir_salon
       - binary_sensor.motioncam_salon
       - switch.camara
@@ -156,7 +168,8 @@ group:
       - sensor.t_salon
       - sensor.salon_temperature
       - sensor.salon_humidity
-      - sensor.salon_pressure
+#      - sensor.salon_pressure
+      - sensor.salon_light_level
       - switch.camara
       - switch.kodi_tv_salon
 

@@ -38,11 +38,19 @@ include:
    - sensor.dormitorio_temperature_rpi2mpd
    - sensor.dormitorio_humidity_rpi2mpd
    - sensor.dormitorio_pressure_rpi2mpd
+   - sensor.dormitorio_htu21d_temperature_rpi2mpd
+   - sensor.dormitorio_htu21d_humidity_rpi2mpd
+   - sensor.dormitorio_light_level_rpi2mpd
+
+   - sensor.estudio_temperature_rpi2h
+   - sensor.estudio_humidity_rpi2h
+   - sensor.estudio_pressure_rpi2h
 
    - sensor.t_salon
    - sensor.salon_temperature
    - sensor.salon_humidity
    - sensor.salon_pressure
+   - sensor.salon_light_level
 
    - sensor.esp1_temperature
    - sensor.esp1_humidity
