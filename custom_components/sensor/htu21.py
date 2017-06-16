@@ -61,7 +61,8 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     if not sensor.sample_ok:
         _LOGGER.error("HTU21D sensor not detected in bus %s", bus_number)
         return False
-    sensor_handler = HTU21DHandler(sensor)
+
+    sensor_handler = yield from hass.async_add_job(HTU21DHandler, sensor)
 
     dev = [HTU21DSensor(sensor_handler, name, SENSOR_TEMPERATURE, temp_unit),
            HTU21DSensor(sensor_handler, name, SENSOR_HUMIDITY, '%')]
@@ -74,6 +75,7 @@ class HTU21DHandler:
     def __init__(self, sensor):
         """Initialize the sensor handler."""
         self.sensor = sensor
+        self.sensor.update()
 
     @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):

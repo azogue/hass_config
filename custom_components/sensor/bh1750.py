@@ -106,7 +106,10 @@ class BH1750Sensor(Entity):
         self._name = name
         self._unit_of_measurement = unit
         self.bh1750_sensor = bh1750_sensor
-        self._state = None
+        if self.bh1750_sensor.light_level >= 0:
+            self._state = int(round(self.bh1750_sensor.light_level))
+        else:
+            self._state = None
 
     @property
     def name(self) -> str:
