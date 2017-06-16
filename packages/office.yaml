@@ -9,17 +9,17 @@ homeassistant:
       friendly_name: Vibración (estudio)
       device_class: vibration
       homebridge_hidden: true
-    binary_sensor.sound_sensor_rpi2h:
-      friendly_name: Sonido (estudio)
-      device_class: sound
-      homebridge_hidden: true
+#    binary_sensor.sound_sensor_rpi2h:
+#      friendly_name: Sonido (estudio)
+#      device_class: sound
+#      homebridge_hidden: true
 
-    sensor.temperature_rpi2h:
-      homebridge_hidden: True
-    sensor.humidity_rpi2h:
-      homebridge_hidden: True
-    sensor.pressure_rpi2h:
-      homebridge_hidden: True
+#    sensor.temperature_rpi2h:
+#      homebridge_hidden: True
+#    sensor.humidity_rpi2h:
+#      homebridge_hidden: True
+#    sensor.pressure_rpi2h:
+#      homebridge_hidden: True
 
     sensor.ram_free_rpi2h:
       homebridge_hidden: True
@@ -49,15 +49,15 @@ binary_sensor:
 sensor:
   - platform: dummy
     sensors:
-      humidity_rpi2h:
-        friendly_name: Humedad SenseHat
-        unit_of_measurement: '%'
-      pressure_rpi2h:
-        friendly_name: Presión SenseHat
-        unit_of_measurement: 'mb'
-      temperature_rpi2h:
-        friendly_name: Temperatura SenseHat
-        unit_of_measurement: '°C'
+#      humidity_rpi2h:
+#        friendly_name: Humedad SenseHat
+#        unit_of_measurement: '%'
+#      pressure_rpi2h:
+#        friendly_name: Presión SenseHat
+#        unit_of_measurement: 'mb'
+#      temperature_rpi2h:
+#        friendly_name: Temperatura SenseHat
+#        unit_of_measurement: '°C'
 
       estudio_temperature_rpi2h:
         friendly_name: Temperatura
@@ -89,9 +89,9 @@ group:
 #      - sensor.temperatura_estudio_rpi2h
 #      - sensor.dht22_temperature_rpi2h
 #      - sensor.dht22_humidity_rpi2h
-      - sensor.temperature_rpi2h
-      - sensor.humidity_rpi2h
-      - sensor.pressure_rpi2h
+#      - sensor.temperature_rpi2h
+#      - sensor.humidity_rpi2h
+#      - sensor.pressure_rpi2h
       - binary_sensor.pir_estudio_rpi2h
       - binary_sensor.motioncam_estudio
       - binary_sensor.vibration_sensor_rpi2h
