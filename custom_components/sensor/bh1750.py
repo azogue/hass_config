@@ -94,7 +94,7 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
 
     dev = [BH1750Sensor(sensor, name, SENSOR_UNIT)]
     _LOGGER.info("Setup of BH1750 light sensor at %s in mode %s is complete.",
-                 bus_number, i2c_address, operation_mode)
+                 i2c_address, operation_mode)
     async_add_devices(dev)
 
 
