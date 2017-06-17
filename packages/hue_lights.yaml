@@ -13,7 +13,7 @@ homeassistant:
       friendly_name: Sync brillo bola grande
 
 light:
-  - platform: hue
+  - platform: myhue
     host: 192.168.1.45
     allow_unreachable: true
     homebridge_hidden: true

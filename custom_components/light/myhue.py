@@ -180,6 +180,13 @@ def setup_bridge(host, hass, add_devices, filename, allow_unreachable,
 
         try:
             api = bridge.get_api()
+        # except (socket.timeout, phue.PhueRequestTimeout):
+        except phue.PhueRequestTimeout:
+            _LOGGER.warning("Timeout trying to reach the bridge")
+            return
+        except ConnectionRefusedError:
+            _LOGGER.error("The bridge refused the connection")
+            return
         except socket.error:
             # socket.error when we cannot reach Hue
             _LOGGER.exception("Cannot reach the bridge")
