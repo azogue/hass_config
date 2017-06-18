@@ -29,7 +29,7 @@ CONF_BLACKLIST_DOMAINS = "blacklist_domains"
 
 DEFAULT_DATABASE = 'home_assistant'
 DEFAULT_VERIFY_SSL = True
-DOMAIN = 'influxdb'
+DOMAIN = 'myinfluxdb'
 TIMEOUT = 5
 
 CONFIG_SCHEMA = vol.Schema({
@@ -166,8 +166,11 @@ def setup(hass, config):
                     new_key = "{}_str".format(key)
                     json_body[0]['fields'][new_key] = str(value)
                     if non_digit_tail.match(json_body[0]['fields'][new_key]):
-                        json_body[0]['fields'][key] = float(
-                            non_decimal.sub('', value))
+                        try:
+                            json_body[0]['fields'][key] = float(
+                                non_decimal.sub('', value))
+                        except ValueError:
+                            pass
 
         json_body[0]['tags'].update(tags)
 
