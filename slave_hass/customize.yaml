@@ -71,3 +71,13 @@ switch.systemd_appdaemon:
 switch.systemd_homebridge:
   homebridge_hidden: true
   icon: mdi:settings
+
+switch.estudio_light_relay:
+  homebridge_hidden: true
+  friendly_name: Luz estudio
+  icon: mdi:lightbulb-on
+binary_sensor.estudio_manual_light_switch:
+  friendly_name: Conmutador manual
+  device_class: light
+  homebridge_hidden: true
+  icon: mdi:lightbulb

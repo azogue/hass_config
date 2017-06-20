@@ -23,7 +23,7 @@ include:
    - switch.calefactor
    - switch.camara
    - switch.cocina
-   - switch.impresora
+   - switch.esp_plancha
    - switch.kodi_tv_salon
    - switch.toggle_config_kodi_ambilight
    - switch.toggle_kodi_ambilight

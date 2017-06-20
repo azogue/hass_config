@@ -12,7 +12,7 @@ config:
 logger:
   default: warn
   logs:
-#    homeassistant.loader: info
+    homeassistant.setup: info
     homeassistant.bootstrap: info
     custom_components.sensor.bme280: info
     requests: error
@@ -29,13 +29,7 @@ history:
     domains:
       - binary_sensor
       - switch
-    entities:
-      - sensor.temperatura_estudio
-      - sensor.dht22_temperature
-      - sensor.dht22_humidity
-      - sensor.temperature
-      - sensor.humidity
-      - sensor.pressure
+      - sensor
 
 logbook:
   include:
@@ -45,17 +39,12 @@ logbook:
       - script
 
 updater:
+  include_used_components: true
 recorder:
   purge_days: !secret recorder_purge_days
-  db_url: !secret recorder_db_url
+#  db_url: !secret recorder_db_url
 
 switch:
-#- platform: rpi_gpio
-#  invert_logic: true
-#  ports:
-#    6: Relé de sirena
-#    13: Relé 2
-
 - platform: command_line
   scan_interval: 120
   switches:
@@ -72,7 +61,18 @@ switch:
       friendly_name: MotionEye service
       value_template: '{{ value_json == 1 }}'
 
+- platform: rpi_gpio
+  ports:
+    16: estudio_light_relay
+  invert_logic: true
+
 binary_sensor:
+- platform: rpi_gpio
+  name: sensor de circuito de luz
+  ports:
+    20: estudio_manual_light_switch
+  pull_mode: "UP"
+
 - platform: rpi_gpio
   name: sensores de movimiento
 #  device_class: motion
@@ -89,27 +89,8 @@ binary_sensor:
   bouncetime: 50
   pull_mode: "DOWN"
 
-#input_boolean:
-#  switch_matrix_display:
-##    initial: on
 
 sensor:
-#  - platform: myonewire
-#    names:
-#      28-800000015326: Temperatura Estudio
-#    scan_interval: 60
-#    maximum: 50
-#    minimum: 5
-#
-#  - platform: dht
-#    sensor: DHT22
-#    pin: 22
-#    name: dht22
-#    scan_interval: 60
-#    monitored_conditions:
-#      - temperature
-#      - humidity
-#
 # BME280 in RPI
   - platform: bme280
     name: estudio
@@ -124,34 +105,7 @@ sensor:
       - temperature
       - humidity
       - pressure
-    scan_interval: 30
-
-#  - platform: command_line
-#    name: estudio_temperature
-#    command: "/usr/local/bin/read_bme280 --temperature --i2c-address 0x77"
-#    unit_of_measurement: "°C"
-#    value_template: '{{ value |replace(" C", "") | round(2) - 1}}'
-#    scan_interval: 30
-#  - platform: command_line
-#    name: estudio_humidity
-#    command: "/usr/local/bin/read_bme280 --humidity --i2c-address 0x77"
-#    unit_of_measurement: "%"
-#    value_template: '{{ value |replace("％", "") | round(2) }}'
-#    scan_interval: 30
-#  - platform: command_line
-#    name: estudio_pressure
-#    command: "/usr/local/bin/read_bme280 --pressure --i2c-address 0x77"
-#    unit_of_measurement: "mb"
-#    value_template: '{{ value |replace(" hPa", "") | round(2) }}'
-#    scan_interval: 30
-
-  - platform: mysensehat
-    scan_interval: 40
-    round: 2
-    display_options:
-      - temperature
-      - humidity
-      - pressure
+    scan_interval: 20
 
   - platform: systemmonitor
     resources:
@@ -218,19 +172,11 @@ weblink:
 
 group:
   Estudio:
-#    - sensor.temperatura_estudio
-#    - sensor.dht22_temperature
-#    - sensor.dht22_humidity
     - sensor.estudio_temperature
     - sensor.estudio_humidity
     - sensor.estudio_pressure
-
-  Estudio_sensehat:
-    name: SenseHat
-    entities:
-    - sensor.temperature
-    - sensor.humidity
-    - sensor.pressure
+    - binary_sensor.estudio_manual_light_switch
+    - switch.estudio_light_relay
 
   Movimiento:
     - binary_sensor.pir_estudio
@@ -253,28 +199,8 @@ group:
       - script.reboot
       - script.shutdown
 
-#  SenseHat:
-#    - input_boolean.switch_matrix_display
-
   Links:
     - weblink.master_hass
     - weblink.hass_dormitorio
     - weblink.motioneye
     - weblink.enerpi
-
-#  Status:
-#    name: Home Status
-#    icon: mdi:castle
-#    view: yes
-#    entities:
-#      - group.estudio
-#      - group.sense_hat
-#
-#  Home Network:
-#    name: Red local del hogar
-#    icon: mdi:sitemap
-#    view: yes
-#    entities:
-#      - group.rpi_2_sensehat_monitor
-#      - group.sensehat
-#      - group.links

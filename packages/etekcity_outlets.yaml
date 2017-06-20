@@ -14,6 +14,7 @@ homeassistant:
       friendly_name: Enchufe de videocámara
       homebridge_name: Cámara Video
       homebridge_switch_type: outlet
+      assumed_state: true
     switch.altavoz:
       icon: mdi:speaker
       friendly_name: Enchufe Altavoz
@@ -24,10 +25,10 @@ homeassistant:
       friendly_name: Caldera de gas
       homebridge_name: Caldera
       homebridge_switch_type: outlet
-    switch.impresora:
-      icon: mdi:printer
-      friendly_name: Impresora
-      homebridge_switch_type: outlet
+    switch.esp_plancha:
+      icon: mdi:home-automation
+      friendly_name: Esp8266 Plancha
+      homebridge_hidden: true
 #    switch.new_switch_2:
 #      icon: mdi:power-plug
 #      friendly_name: Enchufe 2
@@ -54,7 +55,7 @@ switch:
         pulselength: 185
         code_on: 4527875
         code_off: 4527884
-        signal_repetitions: 20
+        signal_repetitions: 40
       altavoz:
         pulselength: 185
         code_on: 4529411
@@ -67,11 +68,11 @@ switch:
         signal_repetitions: 20
 
       # new pack of Etekcity (3x)
-      impresora:
+      esp_plancha:
         pulselength: 186
         code_on: 4478259
         code_off: 4478268
-        signal_repetitions: 50
+        signal_repetitions: 60
   #    new_switch_2:
   #      pulselength: 186
   #      code_on: 4478403
@@ -102,6 +103,6 @@ group:
       - switch.camara
       - switch.altavoz
       - switch.caldera
-      - switch.impresora
+      - switch.esp_plancha
 #      - switch.new_switch_2
 #      - switch.new_switch_3

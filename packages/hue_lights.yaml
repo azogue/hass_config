@@ -64,6 +64,7 @@ group:
   Luces Estudio:
     control: hidden
     entities:
+      - switch.estudio_light_relay
       - light.flexo
 
   Luces Salón:

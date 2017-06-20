@@ -217,6 +217,7 @@ group:
     name: Plancha
     control: hidden
     entities:
+      - switch.esp_plancha
       - binary_sensor.esp3_online
       - sensor.esp3_temperature
       - sensor.esp3_humidity
@@ -278,6 +279,8 @@ automation:
     platform: state
     entity_id: binary_sensor.esp3_online
     to: 'on'
+    for:
+      minutes: 1
   action:
     - service: group.set_visibility
       entity_id: group.esp8266_3
