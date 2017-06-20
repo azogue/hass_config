@@ -173,13 +173,13 @@ class BME280Sensor(Entity):
         yield from self.hass.async_add_job(self.bme280_client.update)
         if self.bme280_client.sensor.sample_ok:
             if self.type == SENSOR_TEMP:
-                temperature = round(self.bme280_client.sensor.temperature, 2)
+                temperature = round(self.bme280_client.sensor.temperature, 1)
                 if self.temp_unit == TEMP_FAHRENHEIT:
                     temperature = round(celsius_to_fahrenheit(temperature), 1)
                 self._state = temperature
             elif self.type == SENSOR_HUMID:
-                self._state = round(self.bme280_client.sensor.humidity, 2)
+                self._state = round(self.bme280_client.sensor.humidity, 1)
             elif self.type == SENSOR_PRESS:
-                self._state = round(self.bme280_client.sensor.pressure, 2)
+                self._state = round(self.bme280_client.sensor.pressure, 1)
         else:
             _LOGGER.warning("Bad update of sensor.%s", self.name)
