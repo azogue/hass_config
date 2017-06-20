@@ -37,7 +37,6 @@ Status:
     - group.caldera
     - group.caldera_simple
 #    - group.camaras
-#    - group.weather
 
 Control:
   name: Home Control
@@ -151,4 +150,5 @@ default_view:
     - media_player.kodi
     - group.weather
     - group.weather_simple
+    - group.weather_forecast
     - media_player.dormitorio_mopidy

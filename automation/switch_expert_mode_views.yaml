@@ -1,8 +1,8 @@
 # switch groups visibility:
 # Expert mode:
-# group.salon,group.estudio_rpi2h,group.dormitorio_rpi2mpd,group.cocina,group.caldera,group.links,group.cacharros,group.hass_control,group.tiempo_en_villena,group.enerpi_max_power_control,group.scripts,group.host_rpi3,group.host_rpi2_hat,group.host_rpi2_mpd,group.conectivity
+# group.salon,group.estudio_rpi2h,group.dormitorio_rpi2mpd,group.cocina,group.caldera,group.links,group.cacharros,group.hass_control,group.weather,group.enerpi_max_power_control,group.scripts,group.host_rpi3,group.host_rpi2_hat,group.host_rpi2_mpd,group.conectivity
 # Normal mode:
-# group.salon_simple,group.estudio_rpi2h_simple,group.dormitorio_rpi2mpd_simple,group.cocina_simple,group.caldera_simple,group.links_simple,group.cacharros_simple,group.hass_control_simple,group.tiempo_en_villena_simple
+# group.salon_simple,group.estudio_rpi2h_simple,group.dormitorio_rpi2mpd_simple,group.cocina_simple,group.caldera_simple,group.links_simple,group.cacharros_simple,group.hass_control_simple,group.weather_simple
 
 # Modo 'experto' (con visibilidad extra)
 - alias: Visibilidad modo experto ON
@@ -12,11 +12,11 @@
     to: 'on'
   action:
     - service: group.set_visibility
-      entity_id: group.salon_simple,group.estudio_rpi2h_simple,group.dormitorio_rpi2mpd_simple,group.cocina_simple,group.caldera_simple,group.links_simple,group.cacharros_simple,group.hass_control_simple,group.tiempo_en_villena_simple,group.esp8266_3_simple
+      entity_id: group.salon_simple,group.estudio_rpi2h_simple,group.dormitorio_rpi2mpd_simple,group.cocina_simple,group.caldera_simple,group.links_simple,group.cacharros_simple,group.hass_control_simple,group.weather_simple,group.esp8266_3_simple
       data:
         visible: False
     - service: group.set_visibility
-      entity_id: group.salon,group.estudio_rpi2h,group.dormitorio_rpi2mpd,group.cocina,group.caldera,group.links,group.cacharros,group.hass_control,group.tiempo_en_villena,group.enerpi_max_power_control,group.scripts,group.host_rpi3,group.host_rpi2_hat,group.host_rpi2_mpd,group.conectivity,group.esp8266_2,group.esp8266_3
+      entity_id: group.salon,group.estudio_rpi2h,group.dormitorio_rpi2mpd,group.cocina,group.caldera,group.links,group.cacharros,group.hass_control,group.weather,group.enerpi_max_power_control,group.scripts,group.host_rpi3,group.host_rpi2_hat,group.host_rpi2_mpd,group.conectivity,group.esp8266_2,group.esp8266_3
       data:
         visible: True
 
@@ -27,11 +27,11 @@
       to: 'off'
   action:
     - service: group.set_visibility
-      entity_id: group.salon_simple,group.estudio_rpi2h_simple,group.dormitorio_rpi2mpd_simple,group.cocina_simple,group.caldera_simple,group.links_simple,group.cacharros_simple,group.hass_control_simple,group.tiempo_en_villena_simple,group.esp8266_3_simple
+      entity_id: group.salon_simple,group.estudio_rpi2h_simple,group.dormitorio_rpi2mpd_simple,group.cocina_simple,group.caldera_simple,group.links_simple,group.cacharros_simple,group.hass_control_simple,group.weather_simple,group.esp8266_3_simple
       data:
         visible: True
     - service: group.set_visibility
-      entity_id: group.salon,group.estudio_rpi2h,group.dormitorio_rpi2mpd,group.cocina,group.caldera,group.links,group.cacharros,group.hass_control,group.tiempo_en_villena,group.enerpi_max_power_control,group.scripts,group.host_rpi3,group.host_rpi2_hat,group.host_rpi2_mpd,group.conectivity,group.esp8266_2,group.esp8266_3
+      entity_id: group.salon,group.estudio_rpi2h,group.dormitorio_rpi2mpd,group.cocina,group.caldera,group.links,group.cacharros,group.hass_control,group.weather,group.enerpi_max_power_control,group.scripts,group.host_rpi3,group.host_rpi2_hat,group.host_rpi2_mpd,group.conectivity,group.esp8266_2,group.esp8266_3
       data:
         visible: False
 
@@ -53,8 +53,7 @@
     event_type: ha_start
   action:
     - delay:
-        seconds: 10
-    - service: homeassistant.turn_off
+        seconds: 15
+#    - service: homeassistant.turn_off
+    - service: input_boolean.turn_off
       entity_id: input_boolean.show_expert_mode
-#    - service: automation.trigger
-#      entity_id: automation.visibilidad_modo_experto_off

@@ -30,23 +30,48 @@ homeassistant:
       friendly_name: Temperatura exterior
     sensor.villena_wind_speed:
       friendly_name: Velocidad del viento
+      homebridge_hidden: True
       icon: mdi:weather-windy
     sensor.villena_humidity:
       friendly_name: Humedad exterior
       icon: mdi:water-percent
     sensor.villena_pressure:
       friendly_name: Presión
+      homebridge_hidden: True
       icon: mdi:weather-windy-variant
     sensor.villena_condition:
       friendly_name: Condición general
+      homebridge_hidden: True
     sensor.villena_cloud_coverage:
       friendly_name: Nubes
+      homebridge_hidden: True
       icon: mdi:weather-cloudy
     sensor.villena_rain:
       friendly_name: LLuvia
+      homebridge_hidden: True
       icon: mdi:weather-rainy
     sensor.villena_forecast:
       friendly_name: Previsión
+      homebridge_hidden: True
+
+    sensor.yw_day1_condition:
+      friendly_name: Mañana
+      homebridge_hidden: True
+    sensor.yw_day1_temperature_min:
+      friendly_name: Mínima mañana
+      homebridge_hidden: True
+    sensor.yw_day1_temperature_max:
+      friendly_name: Máxima mañana
+      homebridge_hidden: True
+    sensor.yw_day2_condition:
+      friendly_name: Pasado mañana
+      homebridge_hidden: True
+    sensor.yw_day2_temperature_min:
+      friendly_name: Mínima pasado mañana
+      homebridge_hidden: True
+    sensor.yw_day2_temperature_max:
+      friendly_name: Máxima pasado mañana
+      homebridge_hidden: True
 
 camera:
   # RPI Camera
@@ -80,18 +105,11 @@ sensor:
     maximum: 45
     minimum: 5
 
-  #- platform: dht
-  #  sensor: DHT22
-  #  pin: 22
-  #  name: Salón
-  #  scan_interval: 30
-  #  monitored_conditions:
-  #    - temperature
-  #    - humidity
-
   # BH1750 in RPI
   - platform: bh1750
     name: salon_light_level
+    measurement_delay_ms: 0
+    operation_mode: continuous_low_res_mode
     scan_interval: 30
 
   # BME280 in RPI
@@ -110,26 +128,10 @@ sensor:
       - pressure
     scan_interval: 30
 
-#  - platform: command_line
-#    name: salon_temperature
-#    command: "/usr/local/bin/read_bme280 --temperature --i2c-address 0x77"
-#    unit_of_measurement: "°C"
-#    value_template: '{{ value |replace(" C", "") | round(2) - 1}}'
-#    scan_interval: 30
-#  - platform: command_line
-#    name: salon_humidity
-#    command: "/usr/local/bin/read_bme280 --humidity --i2c-address 0x77"
-#    unit_of_measurement: "%"
-#    value_template: '{{ value |replace("％", "") | round(2) }}'
-#    scan_interval: 30
-#  - platform: command_line
-#    name: salon_pressure
-#    command: "/usr/local/bin/read_bme280 --pressure --i2c-address 0x77"
-#    unit_of_measurement: "mb"
-#    value_template: '{{ value |replace(" hPa", "") | round(2) }}'
-#    scan_interval: 30
+  - platform: yr
+    name: Weather type
 
-  # Weather sensors:
+# Weather sensors:
   - platform: myopenweathermap
     api_key: !secret openweathermap_api_key
     forecast: 1
@@ -144,8 +146,27 @@ sensor:
       - clouds
       - rain
 
-  - platform: yr
-    name: Wheather type
+  - platform: yweather
+    woeid: !secret yahoo_woeid
+    forecast: 1
+    name: yw_day1
+    monitored_conditions:
+      - weather
+      - temp_min
+      - temp_max
+  - platform: yweather
+    woeid: !secret yahoo_woeid
+    forecast: 2
+    name: yw_day2
+    monitored_conditions:
+      - weather
+      - temp_min
+      - temp_max
+
+weather:
+  - platform: openweathermap
+    api_key: !secret openweathermap_api_key
+    name: Local Weather
 
 group:
   Salón:
@@ -193,6 +214,15 @@ group:
       - sensor.villena_temperature
       - sensor.villena_humidity
       - sensor.villena_cloud_coverage
-      - sensor.villena_rain
       - sensor.villena_forecast
 
+  weather_forecast:
+    name: Previsión
+    entities:
+      - weather.local_weather
+      - sensor.yw_day1_condition
+      - sensor.yw_day1_temperature_min
+      - sensor.yw_day1_temperature_max
+      - sensor.yw_day2_condition
+      - sensor.yw_day2_temperature_min
+      - sensor.yw_day2_temperature_max
