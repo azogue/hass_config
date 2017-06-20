@@ -32,9 +32,6 @@ DEFAULT_VERIFY_SSL = True
 DOMAIN = 'myinfluxdb'
 TIMEOUT = 5
 
-NON_DIGIT_TAIL = re.compile(r'[\d.]+')
-NON_DECIMAL = re.compile(r'[^\d.]+')
-
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Schema({
         vol.Optional(CONF_HOST): cv.string,
@@ -60,6 +57,9 @@ CONFIG_SCHEMA = vol.Schema({
         vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
     }),
 }, extra=vol.ALLOW_EXTRA)
+
+RE_DIGIT_TAIL = re.compile(r'^\w*\d+\.?\d+\w*$')
+RE_DECIMAL = re.compile(r'[^\d.]+')
 
 
 def setup(hass, config):
@@ -113,8 +113,8 @@ def setup(hass, config):
         state = event.data.get('new_state')
         if state is None or state.state in (
                 STATE_UNKNOWN, '', STATE_UNAVAILABLE) or \
-                state.entity_id in blacklist_e or \
-                state.domain in blacklist_d:
+                        state.entity_id in blacklist_e or \
+                        state.domain in blacklist_d:
             return
 
         try:
@@ -166,13 +166,10 @@ def setup(hass, config):
                 except (ValueError, TypeError):
                     new_key = "{}_str".format(key)
                     json_body[0]['fields'][new_key] = str(value)
-                    if NON_DIGIT_TAIL.match(
-                            json_body[0]['fields'][new_key]):
-                        try:
-                            json_body[0]['fields'][key] = float(
-                                NON_DECIMAL.sub('', value))
-                        except (ValueError, TypeError):
-                            pass
+
+                    if RE_DIGIT_TAIL.match(json_body[0]['fields'][new_key]):
+                        json_body[0]['fields'][key] = float(
+                            RE_DECIMAL.sub('', value))
 
         json_body[0]['tags'].update(tags)
 
