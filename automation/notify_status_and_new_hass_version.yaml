@@ -4,41 +4,22 @@
     - platform: homeassistant
       event: start
   action:
-    - service: switch.turn_on
-      entity_id: switch.camara
-    - service: switch.turn_on
-      entity_id: switch.caldera
     - service: script.turn_on
       entity_id: script.notify_hass_start
-    - delay:
-        seconds: 30
-    - service: shell_command.restart_homebridge
 
 - alias: Startup Notification from appdaemon
   trigger:
     - platform: event
       event_type: ha_start
   action:
-    - service: switch.turn_on
-      entity_id: switch.camara
-    - service: switch.turn_on
-      entity_id: switch.caldera
     - service: script.turn_on
       entity_id: script.notify_hass_start
-#    - delay:
-#        seconds: 30
-#    - service: shell_command.restart_homebridge
 
 - alias: Update notifications
   trigger:
     - platform: state
       entity_id: updater.updater
   action:
-#  - service: notify.pushbullet
-#    data:
-#      title: 'New Home Assistant Release'
-#      target: !secret pb_target
-#      message: "Home Assistant  {{ states.updater.updater.state }}  is now available."
   - service: notify.ios_iphone
     data:
       title: 'New Home Assistant Release'

@@ -1,5 +1,13 @@
 alias: Notify HASS start
 sequence:
+  - service: switch.turn_on
+    entity_id: switch.camara,switch.caldera,switch.esp_plancha
+
+  - service: group.set_visibility
+    entity_id: group.esp8266_2
+    data:
+      visible: False
+
   - service: notify.ios_iphone
     data:
       title: "Home-assistant started"
@@ -7,9 +15,9 @@ sequence:
       data:
         push:
           badge: 5
-          sound: "US-EN-Morgan-Freeman-Boss-Is-Arriving.wav"
-#          sound: "US-EN-Morgan-Freeman-Welcome-Home.wav"
-          category: "CONFIRM" # Needs to match the top level identifier you used in the ios configuration
+          sound: "US-EN-Morgan-Freeman-Welcome-Home.wav"
+          category: "CONFIRM"
+
   - delay:
-      seconds: 180
+      seconds: 30
   - service: script.restart_homebridge
