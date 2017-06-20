@@ -68,24 +68,19 @@ switch:
 
 binary_sensor:
 - platform: rpi_gpio
-  name: sensor de circuito de luz
   ports:
-    20: estudio_manual_light_switch
-  pull_mode: "UP"
+    12: estudio_manual_light_switch
+  bouncetime: 2000
 
 - platform: rpi_gpio
-  name: sensores de movimiento
-#  device_class: motion
   ports:
     27: PIR Estudio
   bouncetime: 100
   pull_mode: "UP"
 
 - platform: rpi_gpio
-  name: sensores digitales
   ports:
     21: vibration_sensor_raw
-#    26: sound_sensor_raw
   bouncetime: 50
   pull_mode: "DOWN"
 
