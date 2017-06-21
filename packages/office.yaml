@@ -12,9 +12,9 @@ homeassistant:
 
     binary_sensor.estudio_manual_light_switch_rpi2h:
       homebridge_hidden: true
+      icon: mdi:toggle-switch
     switch.estudio_light_relay:
-      friendly_name: Luz estudio
-      icon: mdi:lightbulb-on
+      icon: mdi:ceiling-light
 
     sensor.ram_free_rpi2h:
       homebridge_hidden: True
@@ -56,12 +56,69 @@ sensor:
         unit_of_measurement: "mb"
 
 switch:
-  - platform: rest
-    name: estudio_light_relay
-    resource: !secret switch_slave_hass_light_url
-    body_on: '{"state": "on"}'
-    body_off: '{"state": "off"}'
-    is_on_template: '{{value_json.state == "on"}}'
+  - platform: command_line
+    switches:
+      estudio_light_relay:
+        command_on: !secret switch_lights_estudio_on
+        command_off: !secret switch_lights_estudio_off
+        command_state: !secret switch_lights_estudio_status
+        value_template: '{{ value_json == 1 }}'
+        friendly_name: Luces estudio
+
+automation:
+  - alias: Manual toggle lights estudio
+    trigger:
+      - platform: state
+        entity_id: binary_sensor.estudio_manual_light_switch_rpi2h
+    action:
+      - service: switch.toggle
+        entity_id: switch.estudio_light_relay
+
+  - alias: Encendido luces estudio
+    trigger:
+      platform: state
+      entity_id: binary_sensor.pir_estudio_rpi2h
+      to: 'on'
+    condition:
+      condition: and
+      conditions:
+        - condition: state
+          entity_id: group.family
+          state: 'home'
+        - condition: state
+          entity_id: switch.estudio_light_relay
+          state: 'off'
+        - condition: state
+          entity_id: switch.switch_master_alarm
+          state: 'off'
+  #      - condition: or
+  #        conditions:
+  #          - condition: template
+  #            value_template: '{{ states.sensor.esp1_light.state |float < 70 }}'
+  #          - condition: time
+  #            after: '13:00:00'
+  #            before: '18:00:00'
+  #          - condition: time
+  #            after: '20:30:00'
+  #            before: '0:00:00'
+    action:
+      - service: switch.turn_on
+        entity_id: switch.estudio_light_relay
+
+  - alias: Apagado Luces estudio
+    trigger:
+      platform: state
+      entity_id: binary_sensor.pir_estudio_rpi2h
+      to: 'off'
+      for:
+        minutes: 3
+    condition:
+      condition: state
+      entity_id: switch.estudio_light_relay
+      state: 'on'
+    action:
+      - service: switch.turn_off
+        entity_id: switch.estudio_light_relay
 
 group:
   Estudio RPi2h:
@@ -84,11 +141,16 @@ group:
       - sensor.estudio_temperature_rpi2h
       - sensor.estudio_humidity_rpi2h
       - sensor.estudio_pressure_rpi2h
+      - switch.estudio_light_relay
 
   Host Estudio:
-    - sensor.hass_cpu_temperature_rpi2h
-    - sensor.cpu_use_rpi2h
-    - sensor.ram_free_rpi2h
-    - sensor.last_boot_rpi2h
-    - sensor.disk_use__rpi2h
+    control: hidden
+    entities:
+      - sensor.hass_cpu_temperature_rpi2h
+      - sensor.cpu_use_rpi2h
+      - sensor.ram_free_rpi2h
+      - sensor.last_boot_rpi2h
+      - sensor.disk_use__rpi2h
+      - automation.encendido_luces_estudio
+      - automation.apagado_luces_estudio
 
