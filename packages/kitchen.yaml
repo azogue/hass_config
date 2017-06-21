@@ -138,6 +138,9 @@ automation:
       - condition: state
         entity_id: switch.cocina
         state: 'off'
+      - condition: state
+        entity_id: switch.switch_master_alarm
+        state: 'off'
       - condition: or
         conditions:
           - condition: template
