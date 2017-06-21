@@ -80,7 +80,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-# noinspection PyUnusedLocal
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up the BME280 sensor."""
@@ -89,8 +88,9 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     i2c_address = config.get(CONF_I2C_ADDRESS)
 
     try:
-        # noinspection PyUnresolvedReferences
+        # pylint: disable=import-error
         import smbus
+        # pylint: disable=import-error
         from i2csense.bme280 import BME280
     except ImportError as exc:
         _LOGGER.error("ImportError: %s", exc)

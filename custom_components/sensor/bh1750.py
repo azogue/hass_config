@@ -65,7 +65,6 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend({
 })
 
 
-# noinspection PyUnusedLocal
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     """Set up the BH1750 sensor."""
@@ -75,8 +74,9 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info=None):
     operation_mode = config.get(CONF_OPERATION_MODE)
 
     try:
-        # noinspection PyUnresolvedReferences
+        # pylint: disable=import-error
         import smbus
+        # pylint: disable=import-error
         from i2csense.bh1750 import BH1750
         bus = smbus.SMBus(bus_number)
     except ImportError as exc:
