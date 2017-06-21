@@ -116,7 +116,6 @@ sensor:
 
   - platform: speedtest
     minute:
-      - 5
       - 35
     monitored_conditions:
       - ping
