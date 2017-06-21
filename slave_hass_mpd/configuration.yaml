@@ -50,6 +50,7 @@ logbook:
       - script
 
 updater:
+  include_used_components: true
 recorder:
   purge_days: !secret recorder_purge_days
   db_url: !secret recorder_db_url
@@ -97,12 +98,10 @@ sensor:
 # BH1750 in RPI
   - platform: bh1750
     name: dormitorio_light_level
-#    operation_mode: continuous_low_res_mode
-#    operation_mode: one_time_high_res_mode_2
-#    measurement_delay_ms: 0
-#    operation_mode: continuous_low_res_mode
     operation_mode: continuous_high_res_mode_2
-    measurement_delay_ms: 180
+    measurement_delay_ms: 10
+    sensibility: 125
+    multiplier: 1.5
     scan_interval: 30
 
 # HTU21D in RPI
