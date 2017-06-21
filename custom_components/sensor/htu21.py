@@ -18,7 +18,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.util import Throttle
 from homeassistant.util.temperature import celsius_to_fahrenheit
 
-REQUIREMENTS = ['i2csense==0.0.2',
+REQUIREMENTS = ['i2csense==0.0.3',
                 'smbus-cffi==0.5.1']
 
 _LOGGER = logging.getLogger(__name__)
@@ -81,9 +81,11 @@ class HTU21DHandler:
     def update(self):
         """Read raw data and calculate temperature and humidity."""
         self.sensor.update()
-        _LOGGER.debug("HTU21D values: {:.2f} ºC, {:.2f} %. Dew point: {:.2f}"
-                      .format(self.sensor.temperature, self.sensor.humidity,
-                              self.sensor.dew_point_temperature))
+        if self.sensor.sample_ok:
+            _LOGGER.debug(
+                "HTU21D values: {:.2f} ºC, {:.2f} %. Dew point: {:.2f}"
+                .format(self.sensor.temperature, self.sensor.humidity,
+                self.sensor.dew_point_temperature))
 
 
 class HTU21DSensor(Entity):
@@ -124,3 +126,5 @@ class HTU21DSensor(Entity):
             else:
                 value = round(self._client.sensor.humidity, 1)
             self._state = value
+        else:
+            _LOGGER.warning("Bad sample")
