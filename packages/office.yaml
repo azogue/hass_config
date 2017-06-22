@@ -142,6 +142,7 @@ group:
       - sensor.estudio_humidity_rpi2h
       - sensor.estudio_pressure_rpi2h
       - switch.estudio_light_relay
+      - switch.new_switch_2
 
   Host Estudio:
     control: hidden
