@@ -287,12 +287,12 @@ def _get_remote_png_tile(hass, host, port, prefix, name):
             partial(requests.get, url_tile, timeout=10))
 
         ok = r_svg.ok
-    except (requests.ReadTimeout, requests.ConnectionError) as e:
-        LOGGER.error('REQUEST TILE ERROR: {} [{}]'.format(e, e.__class__))
+    except (requests.ReadTimeout, requests.ConnectionError):
+        pass
     # yield from asyncio.sleep(0)
     if ok:
         return r_svg.content
-    LOGGER.error('TILE REQUEST ERROR: {} - {}'.format(r_svg, url_tile))
+    LOGGER.debug('TILE REQUEST ERROR: {} - {}'.format(r_svg, url_tile))
     return None
 
 
