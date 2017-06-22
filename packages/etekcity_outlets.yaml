@@ -29,12 +29,12 @@ homeassistant:
       icon: mdi:home-automation
       friendly_name: Esp8266 Plancha
       homebridge_hidden: true
-#    switch.new_switch_2:
-#      icon: mdi:power-plug
-#      friendly_name: Enchufe 2
-#    switch.new_switch_3:
-#      icon: mdi:power-plug
-#      friendly_name: Enchufe 3
+    switch.new_switch_2:
+      icon: mdi:fan
+      friendly_name: Ventilador
+    switch.new_switch_3:
+      icon: mdi:power-plug
+      friendly_name: Enchufe 3
 
 switch:
   - platform: rpi_rf
@@ -73,16 +73,16 @@ switch:
         code_on: 4478259
         code_off: 4478268
         signal_repetitions: 60
-  #    new_switch_2:
-  #      pulselength: 186
-  #      code_on: 4478403
-  #      code_off: 4478412
-  #      signal_repetitions: 20
-  #    new_switch_3:
-  #      pulselength: 186
-  #      code_on: 4478723
-  #      code_off: 4478732
-  #      signal_repetitions: 20
+      new_switch_2:
+        pulselength: 186
+        code_on: 4478403
+        code_off: 4478412
+        signal_repetitions: 40
+      new_switch_3:
+        pulselength: 186
+        code_on: 4478723
+        code_off: 4478732
+        signal_repetitions: 40
   #    new_switch_4:  # no switch, only remote button
   #      pulselength: 186
   #      code_on: 4480259
@@ -104,5 +104,6 @@ group:
       - switch.altavoz
       - switch.caldera
       - switch.esp_plancha
+      - switch.new_switch_2
 #      - switch.new_switch_2
 #      - switch.new_switch_3
