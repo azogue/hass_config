@@ -35,6 +35,7 @@ homeassistant:
     switch.new_switch_3:
       icon: mdi:power-plug
       friendly_name: Enchufe 3
+      homebridge_hidden: true
 
 switch:
   - platform: rpi_rf
