@@ -12,6 +12,25 @@ homeassistant:
       homebridge_hidden: true
       friendly_name: Sync brillo bola grande
 
+    light.bola_grande:
+      icon: mdi:ceiling-light
+    light.bola_pequena:
+      icon: mdi:ceiling-light
+    light.hue_habitacion:
+      icon: mdi:ceiling-light
+    light.aura_habitacion:
+      icon: mdi:lava-lamp
+    light.pie_tv:
+      icon: mdi:lamp
+    light.pie_sofa:
+      icon: mdi:lamp
+    light.cuenco:
+      icon: mdi:lava-lamp
+    light.lamparita:
+      icon: mdi:lava-lamp
+    light.flexo:
+      icon: mdi:lightbulb-outline
+
 light:
   - platform: myhue
     host: 192.168.1.45
