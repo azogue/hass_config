@@ -102,6 +102,15 @@ sensor:
       - pressure
     scan_interval: 20
 
+# BH1750 in RPI
+  - platform: bh1750
+    name: estudio_light_level
+    operation_mode: continuous_high_res_mode_2
+    measurement_delay_ms: 10
+    sensibility: 125
+    multiplier: 1.5
+    scan_interval: 20
+
   - platform: systemmonitor
     resources:
       - type: disk_use_percent
