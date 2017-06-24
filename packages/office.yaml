@@ -1,6 +1,8 @@
 # Slave HASS in RPI2 - Office
 homeassistant:
   customize:
+    switch.estudio_light_relay:
+      icon: mdi:ceiling-light
     binary_sensor.pir_estudio_rpi2h:
       friendly_name: Movimiento (estudio)
       device_class: motion
@@ -9,24 +11,6 @@ homeassistant:
       friendly_name: Vibración (estudio)
       device_class: vibration
       homebridge_hidden: true
-
-    binary_sensor.estudio_manual_light_switch_rpi2h:
-      homebridge_hidden: true
-      icon: mdi:toggle-switch
-    switch.estudio_light_relay:
-      icon: mdi:ceiling-light
-
-    sensor.ram_free_rpi2h:
-      homebridge_hidden: True
-    sensor.cpu_use_rpi2h:
-      homebridge_hidden: True
-    sensor.disk_use__rpi2h:
-      homebridge_hidden: True
-    sensor.last_boot_rpi2h:
-      homebridge_hidden: True
-
-    sensor.hass_cpu_temperature_rpi2h:
-      homebridge_hidden: True
 
 binary_sensor:
   - platform: dummy
@@ -37,10 +21,6 @@ binary_sensor:
       vibration_sensor_rpi2h:
         friendly_name: Vibración en Estudio
         device_class: vibration
-
-      estudio_manual_light_switch_rpi2h:
-        friendly_name: Interruptor manual
-        device_class: light
 
 sensor:
   - platform: dummy
@@ -128,11 +108,13 @@ group:
       - sensor.estudio_temperature_rpi2h
       - sensor.estudio_humidity_rpi2h
       - sensor.estudio_pressure_rpi2h
+      - sensor.estudio_light_level_rpi2h
       - binary_sensor.pir_estudio_rpi2h
       - binary_sensor.motioncam_estudio
       - binary_sensor.vibration_sensor_rpi2h
       - binary_sensor.estudio_manual_light_switch_rpi2h
       - switch.estudio_light_relay
+      - switch.new_switch_2
 
   Estudio RPi2h_simple:
     name: Estudio
@@ -141,6 +123,7 @@ group:
       - sensor.estudio_temperature_rpi2h
       - sensor.estudio_humidity_rpi2h
       - sensor.estudio_pressure_rpi2h
+      - sensor.estudio_light_level_rpi2h
       - switch.estudio_light_relay
       - switch.new_switch_2
 
@@ -152,6 +135,7 @@ group:
       - sensor.ram_free_rpi2h
       - sensor.last_boot_rpi2h
       - sensor.disk_use__rpi2h
+      - binary_sensor.estudio_manual_light_switch_rpi2h
       - automation.encendido_luces_estudio
       - automation.apagado_luces_estudio
 
