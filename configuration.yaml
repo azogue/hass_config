@@ -6,6 +6,7 @@ homeassistant:
   elevation: !secret elevation
   time_zone: !secret time_zone
   customize: !include frontend/customize.yaml
+  customize_glob: !include frontend/customize_glob.yaml
   packages:  !include_dir_named packages
 
 http:
@@ -48,6 +49,7 @@ panel_iframe:
 scene: !include_dir_merge_list scenes/
 automation: !include_dir_merge_list automation/
 script: !include_dir_named scripts/
+python_script:
 logger: !include database/logger.yaml
 group: !include frontend/groups.yaml
 browser:

@@ -1,0 +1,9 @@
+# customize_glob:
+# Customize entities matching a pattern
+"scene.*":
+  homebridge_hidden: true
+
+#"sensor.yw_day*":
+#  homebridge_hidden: True
+#"sensor.dark_sky_*":
+#  homebridge_hidden: True
