@@ -73,7 +73,6 @@ switch.systemd_homebridge:
   icon: mdi:settings
 
 switch.estudio_light_relay:
-  homebridge_hidden: true
   friendly_name: Luces estudio
   icon: mdi:ceiling-light
 binary_sensor.estudio_manual_light_switch:
@@ -81,3 +80,8 @@ binary_sensor.estudio_manual_light_switch:
   device_class: light
   homebridge_hidden: true
   icon: mdi:toggle-switch
+
+sensor.estudio_light_level:
+  friendly_name: Iluminación
+  icon: mdi:lightbulb
+  device_class: light
