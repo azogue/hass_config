@@ -116,10 +116,25 @@ Master conf:
     - group.hass_control
     - group.hass_control_simple
     - group.conectivity
-#    - group.all_automations
-    - group.scripts
+    - group.all_automations
+    - group.all_scripts
     - group.test_notifications
 #    - group.all_devices
+
+Weather:
+  name: El tiempo
+  icon: mdi:weather-partlycloudy
+  view: yes
+  entities:
+    - sensor.house_delta_temperature
+    - binary_sensor.close_house
+    - group.weather_dark_sky_now
+    - group.weather_dark_sky_today
+    - group.weather_dark_sky_tomorrow
+    - group.weather_dark_sky_aftertomorrow
+    - group.weather_dark_sky_afterthree
+    - group.weather_forecast
+    - group.weather
 
 default_view:
 #  name: Piso

@@ -24,6 +24,9 @@ include:
    - switch.camara
    - switch.cocina
    - switch.esp_plancha
+   - switch.estudio_light_relay
+   - binary_sensor.estudio_manual_light_switch_rpi2h
+   - switch.new_switch_2
    - switch.kodi_tv_salon
    - switch.toggle_config_kodi_ambilight
    - switch.toggle_kodi_ambilight
@@ -41,10 +44,6 @@ include:
    - sensor.dormitorio_htu21d_temperature_rpi2mpd
    - sensor.dormitorio_htu21d_humidity_rpi2mpd
    - sensor.dormitorio_light_level_rpi2mpd
-
-   - sensor.estudio_temperature_rpi2h
-   - sensor.estudio_humidity_rpi2h
-   - sensor.estudio_pressure_rpi2h
 
    - sensor.t_salon
    - sensor.salon_temperature
@@ -76,6 +75,7 @@ include:
    - sensor.estudio_temperature_rpi2h
    - sensor.estudio_humidity_rpi2h
    - sensor.estudio_pressure_rpi2h
+   - sensor.estudio_light_level_rpi2h
    - sensor.temperature_rpi2h
    - sensor.humidity_rpi2h
    - sensor.pressure_rpi2h
@@ -83,6 +83,9 @@ include:
    - sensor.villena_humidity
    - sensor.villena_pressure
    - sensor.villena_temperature
+   - sensor.dark_sky_temperature
+   - sensor.dark_sky_humidity
+   - sensor.dark_sky_pressure
 
    - switch.alarm_clock_status
    - input_boolean.manual_trigger_lacafetera

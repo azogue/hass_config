@@ -90,6 +90,18 @@ group.all_automations:
 group.scripts:
   order: 43
 
+group.weather_dark_sky_now:
+  order: 76
+camera.weather_svg:
+  order: 77
+group.weather_dark_sky_today:
+  order: 78
+group.weather_dark_sky_tomorrow:
+  order: 79
+group.weather_dark_sky_aftertomorrow:
+  order: 80
+group.weather_dark_sky_afterthree:
+  order: 82
 ###############################################################################
 #                           SCENES                                            #
 ###############################################################################
