@@ -74,7 +74,8 @@ enerpi:
     name: enerPI
     scan_interval: 30
     delta_refresh: 1000
+    tiles_refresh: 300
+    width_tiles: 48  # show last 48h tiles
     monitored_variables:
       - power
       - ldr
-    pngtiles_refresh: 300
