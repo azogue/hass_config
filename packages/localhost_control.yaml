@@ -197,6 +197,8 @@ group:
       - switch.show_expert_mode
       - input_boolean.switch_motion_lights
       - input_slider.light_duration_after_motion
+      - automation.apagado_de_climatizador_evaporativo
+      - input_slider.max_humidity
       - switch.systemd_appdaemon
       - script.restart_appdaemon
       - switch.systemd_homebridge
