@@ -1,4 +1,6 @@
-# Startup notifications & new version notify
+# Here the automations that should run at HA start
+
+# Startup notifications and more
 - alias: Startup Notification
   trigger:
     - platform: homeassistant
@@ -7,14 +9,7 @@
     - service: script.turn_on
       entity_id: script.notify_hass_start
 
-- alias: Startup Notification from appdaemon
-  trigger:
-    - platform: event
-      event_type: ha_start
-  action:
-    - service: script.turn_on
-      entity_id: script.notify_hass_start
-
+# New version notify
 - alias: Update notifications
   trigger:
     - platform: state
