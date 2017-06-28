@@ -53,6 +53,13 @@ homeassistant:
       device_class: motion
       homebridge_hidden: true
 
+    input_boolean.switch_master_alarm:
+      homebridge_hidden: true
+
+  customize_glob:
+    "input_boolean.use_*":
+      homebridge_hidden: true
+
 # MOTIONEYE CAMERAS
 camera:
   # RPI Camera in Slave HASS
