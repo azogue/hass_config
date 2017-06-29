@@ -1,13 +1,18 @@
-# Here the automations that should run at HA start
-
-# Startup notifications and more
-- alias: Startup Notification
+# Startup notifications, default states, and more to run at HA start
+- alias: Start HomeAssistant
   trigger:
     - platform: homeassistant
       event: start
   action:
-    - service: script.turn_on
-      entity_id: script.notify_hass_start
+    - delay:
+        seconds: 5
+    - service: python_script.start_states
+      data:
+        # Start without expert mode
+        expert_mode_state: off
+    - delay:
+        seconds: 30
+    - service: script.restart_homebridge
 
 # New version notify
 - alias: Update notifications
