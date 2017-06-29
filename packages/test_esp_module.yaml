@@ -237,52 +237,40 @@ group:
       - sensor.esp3_light
 
 automation:
-- alias: Invisibilidad de grupo en pruebas
+- alias: Outlet for ESP_Plancha is on
   trigger:
     platform: state
-    entity_id: binary_sensor.esp2_online
+    entity_id: switch.esp_plancha
     to: 'off'
-    for:
-      minutes: 2
-  action:
-    - service: group.set_visibility
-      entity_id: group.esp8266_2
-      data:
-        visible: False
-
-- alias: Visibilidad de grupo en pruebas
-  trigger:
-    platform: state
-    entity_id: binary_sensor.esp2_online
-    to: 'on'
-  action:
-    - service: group.set_visibility
-      entity_id: group.esp8266_2
-      data:
-        visible: True
-
-- alias: Invisibilidad de grupo devboard
-  trigger:
-    platform: state
-    entity_id: binary_sensor.esp3_online
-    to: 'off'
-    for:
-      minutes: 2
-  action:
-    - service: group.set_visibility
-      entity_id: group.esp8266_3
-      data:
-        visible: False
-
-- alias: Visibilidad de grupo devboard
-  trigger:
-    platform: state
-    entity_id: binary_sensor.esp3_online
-    to: 'on'
     for:
       minutes: 1
+  condition:
+      condition: state
+      entity_id: binary_sensor.esp3_online
+      state: 'on'
   action:
-    - service: group.set_visibility
-      entity_id: group.esp8266_3
-      data:
-        visible: True
+    - service: switch.turn_on
+      entity_id: switch.esp_plancha
+
+- alias: ESP_Plancha goes online
+  trigger:
+    platform: state
+    entity_id: binary_sensor.esp3_online
+    to: 'on'
+  condition:
+      condition: state
+      entity_id: switch.esp_plancha
+      state: 'off'
+  action:
+    - service: switch.turn_on
+      entity_id: switch.esp_plancha
+
+- alias: Visibilidad de módulos ESP
+  trigger:
+    - platform: state
+      entity_id: binary_sensor.esp2_online
+    - platform: state
+      entity_id: binary_sensor.esp3_online
+  action:
+    - service: python_script.change_expert_mode_view
+
