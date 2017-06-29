@@ -1,61 +1,9 @@
-- alias: Salón Scene - Concentración
+# Set a light scene with a python_script
+- alias: Salón Select Scene
   trigger:
     platform: state
     entity_id: input_select.salon_light_scene
-    to: "Concentración"
   action:
-    - service: light.turn_on
-      data:
-        entity_id: light.bola_grande,light.bola_pequena,light.cuenco,light.pie_sofa,light.pie_tv
-        # profile: concentrate --> BAD
-        # relax	0.5119	0.4147	144
-        # concentrate	0.5119	0.4147	219 <--BAD
-        # energize	0.368	0.3686	203
-        # reading	0.4448	0.4066	240
-
-        brightness: 254
-        xy_color: [0.3151, 0.3251]
-
-- alias: Salón Scene - Energía
-  trigger:
-    platform: state
-    entity_id: input_select.salon_light_scene
-    to: "Energía"
-  action:
-    - service: light.turn_on
-      data:
-        entity_id: light.bola_grande,light.bola_pequena,light.cuenco,light.pie_sofa,light.pie_tv
-        profile: energize
-        brightness: 254
-
-- alias: Salón Scene - Relax
-  trigger:
-    platform: state
-    entity_id: input_select.salon_light_scene
-    to: "Relax"
-  action:
-    - service: light.turn_on
-      data:
-        entity_id: light.bola_grande,light.bola_pequena,light.cuenco,light.pie_sofa,light.pie_tv
-        profile: relax
-
-- alias: Salón Scene - Lectura
-  trigger:
-    platform: state
-    entity_id: input_select.salon_light_scene
-    to: "Lectura"
-  action:
-    - service: light.turn_on
-      data:
-        entity_id: light.bola_grande,light.bola_pequena,light.cuenco,light.pie_sofa,light.pie_tv
-        profile: reading
-
-- alias: Salón Scene - OFF
-  trigger:
-    platform: state
-    entity_id: input_select.salon_light_scene
-    to: "OFF"
-  action:
-    - service: light.turn_off
-      data:
-        entity_id: light.bola_grande,light.bola_pequena,light.cuenco,light.pie_sofa,light.pie_tv
+    - service: python_script.select_light_profile
+      data_template:
+        scene: '{{ trigger.to_state.state }}'
