@@ -71,16 +71,16 @@ automation:
         - condition: state
           entity_id: switch.switch_master_alarm
           state: 'off'
-  #      - condition: or
-  #        conditions:
-  #          - condition: template
-  #            value_template: '{{ states.sensor.esp1_light.state |float < 70 }}'
-  #          - condition: time
-  #            after: '13:00:00'
-  #            before: '18:00:00'
-  #          - condition: time
-  #            after: '20:30:00'
-  #            before: '0:00:00'
+        - condition: template
+          value_template: '{{ states.sensor.estudio_light_level_rpi2h.state |int < 20 }}'
+#        - condition: or
+#          conditions:
+#            - condition: time
+#              after: '23:00:00'
+#              before: '10:00:00'
+#            - condition: time
+#              after: '20:30:00'
+#              before: '0:00:00'
     action:
       - service: switch.turn_on
         entity_id: switch.estudio_light_relay
@@ -112,7 +112,7 @@ group:
       - binary_sensor.pir_estudio_rpi2h
       - binary_sensor.motioncam_estudio
       - binary_sensor.vibration_sensor_rpi2h
-      - binary_sensor.estudio_manual_light_switch_rpi2h
+#      - binary_sensor.estudio_manual_light_switch_rpi2h
       - switch.estudio_light_relay
       - switch.new_switch_2
 
