@@ -1,44 +1,11 @@
+# Modo 'experto' (con visibilidad extra / normal)
 # switch groups visibility:
-
-# Modo 'experto' (con visibilidad extra)
-- alias: Visibilidad modo experto ON
+- alias: Visibilidad modo experto ON/OFF
   trigger:
     platform: state
     entity_id: input_boolean.show_expert_mode
-    to: 'on'
   action:
-    - service: group.set_visibility
-      entity_id: group.salon_simple,group.estudio_rpi2h_simple,group.dormitorio_rpi2mpd_simple,group.cocina_simple,group.caldera_simple,group.links_simple,group.cacharros_simple,group.hass_control_simple,group.weather_simple,group.esp8266_3_simple
-      data:
-        visible: False
-    - service: group.set_visibility
-      entity_id: group.salon,group.estudio_rpi2h,group.dormitorio_rpi2mpd,group.cocina,group.caldera,group.links,group.cacharros,group.hass_control,group.weather,group.enerpi_max_power_control,group.scripts,group.host_rpi3,group.host_rpi2_hat,group.host_rpi2_mpd,group.conectivity,group.esp8266_2,group.esp8266_3
-      data:
-        visible: True
+    - service: python_script.change_expert_mode_view
+      data_template:
+        expert_mode_state: '{{ trigger.to_state.state }}'
 
-- alias: Visibilidad modo experto OFF
-  trigger:
-    - platform: state
-      entity_id: input_boolean.show_expert_mode
-      to: 'off'
-  action:
-    - service: group.set_visibility
-      entity_id: group.salon_simple,group.estudio_rpi2h_simple,group.dormitorio_rpi2mpd_simple,group.cocina_simple,group.caldera_simple,group.links_simple,group.cacharros_simple,group.hass_control_simple,group.weather_simple,group.esp8266_3_simple
-      data:
-        visible: True
-    - service: group.set_visibility
-      entity_id: group.salon,group.estudio_rpi2h,group.dormitorio_rpi2mpd,group.cocina,group.caldera,group.links,group.cacharros,group.hass_control,group.weather,group.enerpi_max_power_control,group.scripts,group.host_rpi3,group.host_rpi2_hat,group.host_rpi2_mpd,group.conectivity,group.esp8266_2,group.esp8266_3
-      data:
-        visible: False
-
-- alias: Visibilidad modo experto OFF en HA start
-  trigger:
-    platform: homeassistant
-    event: start
-  action:
-    - service: input_boolean.turn_on
-      entity_id: input_boolean.show_expert_mode
-    - delay:
-        seconds: 1
-    - service: input_boolean.turn_off
-      entity_id: input_boolean.show_expert_mode
