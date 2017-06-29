@@ -69,6 +69,11 @@ homeassistant:
     device_tracker.esp8266_1:
       icon: mdi:raspberrypi
 
+    input_boolean.eu_presence:
+      icon: mdi:human-male
+    input_boolean.carmen_presence:
+      icon: mdi:human-female
+
 # This will override the default home zone
 zone:
 - name: Home
@@ -81,6 +86,15 @@ zone:
   longitude: !secret z2_longitude
   radius: !secret z2_radius
   icon: !secret z2_icon
+
+# These are for the iOS Home App to set them when leaving o entering the house
+input_boolean:
+  eu_presence:
+    name: Eu en casa
+    initial: off
+  carmen_presence:
+    name: Carmen en casa
+    initial: off
 
 device_tracker:
   - platform: nmap_tracker
@@ -133,6 +147,28 @@ sensor:
 #    still_image_url: https://maps.googleapis.com/maps/api/staticmap?center={% if states.device_tracker.iphone.attributes.latitude %}{{ states.device_tracker.iphone.attributes.latitude }},{{ states.device_tracker.iphone.attributes.longitude }}{% else %}{{ states.zone.home.attributes.latitude }},{{ states.zone.home.attributes.longitude }}{% endif %}&zoom=13&size=500x500&scale=2&maptype=roadmap&markers=color:{% if states.device_tracker.iphone.attributes.latitude %}green{% else %}red{% endif %}%7Clabel:E%7C{% if states.device_tracker.iphone.attributes.latitude %}{{ states.device_tracker.iphone.attributes.latitude }},{{ states.device_tracker.iphone.attributes.longitude }}{% else %}{{ states.zone.home.attributes.latitude }},{{ states.zone.home.attributes.longitude }}{% endif %}&markers=color:{% if states.device_tracker.iphone_se.attributes.latitude %}blue{% else %}red{% endif %}%7Clabel:C%7C{% if states.device_tracker.iphone_se.attributes.latitude %}{{ states.device_tracker.iphone_se.attributes.latitude }},{{ states.device_tracker.iphone_se.attributes.longitude }}{% else %}{{ states.zone.home.attributes.latitude }},{{ states.zone.home.attributes.longitude }}{% endif %}
 #    limit_refetch_to_url_change: true
 
+automation:
+  # TODO eliminar (sólo en pruebas)
+  - alias: Entrada / Salida de personas vía HomeKit
+    trigger:
+      - platform: state
+        entity_id: input_boolean.eu_presence
+      - platform: state
+        entity_id: input_boolean.carmen_presence
+#    condition:
+    action:
+      - service: telegram_bot.send_message
+        data_template:
+          title: "*House In & Out*"
+          message: >
+            Cambio en el estatus de gente en casa:
+              Carmen: {% if states.input_boolean.carmen_presence.state == 'on'%}*en casa*{%else%}*fuera de casa*{%endif%} (desde hace {{relative_time(states.input_boolean.carmen_presence.last_changed)}}).
+              Eugenio: {% if states.input_boolean.eu_presence.state == 'on'%}*en casa*{%else%}*fuera de casa*{%endif%} (desde hace {{relative_time(states.input_boolean.eu_presence.last_changed)}}).
+          target: !secret telegram_bot_group
+          disable_notification: false
+#          inline_keyboard:
+#            - Encender:/sc switch turn_on switch.new_switch_2, Apagar:/sc switch turn_off switch.new_switch_2
+
 group:
   Eugenio:
     entities:
@@ -158,23 +194,27 @@ group:
     - group.mary
 
   Cacharros:
-    - group.ipad
-    - sensor.ipad_battery_level
-    - sensor.ipad_battery_state
-    - sensor.iphone_battery_level
-    - sensor.iphone_battery_state
-    - sensor.iphonese_battery_level
-    - sensor.iphonese_battery_state
-    - device_tracker.jo01
-    - device_tracker.rpi3osmc
-    - device_tracker.rpi3w
-    - device_tracker.esp8266_1
-    - device_tracker.rpi_wifi
-    - device_tracker.rpi2hat
-    - device_tracker.rpi2
-  #  - device_tracker.rpi2_wifi
-    - sensor.bateria_iphone_6s
-    - sensor.bateria_iphone_se
+    control: hidden
+    entities:
+      - group.ipad
+      - sensor.ipad_battery_level
+      - sensor.ipad_battery_state
+      - sensor.iphone_battery_level
+      - sensor.iphone_battery_state
+      - sensor.iphonese_battery_level
+      - sensor.iphonese_battery_state
+      - device_tracker.jo01
+      - device_tracker.rpi3osmc
+      - device_tracker.rpi3w
+      - device_tracker.esp8266_1
+      - device_tracker.rpi_wifi
+      - device_tracker.rpi2hat
+      - device_tracker.rpi2
+    #  - device_tracker.rpi2_wifi
+      - sensor.bateria_iphone_6s
+      - sensor.bateria_iphone_se
+      - input_boolean.eu_presence
+      - input_boolean.carmen_presence
 
   Cacharros_simple:
     name: Cacharros
