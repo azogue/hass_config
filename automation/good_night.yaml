@@ -31,12 +31,7 @@
 
     # Family at home
     - condition: state
-      entity_id: group.eugenio
-      state: 'home'
-      for:
-        minutes: 10
-    - condition: state
-      entity_id: group.mary
+      entity_id: group.family
       state: 'home'
       for:
         minutes: 10
