@@ -91,10 +91,8 @@ zone:
 input_boolean:
   eu_presence:
     name: Eu en casa
-    initial: off
   carmen_presence:
     name: Carmen en casa
-    initial: off
 
 device_tracker:
   - platform: nmap_tracker
@@ -155,7 +153,9 @@ automation:
         entity_id: input_boolean.eu_presence
       - platform: state
         entity_id: input_boolean.carmen_presence
-#    condition:
+    condition:
+      condition: template
+      value_template: '{{ (trigger.from_state.state == "on") or (trigger.from_state.state == "off") }}'
     action:
       - service: telegram_bot.send_message
         data_template:
