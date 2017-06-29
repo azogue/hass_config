@@ -15,7 +15,7 @@
             "name": "HomeAssistant",
             "host": "[HASS_HOST]",
             "password": "[HASS_PASSWD]",
-            "supported_types": ["binary_sensor", "scene", "sensor", "switch"]
+            "supported_types": ["binary_sensor", "input_boolean", "scene", "sensor", "switch"]
         },
         {
             "platform": "Camera-ffmpeg",
