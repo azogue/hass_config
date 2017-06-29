@@ -142,7 +142,7 @@ homeassistant:
       friendly_name: !secret weather_svg_cam_name
 
     input_slider.max_humidity:
-      friendly_name: Humedad máxima
+      friendly_name: Humedad Máx.
       icon: mdi:water
 
   # Customize entities matching a pattern

@@ -197,8 +197,11 @@ group:
       - switch.show_expert_mode
       - input_boolean.switch_motion_lights
       - input_slider.light_duration_after_motion
-      - automation.apagado_de_climatizador_evaporativo
+      - binary_sensor.estudio_manual_light_switch_rpi2h
+      - automation.encendido_luces_estudio
+      - automation.apagado_luces_estudio
       - input_slider.max_humidity
+      - automation.apagado_de_climatizador_evaporativo
       - switch.systemd_appdaemon
       - script.restart_appdaemon
       - switch.systemd_homebridge

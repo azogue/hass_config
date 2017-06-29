@@ -135,7 +135,3 @@ group:
       - sensor.ram_free_rpi2h
       - sensor.last_boot_rpi2h
       - sensor.disk_use__rpi2h
-      - binary_sensor.estudio_manual_light_switch_rpi2h
-      - automation.encendido_luces_estudio
-      - automation.apagado_luces_estudio
-
