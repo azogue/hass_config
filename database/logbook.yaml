@@ -9,6 +9,9 @@ include:
   entities:
     - sensor.heating
     - sensor.calefaccion
+    - binary_sensor.close_house
     - group.eugenio
     - group.family
     - group.mary
+    - input_boolean.eu_presence
+    - input_boolean.carmen_presence

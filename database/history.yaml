@@ -6,6 +6,8 @@ include:
     - media_player
   entities:
     - sensor.calefaccion
+    - sensor.house_delta_temperature
+    - binary_sensor.close_house
 
     - sensor.dormitorio_temperature_rpi2mpd
     - sensor.dormitorio_humidity_rpi2mpd
@@ -81,6 +83,8 @@ include:
     - group.eugenio
     - group.family
     - group.mary
+    - input_boolean.eu_presence
+    - input_boolean.carmen_presence
 
     - device_tracker.hass_iphone
     - device_tracker.hass_iphonese

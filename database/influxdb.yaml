@@ -38,6 +38,9 @@ include:
    - sensor.enerpi_ldr
    - sensor.enerpi_power
 
+   - sensor.house_delta_temperature
+   - binary_sensor.close_house
+
    - sensor.dormitorio_temperature_rpi2mpd
    - sensor.dormitorio_humidity_rpi2mpd
    - sensor.dormitorio_pressure_rpi2mpd
@@ -159,6 +162,8 @@ include:
    - group.eugenio
    - group.mary
    - group.ipad
+   - input_boolean.eu_presence
+   - input_boolean.carmen_presence
 
 #  tags:
 #    source: hass
