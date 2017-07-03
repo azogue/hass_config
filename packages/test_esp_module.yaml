@@ -50,10 +50,10 @@ homeassistant:
       homebridge_hidden: true
       icon: mdi:lightbulb-on
     binary_sensor.esp3_pir:
-      friendly_name: Movimiento
+      friendly_name: Movimiento (plancha)
       homebridge_hidden: true
     binary_sensor.esp3_vibro:
-      friendly_name: Vibración
+      friendly_name: Vibración (plancha)
       homebridge_hidden: true
     binary_sensor.esp3_light:
       friendly_name: Luz

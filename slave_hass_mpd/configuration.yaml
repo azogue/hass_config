@@ -12,13 +12,9 @@ config:
 logger:
   default: warn
   logs:
-#    homeassistant.loader: info
+    homeassistant.setup: info
     homeassistant.bootstrap: info
     requests: error
-    homeassistant.components.http: warn
-    homeassistant.components.binary_sensor: info
-    custom_components.sensor.bme280: info
-#    custom_components.sensor.bh1750: debug
 
 http:
   api_password: !secret hass_pw
@@ -105,7 +101,7 @@ sensor:
     scan_interval: 30
 
 # HTU21D in RPI
-  - platform: htu21
+  - platform: htu21d
     name: Dormitorio htu21d
     scan_interval: 30
 

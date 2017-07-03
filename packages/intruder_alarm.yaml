@@ -1,41 +1,37 @@
 # General Intrude/Incident Alarm
 homeassistant:
   customize:
-#    input_boolean.switch_master_alarm:
-#      homebridge_hidden: true
+    input_boolean.switch_master_alarm:
+      homebridge_hidden: true
     switch.switch_master_alarm:
       homebridge_name: Alarma general
     #  icon: mdi:shield-half-full
       icon: mdi:shield
 
     switch.use_pir_estudio_rpi2h:
-      homebridge_hidden: true
       friendly_name: Usar movimiento en estudio
       icon: mdi:bullseye
     switch.use_pir_salon:
-      homebridge_hidden: true
       friendly_name: Usar movimiento en salón
       icon: mdi:bullseye
     switch.use_pir_dormitorio_rpi2mpd:
-      homebridge_hidden: true
       friendly_name: Usar movimiento en dormitorio
       icon: mdi:bullseye
-    switch.use_sound_sensor_rpi2h:
-      homebridge_hidden: true
-      friendly_name: Usar sonido en estudio
-      icon: mdi:surround-sound
+#    switch.use_sound_sensor_rpi2h:
+#      friendly_name: Usar sonido en estudio
+#      icon: mdi:surround-sound
     switch.use_vibration_sensor_rpi2h:
-      homebridge_hidden: true
       friendly_name: Usar vibración en estudio
       icon: mdi:vibrate
     switch.use_esp1_pir:
-      homebridge_hidden: true
       friendly_name: Usar movimiento en cocina
       icon: mdi:bullseye
-    #switch.use_esp1_vibro:
-    #  homebridge_hidden: true
-    #  friendly_name: Usar vibración en cocina
-    #  icon: mdi:vibrate
+    switch.use_esp3_pir:
+      friendly_name: Usar movimiento en plancha
+      icon: mdi:bullseye
+    switch.use_esp3_vibro:
+      friendly_name: Usar vibración en plancha
+      icon: mdi:vibrate
     #switch.use_esp1_light:
     switch.motioncam_estudio:
       homebridge_hidden: true
@@ -44,20 +40,13 @@ homeassistant:
       homebridge_hidden: true
       icon: mdi:camera-burst
 
-    binary_sensor.motioncam_estudio:
-      device_class: motion
-    #  homebridge_name: Vídeo-Mov. en Estudio
-      homebridge_hidden: true
-    binary_sensor.motioncam_salon:
-    #  homebridge_name: Vídeo-Mov. en Salón
-      device_class: motion
-      homebridge_hidden: true
-
-    input_boolean.switch_master_alarm:
-      homebridge_hidden: true
-
   customize_glob:
     "input_boolean.use_*":
+      homebridge_hidden: true
+    "switch.use_*":
+      homebridge_hidden: true
+    "binary_sensor.motioncam_*":
+      device_class: motion
       homebridge_hidden: true
 
 # MOTIONEYE CAMERAS
@@ -90,10 +79,11 @@ input_boolean:
   use_pir_estudio_rpi2h:
   use_pir_salon:
   use_pir_dormitorio_rpi2mpd:
-  use_sound_sensor_rpi2h:
+#  use_sound_sensor_rpi2h:
   use_vibration_sensor_rpi2h:
   use_esp1_pir:
-  #use_esp1_vibro:
+  use_esp3_pir:
+  use_esp3_vibro:
 
 binary_sensor:
   - platform: dummy
@@ -159,14 +149,14 @@ switch:
           entity_id: input_boolean.use_pir_salon
           service: input_boolean.turn_on
         value_template: '{{ states.input_boolean.use_pir_salon.state == "on" }}'
-      use_sound_sensor_rpi2h:
-        turn_off:
-          entity_id: input_boolean.use_sound_sensor_rpi2h
-          service: input_boolean.turn_off
-        turn_on:
-          entity_id: input_boolean.use_sound_sensor_rpi2h
-          service: input_boolean.turn_on
-        value_template: '{{ states.input_boolean.use_sound_sensor_rpi2h.state == "on"}}'
+#      use_sound_sensor_rpi2h:
+#        turn_off:
+#          entity_id: input_boolean.use_sound_sensor_rpi2h
+#          service: input_boolean.turn_off
+#        turn_on:
+#          entity_id: input_boolean.use_sound_sensor_rpi2h
+#          service: input_boolean.turn_on
+#        value_template: '{{ states.input_boolean.use_sound_sensor_rpi2h.state == "on"}}'
       use_vibration_sensor_rpi2h:
         turn_off:
           entity_id: input_boolean.use_vibration_sensor_rpi2h
@@ -183,14 +173,22 @@ switch:
           entity_id: input_boolean.use_esp1_pir
           service: input_boolean.turn_on
         value_template: '{{ states.input_boolean.use_esp1_pir.state == "on" }}'
-  #    use_esp1_vibro:
-  #      turn_off:
-  #        entity_id: input_boolean.use_esp1_vibro
-  #        service: input_boolean.turn_off
-  #      turn_on:
-  #        entity_id: input_boolean.use_esp1_vibro
-  #        service: input_boolean.turn_on
-  #      value_template: '{{ states.input_boolean.use_esp1_vibro.state == "on" }}'
+      use_esp3_pir:
+        turn_off:
+          entity_id: input_boolean.use_esp3_pir
+          service: input_boolean.turn_off
+        turn_on:
+          entity_id: input_boolean.use_esp3_pir
+          service: input_boolean.turn_on
+        value_template: '{{ states.input_boolean.use_esp3_pir.state == "on" }}'
+      use_esp3_vibro:
+        turn_off:
+          entity_id: input_boolean.use_esp3_vibro
+          service: input_boolean.turn_off
+        turn_on:
+          entity_id: input_boolean.use_esp3_vibro
+          service: input_boolean.turn_on
+        value_template: '{{ states.input_boolean.use_esp3_vibro.state == "on" }}'
 
 group:
   Alarma:
@@ -210,22 +208,24 @@ group:
       - binary_sensor.pir_estudio_rpi2h
       - binary_sensor.motioncam_estudio
       - binary_sensor.vibration_sensor_rpi2h
-      - binary_sensor.sound_sensor_rpi2h
-      - binary_sensor.vibration_sensor_raw_rpi2h
-      - binary_sensor.sound_sensor_raw_rpi2h
+#      - binary_sensor.sound_sensor_rpi2h
+#      - binary_sensor.vibration_sensor_raw_rpi2h
+#      - binary_sensor.sound_sensor_raw_rpi2h
       - binary_sensor.esp1_pir
-      - binary_sensor.esp1_vibro
+#      - binary_sensor.esp1_vibro
       - binary_sensor.esp1_light
+      - binary_sensor.esp3_pir
 
   Alarm Control:
     control: hidden
     entities:
     - switch.use_pir_salon
     - switch.motioncam_escam
-    - switch.use_sound_sensor_rpi2h
+#    - switch.use_sound_sensor_rpi2h
     - switch.use_vibration_sensor_rpi2h
     - switch.use_pir_estudio_rpi2h
     - switch.motioncam_estudio
     - switch.use_pir_dormitorio_rpi2mpd
     - switch.use_esp1_pir
-  #  - switch.use_esp1_vibro
+    - switch.use_esp3_pir
+    - switch.use_esp3_vibro

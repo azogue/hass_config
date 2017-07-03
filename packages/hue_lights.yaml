@@ -81,7 +81,7 @@ group:
     - input_select.salon_light_scene
 
   Luces Estudio:
-    control: hidden
+#    control: hidden
     entities:
       - switch.estudio_light_relay
       - light.flexo

@@ -8,6 +8,10 @@ homeassistant:
   customize: !include frontend/customize.yaml
   customize_glob: !include frontend/customize_glob.yaml
   packages:  !include_dir_named packages
+  whitelist_external_dirs:
+    - /tmp
+    - /mnt/usbdrive/
+    - /home/homeassistant/.homeassistant
 
 http:
   base_url: !secret base_url

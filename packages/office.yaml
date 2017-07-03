@@ -50,6 +50,9 @@ automation:
     trigger:
       - platform: state
         entity_id: binary_sensor.estudio_manual_light_switch_rpi2h
+    condition:
+      - condition: template
+        value_template: '{{ (trigger.from_state.state == "on") or (trigger.from_state.state == "off") }}'
     action:
       - service: switch.toggle
         entity_id: switch.estudio_light_relay
