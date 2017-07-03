@@ -23,7 +23,7 @@ notify:
     port: 587
     sender: !secret hass_email
     sender_name: !secret name
-    starttls: 1
+    encryption: starttls
     username: !secret hass_email
     password: !secret hass_email_pw
     recipient: !secret myemail
