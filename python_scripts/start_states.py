@@ -6,13 +6,6 @@ This unifies various automations and HA scripts in a simpler one.
 
 """
 
-# noinspection PyUnresolvedReferences
-hass = hass
-# noinspection PyUnresolvedReferences
-logger = logger
-# noinspection PyUnresolvedReferences
-data = data
-
 SWITCH_EXPERT_MODE = 'input_boolean.show_expert_mode'
 
 # 'expert mode' for filtering groups and visibility control for ESP modules
@@ -40,11 +33,13 @@ dev_tracking = {'group.eugenio': 'input_boolean.eu_presence',
 for group in dev_tracking:
     input_b = dev_tracking.get(group)
     b_in_home = hass.states.get(group).state == 'home'
-    b_in_house = hass.states.get(input_b).state == 'on'
-    if b_in_house != b_in_home:
+    input_b_st = hass.states.get(input_b)
+    input_b_in_home = input_b_st.state == 'on'
+    if input_b != b_in_home:
         logger.warning('SYNC error %s: dev_tracker=%s, HomeKit=%s',
-                       group.lstrip('group.'), b_in_home, b_in_house)
-        hass.states.set(input_b, "on" if b_in_home else "off")
+                       group.lstrip('group.'), b_in_home, input_b_in_home)
+        hass.states.set(input_b, "on" if b_in_home else "off",
+                        attributes=input_b_st.attributes)
 
 # Notify HA init with iOS
 hass.services.call(

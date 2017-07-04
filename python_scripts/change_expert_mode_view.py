@@ -31,13 +31,6 @@ GROUPS_WITH_BINARY_STATE = {
     'group.cocina': 'binary_sensor.cocina_online'
 }
 
-# noinspection PyUnresolvedReferences,PyUnboundLocalVariable
-hass = hass
-# noinspection PyUnresolvedReferences,PyUnboundLocalVariable
-logger = logger
-# noinspection PyUnresolvedReferences,PyUnboundLocalVariable
-data = data
-
 # Get new value of 'expert mode'
 expert_mode = data.get(
     'expert_mode_state',
