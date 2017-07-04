@@ -10,6 +10,8 @@ homeassistant:
     switch.systemd_homebridge:
       homebridge_hidden: true
       icon: mdi:settings
+    input_boolean.show_expert_mode:
+      homebridge_hidden: true
     switch.show_expert_mode:
       homebridge_hidden: true
       friendly_name: Modo experto
