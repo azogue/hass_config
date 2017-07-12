@@ -199,7 +199,7 @@ script:
 #      - service: persistent_notification.create
 #        data:
 #          title: 'Condiciones ambientales:'
-#          message: "La Tª es de {{(states('sensor.temperatura_dormitorio')|float / 2 + states('sensor.dht22_dormitorio_temperature')|float / 2)|round(1)}} ºC y la HR es del {{states('sensor.dht22_dormitorio_humidity')}} %."
+#          message: "La Tª es de {{(states('sensor.temperatura_dormitorio')|float / 2 + states('sensor.dht22_dormitorio_temperature')|float / 2)|round(1)}} °C y la HR es del {{states('sensor.dht22_dormitorio_humidity')}} %."
 #      - service: tts.google_say
 #        entity_id: media_player.mopidy
 #        data_template:

@@ -72,7 +72,7 @@ sensor:
   - platform: mqtt
     state_topic: !secret mqtt_topic_esp1_temp
     name: 'esp1_Temperature'
-    unit_of_measurement: 'ºC'
+    unit_of_measurement: '°C'
     expire_after: 180
   - platform: mqtt
     state_topic: !secret mqtt_topic_esp1_light_analog
