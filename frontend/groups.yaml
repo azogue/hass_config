@@ -48,8 +48,8 @@ Control:
     - group.luces_dormitorio
     - group.luces_estudio
     - group.enchufes
-    - group.kodi
     - media_player.kodi
+    - group.kodi
     - media_player.dormitorio_mopidy
 #    - group.despertador
 
@@ -58,8 +58,8 @@ kodi_control:
   icon: mdi:kodi
   view: yes
   entities:
-    - group.kodi
     - media_player.kodi
+    - group.kodi
     - group.media_select
 
 alarm_clock:

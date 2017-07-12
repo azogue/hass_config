@@ -6,17 +6,14 @@ homeassistant:
     media_player.kodi:
       icon: mdi:kodi
       friendly_name: Kodi OSMC
-      homebridge_hidden: true
+      homebridge_name: Tele
+      homebridge_media_player_switch: on_off
     switch.toggle_kodi_ambilight:
       icon: mdi:monitor-multiple
       homebridge_name: Kodi Ambilight
     switch.toggle_config_kodi_ambilight:
       icon: mdi:traffic-light
       homebridge_hidden: true
-    switch.kodi_tv_salon:
-      friendly_name: Tele
-      homebridge_name: Tele
-      assumed_state: true
     script.play_kodi_pvr:
       friendly_name: Enciende la caja tonta
       icon: mdi:television-guide
@@ -28,6 +25,8 @@ homeassistant:
       icon: mdi:refresh
     script.stop_kodi:
       icon: mdi:stop
+    script.quit_kodi:
+      icon: mdi:close
     script.recent_episodes:
       icon: mdi:play-circle
     script.recent_movies:
@@ -54,11 +53,6 @@ switch:
         friendly_name: KODI Ambilight INMERSION
         value_template: '{{ value_json == 6 }}'
 
-  - platform: cecswitch
-    name: kodi_tv_salon
-    kodi_player: media_player.kodi
-    on_cec_command: activate
-
 media_player:
   - platform: kodi
     host: !secret kodi_host
@@ -67,8 +61,30 @@ media_player:
     username: !secret kodi_user
     password: !secret kodi_pw
     enable_websocket: true
-    turn_off_action: quit
     timeout: 10
+    turn_on_action:
+    - service: media_player.kodi_call_method
+      data:
+        entity_id: media_player.kodi
+        method: Addons.ExecuteAddon
+        addonid: script.json-cec
+        params:
+          command: activate
+    turn_off_action:
+      service: python_script.turn_off_kodi
+#    turn_off_action:
+#    - service: media_player.kodi_call_method
+#      data:
+#        entity_id: media_player.kodi
+#        method: Player.Stop
+#        playerid: 1
+#    - service: media_player.kodi_call_method
+#      data:
+#        entity_id: media_player.kodi
+#        method: Addons.ExecuteAddon
+#        addonid: script.json-cec
+#        params:
+#          command: standby
 
 shell_command:
   # Kill OSMC Kodi (when frozen)
@@ -79,8 +95,9 @@ script:
     alias: Enciende la caja tonta
     sequence:
       - alias: TV on
-        service: switch.turn_on
-        entity_id: switch.kodi_tv_salon
+        service: media_player.turn_on
+        data:
+          entity_id: media_player.kodi
 
       - alias: Play TV channel
         service: media_player.play_media
@@ -132,6 +149,13 @@ script:
 
   stop_kodi:
     alias: Stop playback in Kodi
+    sequence:
+        service: media_player.media_stop
+        data:
+          entity_id: media_player.kodi
+
+  quit_kodi:
+    alias: Quit Kodi
     sequence:
         service: media_player.media_stop
         data:
@@ -192,15 +216,18 @@ input_select:
      - Nada que hacer
 
 group:
+  player:
+    - media_player.kodi
+
   Kodi:
     control: hidden
     entities:
-      - switch.kodi_tv_salon
       - switch.toggle_kodi_ambilight
       - switch.toggle_config_kodi_ambilight
       - script.play_kodi_pvr
       - script.stop_kodi
       - script.update_library
+      - script.quit_kodi
       - script.restart_kodi_osmc
 
   Media select:

@@ -27,7 +27,6 @@ include:
    - switch.estudio_light_relay
    - binary_sensor.estudio_manual_light_switch_rpi2h
    - switch.new_switch_2
-   - switch.kodi_tv_salon
    - switch.toggle_config_kodi_ambilight
    - switch.toggle_kodi_ambilight
 

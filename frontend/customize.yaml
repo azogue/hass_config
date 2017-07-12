@@ -1,24 +1,28 @@
 ###############################################################################
 #                           GROUPS                                            #
 ###############################################################################
-group.media_select:
-  order: 0
 group.family:
-  order: 1
+  order: -1
 group.alarma:
-  order: 2
+  order: 0
 group.master_luces_del_salon:
-  order: 3
+  order: 1
 group.luces_salon:
-  order: 4
+  order: 2
 group.salon:
-  order: 5
+  order: 3
 group.salon_simple:
-  order: 6
+  order: 4
 group.enchufes:
-  order: 7
+  order: 5
+
+group.player:
+  order: 6
 group.kodi:
+  order: 7
+group.media_select:
   order: 8
+
 group.luces_estudio:
   order: 9
 group.estudio_rpi2h:

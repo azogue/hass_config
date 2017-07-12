@@ -21,6 +21,37 @@ switch:
   kodi_player: media_player.kodi
   on_cec_command: activate
 ```
+
+** **UPDATE**:
+
+With the new options to define HA scripts to turn ON/OFF Kodi, this extra
+switch is not required anymore. It can be replaced with scripts like this:
+
+```yaml
+media_player:
+  - platform: kodi
+    turn_on_action:
+    - service: media_player.kodi_call_method
+      data:
+        entity_id: media_player.kodi
+        method: Addons.ExecuteAddon
+        addonid: script.json-cec
+        params:
+          command: activate
+    turn_off_action:
+    - service: media_player.kodi_call_method
+      data:
+        entity_id: media_player.kodi
+        method: Player.Stop
+        playerid: 1
+    - service: media_player.kodi_call_method
+      data:
+        entity_id: media_player.kodi
+        method: Addons.ExecuteAddon
+        addonid: script.json-cec
+        params:
+          command: standby
+```
 """
 import asyncio
 import logging
