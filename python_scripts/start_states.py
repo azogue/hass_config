@@ -9,14 +9,10 @@ This unifies various automations and HA scripts in a simpler one.
 SWITCH_EXPERT_MODE = 'input_boolean.show_expert_mode'
 
 # 'expert mode' for filtering groups and visibility control for ESP modules
-expert_mode_on = data.get(
-    'expert_mode_state',
-    hass.states.get(SWITCH_EXPERT_MODE).state)
-
-# Call other python_script to change visibility states
-# hass.services.call('python_script', 'change_expert_mode_view',
-#                    {"expert_mode_state": expert_mode_on})
-hass.states.set(SWITCH_EXPERT_MODE, expert_mode_on)
+last_state = hass.states.get(SWITCH_EXPERT_MODE)
+expert_mode_on = data.get('expert_mode_state', last_state.state)
+hass.states.set(SWITCH_EXPERT_MODE, expert_mode_on,
+                attributes=last_state.attributes)
 
 # Anyone at home?
 family_home = hass.states.get('group.family').state == 'home'
@@ -35,7 +31,7 @@ for group in dev_tracking:
     b_in_home = hass.states.get(group).state == 'home'
     input_b_st = hass.states.get(input_b)
     input_b_in_home = input_b_st.state == 'on'
-    if input_b != b_in_home:
+    if input_b_in_home != b_in_home:
         logger.warning('SYNC error %s: dev_tracker=%s, HomeKit=%s',
                        group.lstrip('group.'), b_in_home, input_b_in_home)
         hass.states.set(input_b, "on" if b_in_home else "off",
