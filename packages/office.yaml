@@ -12,6 +12,9 @@ homeassistant:
       device_class: vibration
       homebridge_hidden: true
 
+    sensor.estudio_light_level_rpi2h:
+      homebridge_sensor_type: light
+
 binary_sensor:
   - platform: dummy
     sensors:
