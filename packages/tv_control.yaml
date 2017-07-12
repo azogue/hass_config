@@ -71,20 +71,16 @@ media_player:
         params:
           command: activate
     turn_off_action:
-      service: python_script.turn_off_kodi
-#    turn_off_action:
-#    - service: media_player.kodi_call_method
-#      data:
-#        entity_id: media_player.kodi
-#        method: Player.Stop
-#        playerid: 1
-#    - service: media_player.kodi_call_method
-#      data:
-#        entity_id: media_player.kodi
-#        method: Addons.ExecuteAddon
-#        addonid: script.json-cec
-#        params:
-#          command: standby
+    - service: media_player.media_stop
+      data:
+        entity_id: media_player.kodi
+    - service: media_player.kodi_call_method
+      data:
+        entity_id: media_player.kodi
+        method: Addons.ExecuteAddon
+        addonid: script.json-cec
+        params:
+          command: standby
 
 shell_command:
   # Kill OSMC Kodi (when frozen)
@@ -157,9 +153,9 @@ script:
   quit_kodi:
     alias: Quit Kodi
     sequence:
-        service: media_player.media_stop
-        data:
-          entity_id: media_player.kodi
+      service: media_player.kodi_call_method
+      data:
+        method: Application.Quit
 
   update_library:
     alias: Update Kodi Library
