@@ -13,7 +13,7 @@
     # Not playing anything for a time
     - condition: state
       entity_id: media_player.kodi
-      state: 'idle'
+      state: 'off'
       for:
         minutes: 15
 
@@ -25,6 +25,11 @@
         minutes: 3
     - condition: state
       entity_id: light.salon
+      state: 'off'
+      for:
+        minutes: 5
+    - condition: state
+      entity_id: light.estudio
       state: 'off'
       for:
         minutes: 5

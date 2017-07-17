@@ -1,28 +1,21 @@
-# No need to update the switch, or only for running the turn_on_action when play is detected? -> implement the media_player.turn_on call individually for now
-#- alias: Encendido de TV si apagada y KODI play
-#  trigger:
-#    platform: state
-#    entity_id: media_player.kodi
-#    from: 'idle'
-#    to: 'playing'
-#  condition:
-#    condition: state
-#    entity_id: switch.kodi_tv_salon
-#    state: 'off'
-#    for:
-#      minutes: 2
-#  action:
-#  - service: switch.turn_on
-#    entity_id: switch.kodi_tv_salon
-#  - service: telegram_bot.send_message
-#    data:
-#      title: '*TV ON*'
-#      target: !secret telegram_bot_group
-#      message: 'Encendido de TV automático en Kodi PLAY'
-#      disable_notification: true
-#      inline_keyboard:
-#        - TV OFF:/service_call switch.turn_off switch.kodi_tv_salon, TV ON:/service_call switch.turn_on switch.kodi_tv_salon, ◼︎:/service_call media_player.media_stop media_player.kodi
-#        - Luces salón:/service_call light.toggle group.luces_salon, +:/init
+- alias: Encendido de TV si apagada y KODI play
+  trigger:
+    platform: state
+    entity_id: media_player.kodi
+    from: 'off'
+    to: 'playing'
+  action:
+  - service: media_player.turn_on
+    entity_id: media_player.kodi
+  - service: telegram_bot.send_message
+    data:
+      title: '*TV ON*'
+      target: !secret telegram_bot_group
+      message: 'Encendido de TV automático en Kodi PLAY'
+      disable_notification: true
+      inline_keyboard:
+        - TV OFF:/service_call media_player.turn_off media_player.kodi, TV ON:/service_call media_player.turn_on media_player.kodi, ◼︎:/service_call media_player.media_stop media_player.kodi
+        - Luces salón:/service_call light.toggle group.luces_salon, +:/init
 #
 - alias: Apagado de TV si encendida y KODI en idle > 10 min
   trigger:
@@ -48,7 +41,7 @@
   trigger:
     platform: state
     entity_id: media_player.kodi
-    from: 'idle'
+#    from: 'idle'
     to: 'playing'
   condition:
     - condition: sun
@@ -68,3 +61,18 @@
       disable_notification: true
       inline_keyboard:
         - CAM OFF:/service_call switch.turn_off switch.camara, CAM ON:/service_call switch.turn_on switch.camara, +:/init
+
+- alias: Encendido automático de CAM salón
+  trigger:
+    platform: state
+    entity_id: media_player.kodi
+    to: 'off'
+    for:
+      minutes: 5
+  condition:
+    - condition: state
+      entity_id: switch.camara
+      state: 'off'
+  action:
+  - service: switch.turn_on
+    entity_id: switch.camara
