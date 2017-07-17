@@ -274,6 +274,75 @@ weather:
     api_key: !secret openweathermap_api_key
     name: Local Weather
 
+input_slider:
+  max_humidity:
+    initial: 55
+    min: 30
+    max: 75.0
+    step: 1
+
+psychrometrics:
+  scan_interval: 40
+  altitude: 550
+#  pressure_kpa: 975
+#  remote_api:
+#    base_url: !secret master_base_url
+#    api_password: !secret master_api_password
+#    port: 443
+#    use_ssl: True
+  interior:
+    Salón:
+#      - sensor.t_salon
+      - sensor.salon_temperature, sensor.salon_humidity
+    Dormitorio:
+      - sensor.dormitorio_temperature_rpi2mpd, sensor.dormitorio_humidity_rpi2mpd
+      - sensor.dormitorio_htu21d_temperature_rpi2mpd, sensor.dormitorio_htu21d_humidity_rpi2mpd
+    Cocina:
+      - sensor.esp1_temperature, sensor.esp1_humidity
+    Plancha:
+      - sensor.esp3_temperature, sensor.esp3_humidity
+    Estudio:
+      - sensor.estudio_temperature_rpi2h, sensor.estudio_humidity_rpi2h
+  exterior:
+      - sensor.galeria_dht22_temperature, sensor.galeria_dht22_humidity
+#      - sensor.galeria_impulsion_calefaccion
+#      - sensor.galeria_retorno_calefaccion
+  weather:
+      - sensor.dark_sky_temperature, sensor.dark_sky_humidity
+      - sensor.villena_temperature, sensor.villena_humidity
+
+automation:
+  # automation.apagado_de_climatizador_evaporativo
+  - alias: Apagado de climatizador evaporativo
+    trigger:
+      platform: template
+      value_template: >
+        {{ (states.sensor.estudio_humidity_rpi2h and states.sensor.estudio_humidity_rpi2h.state|int > states.input_slider.max_humidity.state|int)
+          or (states.sensor.dormitorio_humidity_rpi2mpd and states.sensor.dormitorio_humidity_rpi2mpd.state|int > states.input_slider.max_humidity.state|int)
+          or (states.sensor.salon_humidity and states.sensor.salon_humidity.state|int > states.input_slider.max_humidity.state|int) }}
+    condition:
+      condition: state
+      entity_id: switch.new_switch_2
+      state: 'on'
+    action:
+      - service: switch.turn_off
+        entity_id: switch.new_switch_2
+
+      - service: telegram_bot.send_message
+        data_template:
+          title: "*Apagado automático de climatizador evaporativo*"
+          message: >
+            Se ha llegado al límite establecido para la humedad relativa{% if states.input_slider.max_humidity %} (*{{states.input_slider.max_humidity.state|int}}%*){%endif%}
+              --> _Se apaga el ventilador_. La humedad relativa en casa es de:
+              {% if states.sensor.estudio_humidity_rpi2h %}- {{ states.sensor.estudio_humidity_rpi2h.state}}% en estudio {%endif%}
+              {% if states.sensor.dormitorio_humidity_rpi2mpd %}- {{ states.sensor.dormitorio_humidity_rpi2mpd.state}}% en dormitorio {%endif%}
+              {% if states.sensor.salon_humidity %}- {{ states.sensor.salon_humidity.state}}% en salón {%endif%}
+
+          target: !secret telegram_bot_group
+          disable_notification: true
+          inline_keyboard:
+            - Encender:/service_call switch/turn_on switch.new_switch_2, Apagar:/service_call switch/turn_off switch.new_switch_2
+
 group:
   Salón:
     control: hidden
@@ -317,6 +386,7 @@ group:
     name: Ahora
     entities:
       - sensor.dark_sky_summary
+      - camera.psychrometric_chart
       - sensor.dark_sky_temperature
       - sensor.dark_sky_apparent_temperature
       - sensor.dark_sky_dew_point
@@ -387,42 +457,3 @@ group:
 #      - sensor.yw_day2_condition
 #      - sensor.yw_day2_temperature_min
 #      - sensor.yw_day2_temperature_max
-
-input_slider:
-  max_humidity:
-    initial: 55
-    min: 30
-    max: 75.0
-    step: 1
-
-automation:
-  # automation.apagado_de_climatizador_evaporativo
-  - alias: Apagado de climatizador evaporativo
-    trigger:
-      platform: template
-      value_template: >
-        {{ (states.sensor.estudio_humidity_rpi2h and states.sensor.estudio_humidity_rpi2h.state|int > states.input_slider.max_humidity.state|int)
-          or (states.sensor.dormitorio_humidity_rpi2mpd and states.sensor.dormitorio_humidity_rpi2mpd.state|int > states.input_slider.max_humidity.state|int)
-          or (states.sensor.salon_humidity and states.sensor.salon_humidity.state|int > states.input_slider.max_humidity.state|int) }}
-    condition:
-      condition: state
-      entity_id: switch.new_switch_2
-      state: 'on'
-    action:
-      - service: switch.turn_off
-        entity_id: switch.new_switch_2
-
-      - service: telegram_bot.send_message
-        data_template:
-          title: "*Apagado automático de climatizador evaporativo*"
-          message: >
-            Se ha llegado al límite establecido para la humedad relativa{% if states.input_slider.max_humidity %} (*{{states.input_slider.max_humidity.state|int}}%*){%endif%}
-              --> _Se apaga el ventilador_. La humedad relativa en casa es de:
-              {% if states.sensor.estudio_humidity_rpi2h %}- {{ states.sensor.estudio_humidity_rpi2h.state}}% en estudio {%endif%}
-              {% if states.sensor.dormitorio_humidity_rpi2mpd %}- {{ states.sensor.dormitorio_humidity_rpi2mpd.state}}% en dormitorio {%endif%}
-              {% if states.sensor.salon_humidity %}- {{ states.sensor.salon_humidity.state}}% en salón {%endif%}
-
-          target: !secret telegram_bot_group
-          disable_notification: true
-          inline_keyboard:
-            - Encender:/service_call switch/turn_on switch.new_switch_2, Apagar:/service_call switch/turn_off switch.new_switch_2
