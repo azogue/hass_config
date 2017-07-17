@@ -59,7 +59,6 @@ group: !include frontend/groups.yaml
 browser:
 #conversation:
 discovery:
-frontend:
 sun:
 updater:
   include_used_components: true
@@ -67,6 +66,18 @@ config:
 tts:  # Text to speech
   platform: google
   language: 'es'
+wake_on_lan:
+media_extractor:
+frontend:
+  themes:
+    green:
+      primary-color: '#6ca518'
+      dark-primary-color: '#334E0C'
+      light-primary-color: '#97E726'
+    default:
+      primary-color: '#03A9F4'
+      dark-primary-color: '#0288D1'
+      light-primary-color: '#B3E5FC'
 
 ########################################
 # Databases
