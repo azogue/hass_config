@@ -54,7 +54,7 @@ switch:
         value_template: '{{ value_json == 6 }}'
 
 media_player:
-  - platform: kodi
+  - platform: mykodi
     host: !secret kodi_host
     port: !secret kodi_port
     name: Kodi
