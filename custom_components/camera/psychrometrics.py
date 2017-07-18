@@ -23,7 +23,8 @@ def async_setup_platform(hass, config, async_add_devices, discovery_info):
             discovery_info['connectors'],
             discovery_info['entity_name'],
             discovery_info['refresh_interval'],
-            discovery_info['remote_api'])
+            discovery_info['evolution_arrows_minutes'],
+            discovery_info['remote_api_conf'])
         async_add_devices([cam])
     else:
         return False

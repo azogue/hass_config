@@ -4,7 +4,7 @@
 """
 # TODO DESCRIPTION
 import asyncio
-import datetime as dt
+from collections import deque
 from datetime import timedelta
 from io import BytesIO
 from itertools import cycle
@@ -27,7 +27,7 @@ from homeassistant.util.dt import now
 # TODO Remove TEMPORAL remote access
 from homeassistant import remote
 
-REQUIREMENTS = ['psychrochart==0.1.4']
+REQUIREMENTS = ['psychrochart==0.1.5']
 DEPENDENCIES = ['sensor']
 
 DOMAIN = 'psychrometrics'
@@ -36,6 +36,7 @@ CONF_ALTITUDE = 'altitude'
 CONF_EXTERIOR = 'exterior'
 CONF_INTERIOR = 'interior'
 CONF_PRESSURE_KPA = 'pressure_kpa'
+CONF_EVOLUTION_ARROWS_MIN = 'evolution_arrows_minutes'
 CONF_REMOTE_API = 'remote_api'
 CONF_WEATHER = 'weather'
 
@@ -59,6 +60,7 @@ CONFIG_SCHEMA = vol.Schema({
             cv.positive_int,
         vol.Exclusive(CONF_ALTITUDE, 'altitude'): cv.positive_int,
         vol.Exclusive(CONF_PRESSURE_KPA, 'altitude'): cv.positive_int,
+        vol.Optional(CONF_EVOLUTION_ARROWS_MIN): cv.positive_int,
         vol.Optional(CONF_REMOTE_API): cv.Dict,
     })
 }, required=True, extra=vol.ALLOW_EXTRA)
@@ -81,6 +83,7 @@ def make_psychrochart(altitude, pressure_kpa):
     """Create the PsychroChart object where to overlay the sensors info."""
     from psychrochart.agg import PsychroChart
     from psychrochart.util import load_config
+    from psychrochart import __version__ as version, __file__ as psy_file
 
     # Load chart style:
     chart_style = load_config(CHART_STYLE_JSON)
@@ -90,7 +93,7 @@ def make_psychrochart(altitude, pressure_kpa):
         chart_style['limits']['pressure_kpa'] = pressure_kpa
 
     # Make chart
-    chart = PsychroChart(chart_style, OVERLAY_ZONES_JSON)
+    chart = PsychroChart(chart_style, OVERLAY_ZONES_JSON, logger=_LOGGER)
 
     # Append lines
     t_min, t_opt, t_max = 16, 23, 30
@@ -109,11 +112,14 @@ def make_psychrochart(altitude, pressure_kpa):
 
 
 def update_chart_overlay(chart, svg_image,
-                         points, connectors,
+                         points, connectors, arrows,
                          first_generation=False):
     """Update the PsychroChart with the sensors info and return the SVG."""
     # svg_image = BytesIO()
     chart.plot_points_dbt_rh(points, connectors)
+    if arrows:
+        # Make pairs:
+        chart.plot_arrows_dbt_rh(arrows)
     if first_generation:
         # Append legend
         chart.plot_legend(
@@ -133,6 +139,7 @@ def async_setup(hass, config_hosts):
     altitude = config.get(CONF_ALTITUDE)
     pressure_kpa = config.get(CONF_PRESSURE_KPA)
     scan_interval = config.get(CONF_SCAN_INTERVAL)
+    evolution_arrows_minutes = config.get(CONF_EVOLUTION_ARROWS_MIN)
 
     remote_api_conf = config.get(CONF_REMOTE_API)
 
@@ -150,7 +157,8 @@ def async_setup(hass, config_hosts):
         "connectors": connectors,
         "entity_name": config.get(CONF_NAME),
         "refresh_interval": scan_interval,
-        "remote_api": remote_api_conf}
+        "evolution_arrows_minutes": evolution_arrows_minutes,
+        "remote_api_conf": remote_api_conf}
 
     yield from async_load_platform(hass, 'camera', DOMAIN, chart_config)
 
@@ -172,7 +180,8 @@ class PsychroCam(Camera):
     """Custom Camera for the psychrometric chart."""
 
     def __init__(self, hass, chart_object, zones_sensors, connectors,
-                 entity_name, refresh_interval, remote_api_conf):
+                 entity_name, refresh_interval, evolution_arrows_minutes,
+                 remote_api_conf):
         """Initialize Local File Camera component."""
         super().__init__()
         self.hass = hass
@@ -187,6 +196,10 @@ class PsychroCam(Camera):
             for k in sorted(self.zones_sensors[CONF_INTERIOR])}
         self.connectors = connectors
 
+        if evolution_arrows_minutes:
+            len_deque = int(timedelta(minutes=evolution_arrows_minutes)
+                            / self._delta_refresh)
+            self._points = deque([], maxlen=len_deque)
         self._image_bytes = None
         # self._file_path = os.path.join(basedir, 'chart.svg')
 
@@ -204,9 +217,9 @@ class PsychroCam(Camera):
         # self._counter_frames = 0
 
         # Chart regeneration
-        async_track_point_in_utc_time(
-            self.hass, self.update_chart,
-            now() + dt.timedelta(seconds=1))
+        if self.remote_api is not None:  # No need to wait
+            async_track_point_in_utc_time(
+                self.hass, self.update_chart, now() + timedelta(seconds=1))
         async_track_time_interval(
             self.hass, self.update_chart, self._delta_refresh)
 
@@ -285,10 +298,44 @@ class PsychroCam(Camera):
     def get_dbt_rh_points(self):
         # Extract T-RH points
 
-        def _mean(values: Union[List[float], Tuple[float]]) -> float:
+        def _mean(values: Union[List[float],
+                                Tuple[float]]) -> Optional[float]:
             if values:
-                return sum(values) / len(values)
-            return 0.
+                try:
+                    return sum(values) / len(values)
+                except TypeError:
+                    _LOGGER.error('Bad values in mean: %s', values)
+            return None
+
+        results = yield from self.collect_states()
+        points = {}
+        for key, value in results.items():
+            if isinstance(value, dict):
+                temp_zone = humid_zone = counter = 0
+                for k_room, s_values in value.items():
+                    temp = _mean([v[0] for v in s_values])
+                    humid = _mean([v[1] for v in s_values])
+                    if temp is not None and humid is not None:
+                        points[k_room] = (int(100 * temp) / 100.,
+                                          int(100 * humid) / 100.)
+                        temp_zone += temp
+                        humid_zone += humid
+                        counter += 1
+                if counter:
+                    points[key] = (int(100 * temp_zone / counter) / 100.,
+                                   int(100 * humid_zone / counter) / 100.)
+            else:
+                temp = _mean([v[0] for v in value])
+                humid = _mean([v[1] for v in value])
+                if temp is not None and humid is not None:
+                    points[key] = (int(100 * temp) / 100.,
+                                   int(100 * humid) / 100.)
+        return points
+
+    # noinspection PyUnusedLocal
+    @asyncio.coroutine
+    def update_chart(self, *args):
+        """Re-generates Chart SVG."""
 
         def _apply_style(labeled_points, colors_interior_zones):
             point_styles = {
@@ -317,45 +364,30 @@ class PsychroCam(Camera):
                         "label": k}
             return labeled_points
 
-        results = yield from self.collect_states()
-        points = {}
-        for key, value in results.items():
-            if isinstance(value, dict):
-                temp_zone = humid_zone = counter = 0
-                for k_room, s_values in value.items():
-                    temp = _mean([v[0] for v in s_values])
-                    humid = _mean([v[1] for v in s_values])
-                    points[k_room] = (int(100 * temp) / 100.,
-                                      int(100 * humid) / 100.)
-                    temp_zone += temp
-                    humid_zone += humid
-                    counter += 1
-                if counter:
-                    points[key] = (int(100 * temp_zone / counter) / 100.,
-                                   int(100 * humid_zone / counter) / 100.)
-            else:
-                temp = _mean([v[0] for v in value])
-                humid = _mean([v[1] for v in value])
-                points[key] = (int(100 * temp) / 100.,
-                               int(100 * humid) / 100.)
-        return _apply_style(points, self.colors_interior_zones)
-
-    # noinspection PyUnusedLocal
-    @asyncio.coroutine
-    def update_chart(self, *args):
-        """Re-generates Chart SVG."""
         tic = time()
         points = yield from self.get_dbt_rh_points()
-        # _LOGGER.debug('POINTS: %s', points)
+
+        self._points.append(points.copy())
+        _LOGGER.debug('NEW POINTS: %s', points)
+
+        arrows = {}
+        if len(self._points) > 1:
+            arrows = {k: [p, self._points[0][k]]
+                      for k, p in points.items() if k in self._points[0]
+                      and p != self._points[0][k]}
+            _LOGGER.debug('MAKE ARROWS: %s', arrows)
+            arrows = _apply_style(arrows, self.colors_interior_zones)
+
+        points = _apply_style(points, self.colors_interior_zones)
 
         svg_image = BytesIO()
         yield from self.hass.async_add_job(
             update_chart_overlay, self.chart, svg_image,
-            points, self.connectors, self._image_bytes is None)
+            points, self.connectors, arrows, self._image_bytes is None)
         svg_image.seek(0)
         self._image_bytes = svg_image.read()
 
-        self._last_tile_generation = dt.datetime.now()
+        self._last_tile_generation = now()
         _LOGGER.debug('CHART generated in {:.2f} sec'.format(time() - tic))
 
     @property
