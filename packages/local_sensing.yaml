@@ -282,7 +282,8 @@ input_slider:
     step: 1
 
 psychrometrics:
-  scan_interval: 40
+  scan_interval: 120
+  evolution_arrows_minutes: 240
   altitude: 550
 #  pressure_kpa: 975
 #  remote_api:
@@ -309,7 +310,7 @@ psychrometrics:
 #      - sensor.galeria_retorno_calefaccion
   weather:
       - sensor.dark_sky_temperature, sensor.dark_sky_humidity
-      - sensor.villena_temperature, sensor.villena_humidity
+#      - sensor.villena_temperature, sensor.villena_humidity
 
 automation:
   # automation.apagado_de_climatizador_evaporativo
