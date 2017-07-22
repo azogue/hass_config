@@ -296,16 +296,16 @@ def _check_if_tile_changed(new_svg_content_b, path_svg_file):
 def _get_remote_svg_tile(hass, host, port, prefix, name, width_tiles, c1, c2):
     """Get remote SVG file."""
     url_tile = URL_TILE_MASK.format(host, port, prefix, name, width_tiles)
-    ok, r_svg = False, None
+    ok, r_svg, status = False, None, -1
     try:
         r_svg = yield from hass.async_add_job(
-            partial(requests.get, url_tile, timeout=10))
-
+            partial(requests.get, url_tile, timeout=15))
+        status = r_svg.status_code
         ok = r_svg.ok
     except (requests.ReadTimeout, requests.ConnectionError):
         pass
     if ok:
-        yield from asyncio.sleep(0)
+        # yield from asyncio.sleep(0)
         color1 = ', '.join([str(x) for x in c1])
         color2 = ', '.join([str(x) for x in c2])
         mask_bg = ('background-image: radial-gradient('
@@ -320,7 +320,8 @@ def _get_remote_svg_tile(hass, host, port, prefix, name, width_tiles, c1, c2):
         #     svg_text_sub, count=1)
         # LOGGER.warning(svg_text_sub[:300])
         return svg_text_sub.encode()
-    LOGGER.info('TILE REQUEST ERROR: {} - {}'.format(r_svg, url_tile))
+    LOGGER.info('TILE REQUEST ERROR [code:{}]: {} - {}'
+                .format(status, r_svg, url_tile))
     return None
 
 
