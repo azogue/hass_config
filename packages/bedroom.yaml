@@ -65,6 +65,38 @@ media_player:
     name: Dormitorio (Mopidy)
   #  scan_interval: 60
 
+automation:
+  - alias: Encendido luces dormitorio
+    trigger:
+      platform: state
+      entity_id: binary_sensor.pir_dormitorio_rpi2mpd
+      to: 'on'
+    condition:
+      condition: and
+      conditions:
+        - condition: state
+          entity_id: group.family
+          state: 'home'
+        - condition: state
+          entity_id: group.luces_dormitorio
+          state: 'off'
+          for:
+            seconds: 30
+        - condition: state
+          entity_id: switch.switch_master_alarm
+          state: 'off'
+        - condition: template
+          value_template: '{{ states.sensor.dormitorio_light_level_rpi2mpd.state |int < 15 }}'
+        - condition: time
+          after: '8:30:00'
+          before: '23:00:00'
+    action:
+      - service: light.turn_on
+        data:
+          entity_id: light.aura_habitacion
+          brightness: 222
+          xy_color: [0.3945,0.406]
+
 group:
   Dormitorio RPI2MPD:
     name: Dormitorio

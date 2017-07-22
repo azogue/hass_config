@@ -32,3 +32,4 @@ catlog.sh
 testing_gen.yaml
 log_service_status.json
 known_devices.yaml
+*.00

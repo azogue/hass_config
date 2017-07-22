@@ -74,6 +74,8 @@ automation:
         - condition: state
           entity_id: switch.estudio_light_relay
           state: 'off'
+          for:
+            seconds: 60
         - condition: state
           entity_id: switch.switch_master_alarm
           state: 'off'

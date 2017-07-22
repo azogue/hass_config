@@ -12,10 +12,12 @@
 sensor.dormitorio_temperature:
   friendly_name: Temperatura
   icon: mdi:thermometer
+  homebridge_hidden: True
 sensor.dormitorio_humidity:
   friendly_name: Humedad
   icon: mdi:water-percent
-  homebridge_sensor_type: humidity
+  homebridge_hidden: True
+#  homebridge_sensor_type: humidity
 sensor.dormitorio_pressure:
   friendly_name: Presión atmosférica
   icon: mdi:weather-cloudy
@@ -24,6 +26,7 @@ sensor.dormitorio_light_level:
   friendly_name: Iluminación
   icon: mdi:lightbulb
   device_class: light
+  homebridge_sensor_type: light
 
 sensor.dormitorio_htu21d_temperature:
   friendly_name: Temperatura HTU

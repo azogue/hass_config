@@ -12,6 +12,7 @@ homeassistant:
     - /tmp
     - /mnt/usbdrive/
     - /home/homeassistant/.homeassistant
+    - /home/homeassistant/picamera
 
 http:
   base_url: !secret base_url
