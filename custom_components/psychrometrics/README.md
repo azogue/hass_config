@@ -50,6 +50,7 @@ As you can see, the ambient points (temperature and relative humidity) are defin
 ```yaml
 psychrometrics:
   scan_interval: 120  # data update interval
+  evolution_arrows_minutes: 240  # draw arrows to show evolution
   altitude: 550  # Altitude in m to calculate the typical pressure
   # pressure_kpa: 97.5  # Pressure in kPa instead of altitude
   interior:  # Interior main zone, with sensors for each room
@@ -68,7 +69,6 @@ psychrometrics:
       - sensor.galeria_dht22_temperature, sensor.galeria_dht22_humidity
   weather:  # Pairs of (T, RH) from weather services
       - sensor.dark_sky_temperature, sensor.dark_sky_humidity
-      - sensor.villena_temperature, sensor.villena_humidity
 ```
 
 ### Screenshots

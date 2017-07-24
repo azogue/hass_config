@@ -127,8 +127,7 @@ Weather:
   icon: mdi:weather-partlycloudy
   view: yes
   entities:
-    - sensor.house_delta_temperature
-    - binary_sensor.close_house
+    - group.aislamiento
     - group.weather_dark_sky_now
     - group.weather_dark_sky_today
     - group.weather_dark_sky_tomorrow

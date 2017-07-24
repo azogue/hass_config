@@ -94,6 +94,9 @@ group.all_automations:
 group.scripts:
   order: 43
 
+group.aislamiento:
+  order: 70
+
 group.weather_dark_sky_now:
   order: 76
 camera.weather_svg:

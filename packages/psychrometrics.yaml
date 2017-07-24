@@ -1,0 +1,92 @@
+# psychrometrics custom component
+homeassistant:
+  customize:
+      sensor.house_delta_temperature:
+        friendly_name: Recalentamiento de casa
+        homebridge_hidden: True
+
+      binary_sensor.close_house:
+        friendly_name: Apertura de ventanas
+
+psychrometrics:
+  scan_interval: 120
+  evolution_arrows_minutes: 240
+  altitude: !secret elevation
+#  pressure_kpa: 975
+#  remote_api:
+#    base_url: !secret master_base_url
+#    api_password: !secret master_api_password
+#    port: 443
+#    use_ssl: True
+  interior:
+    Salón:
+#      - sensor.t_salon
+      - sensor.salon_temperature, sensor.salon_humidity
+    Dormitorio:
+      - sensor.dormitorio_temperature_rpi2mpd, sensor.dormitorio_humidity_rpi2mpd
+      - sensor.dormitorio_htu21d_temperature_rpi2mpd, sensor.dormitorio_htu21d_humidity_rpi2mpd
+    Cocina:
+      - sensor.esp1_temperature, sensor.esp1_humidity
+    Plancha:
+      - sensor.esp3_temperature, sensor.esp3_humidity
+    Estudio:
+      - sensor.estudio_temperature_rpi2h, sensor.estudio_humidity_rpi2h
+  exterior:
+      - sensor.galeria_dht22_temperature, sensor.galeria_dht22_humidity
+#      - sensor.galeria_impulsion_calefaccion
+#      - sensor.galeria_retorno_calefaccion
+  weather:
+      - sensor.dark_sky_temperature, sensor.dark_sky_humidity
+      - sensor.villena_temperature, sensor.villena_humidity
+
+
+automation:
+- alias: Notificación de final de ventilación natural
+  trigger:
+    platform: state
+    entity_id: binary_sensor.close_house
+    from: 'on'
+    to: 'off'
+  action:
+    - service: telegram_bot.send_message
+      data_template:
+        title: '*Cierre y oscurecimiento de ventanas*'
+        target: '{{ states.sensor.telegram_default_chatid.state | int }}'
+        message: >
+          _Se recomienda aislar la casa lo máximo posible para evitar el recalentamiento gratuito_.
+          Las temperaturas actuales son de *{{states.sensor.house_delta_temperature.attributes['Exterior'] | round(1)}} °C en el exterior* (estimados {{states.sensor.house_delta_temperature.attributes['Exterior Est.'] | round(1)}} °C), y *{{states.sensor.house_delta_temperature.attributes['Interior'] | round(1)}} °C en el interior*, ∆T={{states.sensor.house_delta_temperature.state}} °C.
+          (∆ por zonas: {% for attr in states.sensor.house_delta_temperature.attributes -%}{%- if attr not in ['homebridge_hidden', 'icon', 'friendly_name', '∆T with estimated exterior', 'Exterior' , 'attribution' , 'Interior' , 'Exterior Est.', 'unit_of_measurement'] -%} {{attr}}: {{states.sensor.house_delta_temperature.attributes[attr]}} °C, {%- endif -%}{%- endfor -%})
+
+        inline_keyboard:
+          - Ventilador ON:/service_call homeassistant/turn_on switch.new_switch_2, Ventilador OFF:/service_call homeassistant/turn_off switch.new_switch_2
+        disable_notification: false
+        disable_web_page_preview: false
+
+- alias: Notificación de inicio de ventilación natural
+  trigger:
+    platform: state
+    entity_id: binary_sensor.close_house
+    from: 'off'
+    to: 'on'
+  action:
+    - service: telegram_bot.send_message
+      data_template:
+        title: '*Apertura de ventanas*'
+        target: '{{ states.sensor.telegram_default_chatid.state | int }}'
+        message: >
+          _Se recomienda ventilar la casa para refrescarla_.
+          Las temperaturas actuales son de *{{states.sensor.house_delta_temperature.attributes['Exterior'] | round(1)}} °C en el exterior* (estimados {{states.sensor.house_delta_temperature.attributes['Exterior Est.'] | round(1)}} °C), y *{{states.sensor.house_delta_temperature.attributes['Interior'] | round(1)}} °C en el interior*, ∆T={{states.sensor.house_delta_temperature.state}} °C.
+          (∆ por zonas: {% for attr in states.sensor.house_delta_temperature.attributes -%}{%- if attr not in ['homebridge_hidden', 'icon', 'friendly_name', '∆T with estimated exterior', 'Exterior' , 'attribution' , 'Interior' , 'Exterior Est.', 'unit_of_measurement'] -%} {{attr}}: {{states.sensor.house_delta_temperature.attributes[attr]}} °C, {%- endif -%}{%- endfor -%})
+
+        inline_keyboard:
+          - Ventilador ON:/service_call homeassistant/turn_on switch.new_switch_2, Ventilador OFF:/service_call homeassistant/turn_off switch.new_switch_2
+        disable_notification: false
+        disable_web_page_preview: false
+
+
+group:
+  Aislamiento:
+    entities:
+      - camera.psychrometric_chart
+      - sensor.house_delta_temperature
+      - binary_sensor.close_house

@@ -1,30 +1,27 @@
 # -*- coding: utf-8 -*-
 """
+Support for the Psychrometrics component.
+
+For more details about this platform, please refer to the documentation
+https://home-assistant.io/components/camera.psychrometrics/
 
 """
 import asyncio
 
-from ..psychrometrics import PsychroCam, make_psychrochart
+from ..psychrometrics import DOMAIN, PsychroCam
+
+
+DEPENDENCIES = ['psychrometrics']
 
 
 # noinspection PyUnusedLocal
 @asyncio.coroutine
 def async_setup_platform(hass, config, async_add_devices, discovery_info):
     """Set up the Psychrometric chart as Camera."""
-    if discovery_info:
-        # Create chart:
-        chart = yield from hass.async_add_job(
-            make_psychrochart,
-            discovery_info['altitude'], discovery_info['pressure_kpa'])
+    if discovery_info is None:
+        return
 
-        cam = PsychroCam(
-            hass, chart,
-            discovery_info['zones_sensors'],
-            discovery_info['connectors'],
-            discovery_info['entity_name'],
-            discovery_info['refresh_interval'],
-            discovery_info['evolution_arrows_minutes'],
-            discovery_info['remote_api_conf'])
-        async_add_devices([cam])
-    else:
-        return False
+    chart_handler = hass.data[DOMAIN]
+
+    async_add_devices(
+        [PsychroCam(hass, chart_handler, discovery_info['name'])])

@@ -19,6 +19,7 @@ homeassistant:
       friendly_name: Iluminación
       icon: mdi:lightbulb
       device_class: light
+      homebridge_sensor_type: light
 
     binary_sensor.pir_salon:
       friendly_name: Movimiento (salón)
@@ -281,37 +282,6 @@ input_slider:
     max: 75.0
     step: 1
 
-psychrometrics:
-  scan_interval: 120
-  evolution_arrows_minutes: 240
-  altitude: 550
-#  pressure_kpa: 975
-#  remote_api:
-#    base_url: !secret master_base_url
-#    api_password: !secret master_api_password
-#    port: 443
-#    use_ssl: True
-  interior:
-    Salón:
-#      - sensor.t_salon
-      - sensor.salon_temperature, sensor.salon_humidity
-    Dormitorio:
-      - sensor.dormitorio_temperature_rpi2mpd, sensor.dormitorio_humidity_rpi2mpd
-      - sensor.dormitorio_htu21d_temperature_rpi2mpd, sensor.dormitorio_htu21d_humidity_rpi2mpd
-    Cocina:
-      - sensor.esp1_temperature, sensor.esp1_humidity
-    Plancha:
-      - sensor.esp3_temperature, sensor.esp3_humidity
-    Estudio:
-      - sensor.estudio_temperature_rpi2h, sensor.estudio_humidity_rpi2h
-  exterior:
-      - sensor.galeria_dht22_temperature, sensor.galeria_dht22_humidity
-#      - sensor.galeria_impulsion_calefaccion
-#      - sensor.galeria_retorno_calefaccion
-  weather:
-      - sensor.dark_sky_temperature, sensor.dark_sky_humidity
-#      - sensor.villena_temperature, sensor.villena_humidity
-
 automation:
   # automation.apagado_de_climatizador_evaporativo
   - alias: Apagado de climatizador evaporativo
@@ -339,7 +309,7 @@ automation:
               {% if states.sensor.dormitorio_humidity_rpi2mpd %}- {{ states.sensor.dormitorio_humidity_rpi2mpd.state}}% en dormitorio {%endif%}
               {% if states.sensor.salon_humidity %}- {{ states.sensor.salon_humidity.state}}% en salón {%endif%}
 
-          target: !secret telegram_bot_group
+          target: '{{ states.sensor.telegram_default_chatid.state | int }}'
           disable_notification: true
           inline_keyboard:
             - Encender:/service_call switch/turn_on switch.new_switch_2, Apagar:/service_call switch/turn_off switch.new_switch_2
@@ -387,7 +357,6 @@ group:
     name: Ahora
     entities:
       - sensor.dark_sky_summary
-      - camera.psychrometric_chart
       - sensor.dark_sky_temperature
       - sensor.dark_sky_apparent_temperature
       - sensor.dark_sky_dew_point

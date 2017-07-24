@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
 """
+Support for the Psychrometrics component.
 
+For more details about this component, please refer to the documentation
+https://home-assistant.io/components/psychrometrics/
 """
-# TODO DESCRIPTION
 import asyncio
 from collections import deque
 from datetime import timedelta
@@ -16,21 +18,31 @@ from typing import Union, List, Tuple, Optional
 
 import voluptuous as vol
 
+# TODO Remove TEMPORAL remote access
+from homeassistant import remote
 from homeassistant.components.camera import Camera
 from homeassistant.const import (
-    CONF_NAME, CONF_SCAN_INTERVAL, STATE_ON, STATE_OFF)
+    CONF_NAME, CONF_SCAN_INTERVAL, STATE_ON, STATE_OFF, ATTR_ICON,
+    ATTR_FRIENDLY_NAME, ATTR_UNIT_OF_MEASUREMENT, TEMP_CELSIUS,
+    ATTR_DEVICE_CLASS, ATTR_ATTRIBUTION)
+from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect, async_dispatcher_send)
+from homeassistant.helpers.entity import Entity
+from homeassistant.components.binary_sensor import BinarySensorDevice
 from homeassistant.helpers.event import (
     async_track_time_interval, async_track_point_in_utc_time)
 from homeassistant.util.dt import now
-# TODO Remove TEMPORAL remote access
-from homeassistant import remote
 
-REQUIREMENTS = ['psychrochart==0.1.5']
+
+REQUIREMENTS = ['psychrochart==0.1.7']
 DEPENDENCIES = ['sensor']
 
 DOMAIN = 'psychrometrics'
+
+_LOGGER = logging.getLogger(__name__)
 
 CONF_ALTITUDE = 'altitude'
 CONF_EXTERIOR = 'exterior'
@@ -43,7 +55,12 @@ CONF_WEATHER = 'weather'
 DEFAULT_NAME = "Psychrometric chart"
 DEFAULT_SCAN_INTERVAL_SEC = 60
 
-_LOGGER = logging.getLogger(__name__)
+DEFAULT_DEAD_BAND = 0.5  # ºC
+DEFAULT_DELTA_EVOLUTION = 5400  # 1.5h
+DEFAULT_FREQ_SAMPLING_SEC = 300  # 300 (5min)
+
+BINARY_SENSOR_NAME = 'close_house'
+SENSOR_NAME = 'house_delta_temperature'
 
 POINT_SCHEMA = vol.Schema(cv.entity_ids)
 POINTS_SCHEMA = vol.Schema(
@@ -78,12 +95,13 @@ POINT_COLORS = cycle([[0.1059, 0.6196, 0.4667, 0.7],
                       [0.651, 0.4627, 0.1137, 0.7],
                       [0.4, 0.4, 0.4, 0.7]])
 
+SIGNAL_UPDATE_DATA = DOMAIN + '_update'
+
 
 def make_psychrochart(altitude, pressure_kpa):
     """Create the PsychroChart object where to overlay the sensors info."""
     from psychrochart.agg import PsychroChart
     from psychrochart.util import load_config
-    from psychrochart import __version__ as version, __file__ as psy_file
 
     # Load chart style:
     chart_style = load_config(CHART_STYLE_JSON)
@@ -111,28 +129,12 @@ def make_psychrochart(altitude, pressure_kpa):
     return chart
 
 
-def update_chart_overlay(chart, svg_image,
-                         points, connectors, arrows,
-                         first_generation=False):
-    """Update the PsychroChart with the sensors info and return the SVG."""
-    # svg_image = BytesIO()
-    chart.plot_points_dbt_rh(points, connectors)
-    if arrows:
-        # Make pairs:
-        chart.plot_arrows_dbt_rh(arrows)
-    if first_generation:
-        # Append legend
-        chart.plot_legend(
-            frameon=False, fontsize=8, labelspacing=.8, markerscale=.7)
-    chart.save(svg_image, format='svg')
-    chart.remove_annotations()
-
-
 @asyncio.coroutine
 def async_setup(hass, config_hosts):
     """Setup the Psychrochart Platform."""
     config = config_hosts[DOMAIN]
 
+    name = config.get(CONF_NAME)
     interior_rooms = config.get(CONF_INTERIOR)
     exterior = config.get(CONF_EXTERIOR)
     weather = config.get(CONF_WEATHER)
@@ -150,43 +152,43 @@ def async_setup(hass, config_hosts):
     connectors = yield from hass.async_add_job(
         json.load, open(CONNECTORS_JSON))
 
-    chart_config = {
-        "altitude": altitude,
-        "pressure_kpa": pressure_kpa,
-        "zones_sensors": zones,
-        "connectors": connectors,
-        "entity_name": config.get(CONF_NAME),
-        "refresh_interval": scan_interval,
-        "evolution_arrows_minutes": evolution_arrows_minutes,
-        "remote_api_conf": remote_api_conf}
+    # Create chart:
+    chart = yield from hass.async_add_job(
+        make_psychrochart, altitude, pressure_kpa)
 
-    yield from async_load_platform(hass, 'camera', DOMAIN, chart_config)
+    chart_handler = PsychroChartHandler(
+        hass, chart, zones, connectors,
+        scan_interval, evolution_arrows_minutes, remote_api_conf)
+
+    hass.data[DOMAIN] = chart_handler
 
     # Todo don't use domain=camera --> make new card (without caption)
-    # component = EntityComponent(_LOGGER, DOMAIN, hass, scan_interval)
-    # component = EntityComponent(_LOGGER, 'camera', hass, scan_interval)
+    yield from async_load_platform(hass, 'camera', DOMAIN, {"name": name})
 
-    # hass.http.register_view(CameraImageView(component.entities))
-    # hass.http.register_view(CameraMjpegStream(component.entities))
+    conf_sensor = {
+        CONF_NAME: SENSOR_NAME,
+        ATTR_FRIENDLY_NAME: "Recalentamiento de casa",
+        ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS,
+        ATTR_ICON: "mdi:thermometer"}
 
-    # entities = [PsychroCam(
-    #     hass, chart, zones, connectors, config.get(CONF_NAME), scan_interval, api)]
-    # yield from component.async_add_entities(entities)
+    conf_bin = {
+        CONF_NAME: BINARY_SENSOR_NAME,
+        ATTR_FRIENDLY_NAME: "Apertura de ventanas",
+        ATTR_DEVICE_CLASS: "opening"}
+
+    yield from async_load_platform(hass, 'sensor', DOMAIN, conf_sensor)
+    yield from async_load_platform(hass, 'binary_sensor', DOMAIN, conf_bin)
 
     return True
 
 
-class PsychroCam(Camera):
-    """Custom Camera for the psychrometric chart."""
+class PsychroChartHandler:
+    """Handler for the psychrometric chart."""
 
     def __init__(self, hass, chart_object, zones_sensors, connectors,
-                 entity_name, refresh_interval, evolution_arrows_minutes,
-                 remote_api_conf):
+                 refresh_interval, evolution_arrows_minutes, remote_api_conf):
         """Initialize Local File Camera component."""
-        super().__init__()
         self.hass = hass
-        self.content_type = 'image/svg+xml'
-        self._name = entity_name
         self._last_tile_generation = None
         self._delta_refresh = timedelta(seconds=refresh_interval)
         self.chart = chart_object
@@ -199,9 +201,15 @@ class PsychroCam(Camera):
         if evolution_arrows_minutes:
             len_deque = int(timedelta(minutes=evolution_arrows_minutes)
                             / self._delta_refresh)
-            self._points = deque([], maxlen=len_deque)
-        self._image_bytes = None
-        # self._file_path = os.path.join(basedir, 'chart.svg')
+        else:
+            len_deque = 1
+        self.points = deque([], maxlen=len_deque)
+        self.svg_image_bytes = None
+
+        self.delta_house = None
+        self.open_house = None
+        self._deadband = 0.5  # ºC
+        self.sensor_attributes = {}
 
         # Remote access to sensors in other HA instance
         self.remote_api = None
@@ -214,33 +222,27 @@ class PsychroCam(Camera):
                 use_ssl=remote_api_conf.get('use_ssl', False))
             assert api.validate_api()
             self.remote_api = api
-        # self._counter_frames = 0
 
         # Chart regeneration
         if self.remote_api is not None:  # No need to wait
             async_track_point_in_utc_time(
-                self.hass, self.update_chart, now() + timedelta(seconds=1))
+                self.hass, self.update_chart, now() + timedelta(seconds=10))
         async_track_time_interval(
             self.hass, self.update_chart, self._delta_refresh)
 
-    @asyncio.coroutine
-    def async_camera_image(self):
-        """Return image response."""
-        if self._image_bytes is not None:
-            return self._image_bytes
-
-    @property
-    def name(self):
-        """Return the name of this camera."""
-        return self._name
-
-    # Todo state OK vs COLD/HOT/DRY/WET
-    # @property
-    # def state(self):
-    #     """Return the camera state."""
-    #     if self._image_bytes is None:
-    #         return STATE_OFF
-    #     return STATE_ON
+    def update_chart_overlay(self, svg_image,
+                             points, connectors, arrows,
+                             first_generation=False):
+        """Update the PsychroChart with the sensors info and return the SVG."""
+        # if first_generation:
+        self.chart.plot_points_dbt_rh(points, connectors)
+        if arrows:
+            self.chart.plot_arrows_dbt_rh(arrows)
+        self.chart.plot_legend(
+            frameon=False, fontsize=8, labelspacing=.8, markerscale=.7)
+        self.chart.save(svg_image, format='svg')
+        # self.chart.remove_annotations()
+        self.chart.close_fig()
 
     def _get_sensor_state(self, entity_id, remote_states=None):
 
@@ -332,6 +334,56 @@ class PsychroCam(Camera):
                                    int(100 * humid) / 100.)
         return points
 
+    @asyncio.coroutine
+    def update_sensors(self):
+        if not self.points:
+            return
+
+        points = self.points[-1]
+        _LOGGER.debug('POINTS FOR UPD SENSORS: %s', points)
+        main_zones = [CONF_INTERIOR, CONF_EXTERIOR, CONF_WEATHER]
+        temp_int, temp_ext, temp_est = [points[k][0] for k in main_zones]
+        _LOGGER.debug('TEMPS: Int: %s, Ext: %s, Est: %s', temp_int, temp_ext, temp_est)
+
+        delta_est = round(temp_ext - temp_est, 1)
+        delta_house = round(temp_int - temp_ext, 1)
+        deltas_zones = {z: round(p[0] - temp_ext, 1) for z, p in
+                        points.items() if z not in main_zones}
+        assert (abs(delta_house) < 15)
+        assert (abs(delta_est) < 25)
+
+        attrs = {
+            "Interior": temp_int,
+            "Exterior": temp_ext,
+            "Exterior Est.": temp_est,
+            "∆T with estimated exterior": delta_est,
+            ATTR_UNIT_OF_MEASUREMENT: TEMP_CELSIUS,
+            ATTR_FRIENDLY_NAME: "Recalentamiento de casa",
+            ATTR_ICON: "mdi:thermometer",
+        }
+        # Append deltas_zones
+        [attrs.update({z: delta}) for z, delta in deltas_zones.items()]
+        self.delta_house = delta_house
+        self.sensor_attributes = attrs
+
+        # Decision logic (deadband)
+        if self.open_house is None:
+            # First value
+            self.open_house = delta_house > 0
+            _LOGGER.info("Monitoring natural ventilation "
+                         "(∆House: {} ºC, Open:{})"
+                         .format(delta_house, self.open_house))
+        elif self.open_house and delta_house < -self._deadband:
+            _LOGGER.info("Natural ventilation --> OFF (∆House: {} ºC)"
+                         .format(delta_house))
+            self.open_house = False
+        elif not self.open_house and delta_house > self._deadband:
+            self.open_house = True
+            _LOGGER.info("Natural ventilation --> ON (∆House: {} ºC)"
+                         .format(delta_house))
+
+        async_dispatcher_send(self.hass, SIGNAL_UPDATE_DATA)
+
     # noinspection PyUnusedLocal
     @asyncio.coroutine
     def update_chart(self, *args):
@@ -366,29 +418,53 @@ class PsychroCam(Camera):
 
         tic = time()
         points = yield from self.get_dbt_rh_points()
-
-        self._points.append(points.copy())
         _LOGGER.debug('NEW POINTS: %s', points)
 
+        self.points.append(points.copy())
+        yield from self.update_sensors()
+
         arrows = {}
-        if len(self._points) > 1:
-            arrows = {k: [p, self._points[0][k]]
-                      for k, p in points.items() if k in self._points[0]
-                      and p != self._points[0][k]}
+        if len(self.points) > 1:
+            arrows = {k: [p, self.points[0][k]]
+                      for k, p in points.items() if k in self.points[0]
+                      and p != self.points[0][k]}
             _LOGGER.debug('MAKE ARROWS: %s', arrows)
             arrows = _apply_style(arrows, self.colors_interior_zones)
 
-        points = _apply_style(points, self.colors_interior_zones)
-
+        points_plot = _apply_style(points, self.colors_interior_zones)
         svg_image = BytesIO()
         yield from self.hass.async_add_job(
-            update_chart_overlay, self.chart, svg_image,
-            points, self.connectors, arrows, self._image_bytes is None)
+            self.update_chart_overlay, svg_image,
+            points_plot, self.connectors, arrows,
+            self.svg_image_bytes is None)
         svg_image.seek(0)
-        self._image_bytes = svg_image.read()
+        self.svg_image_bytes = svg_image.read()
 
         self._last_tile_generation = now()
         _LOGGER.debug('CHART generated in {:.2f} sec'.format(time() - tic))
+
+
+class PsychroCam(Camera):
+    """Custom Camera for the psychrometric chart."""
+
+    def __init__(self, hass, chart_handler, entity_name):
+        """Initialize Local File Camera component."""
+        super().__init__()
+        self.hass = hass
+        self.content_type = 'image/svg+xml'
+        self._name = entity_name
+        self._chart = chart_handler
+
+    @asyncio.coroutine
+    def async_camera_image(self):
+        """Return image response."""
+        if self._chart.svg_image_bytes is not None:
+            return self._chart.svg_image_bytes
+
+    @property
+    def name(self):
+        """Return the name of this camera."""
+        return self._name
 
     @property
     def brand(self):
@@ -410,3 +486,121 @@ class PsychroCam(Camera):
     #     st_attrs.update({"friendly_name": self.name,
     #                      "attribution": "Powered by AzogueLabs"})
     #     return st_attrs
+
+
+class PsychrometricsSensor(Entity):
+    """Representation of a sensor for the psychrometrics component."""
+
+    def __init__(self, chart_handler, name, friendly_name, unit, icon):
+        """Initialize the psychrometric sensor object."""
+        self._chart = chart_handler
+        self._name = name
+        self._friendly_name = friendly_name
+        self._icon = icon
+        self._unit = unit
+
+    @property
+    def name(self):
+        """Return the name of the sensor."""
+        return self._name
+
+    @property
+    def unit_of_measurement(self):
+        """Return the unit the value is expressed in."""
+        return self._unit
+
+    @property
+    def state(self):
+        """Return the state of the sensor."""
+        return self._chart.delta_house
+
+    @property
+    def should_poll(self):
+        """Return True if entity has to be polled for state."""
+        return False
+
+    @property
+    def available(self):
+        """Return true when state is known."""
+        return self._chart.delta_house is not None
+
+    @property
+    def device_state_attributes(self):
+        """Return the state attributes."""
+        attrs = self._chart.sensor_attributes.copy()
+        attrs.update({"friendly_name": self._friendly_name})
+        return attrs
+
+    @property
+    def icon(self):
+        """Return the icon for the sensor."""
+        return self._icon
+
+    @asyncio.coroutine
+    def async_added_to_hass(self):
+        """Register update dispatcher."""
+        @callback
+        def async_sensor_update():
+            """Update callback."""
+            self.hass.async_add_job(self.async_update_ha_state(True))
+
+        async_dispatcher_connect(
+            self.hass, SIGNAL_UPDATE_DATA, async_sensor_update)
+
+
+class PsychrometricsBinarySensor(BinarySensorDevice):
+    """Representation of a binary sensor for the psychrometrics component."""
+
+    def __init__(self, chart_handler, name, friendly_name, device_class):
+        """Initialize the sensor object."""
+        self._chart = chart_handler
+        self._name = name
+        self._friendly_name = friendly_name
+        self._device_class = device_class
+
+    @property
+    def name(self):
+        """Return the name of the sensor."""
+        return self._name
+
+    @property
+    def is_on(self):
+        """Return true if the binary sensor is on."""
+        return self._chart.open_house
+
+    @property
+    def state(self):
+        """Return the state of the binary sensor."""
+        return STATE_ON if self.is_on else STATE_OFF
+
+    @property
+    def device_class(self):
+        """Return the class of the binary sensor."""
+        return self._device_class
+
+    @property
+    def should_poll(self):
+        """Return True if entity has to be polled for state."""
+        return False
+
+    @property
+    def available(self):
+        """Return true when state is known."""
+        return False if self._chart.open_house is None else True
+
+    @property
+    def device_state_attributes(self):
+        """Return the state attributes."""
+        attrs = {"friendly_name": self._friendly_name}
+        return attrs
+
+    @asyncio.coroutine
+    def async_added_to_hass(self):
+        """Register update dispatcher."""
+        @callback
+        def async_sensor_update():
+            """Update callback."""
+            self.hass.async_add_job(self.async_update_ha_state(True))
+
+        async_dispatcher_connect(
+            self.hass, SIGNAL_UPDATE_DATA, async_sensor_update)

@@ -11,9 +11,8 @@ logs:
   homeassistant.components.media_player: info
   homeassistant.components.tts: debug
 
-  mirobo.device: error
-  custom_components.xiaomi_vacuum: info
-  custom_components.notify.telegram: info
-  custom_components.telegram_bot: info
+  custom_components.psychrometrics: info
+  mirobo.device: critical
+#  custom_components.xiaomi_vacuum: info
   # custom_components.sensor.enerweb: info
   # custom_components.enerpi: info
