@@ -8,9 +8,9 @@
   - service: media_player.turn_on
     entity_id: media_player.kodi
   - service: telegram_bot.send_message
-    data:
+    data_template:
       title: '*TV ON*'
-      target: !secret telegram_bot_group
+      target: '{{ states.sensor.telegram_default_chatid.state | int }}'
       message: 'Encendido de TV automático en Kodi PLAY'
       disable_notification: true
       inline_keyboard:
@@ -28,9 +28,9 @@
   - service: media_player.turn_off
     entity_id: media_player.kodi
   - service: telegram_bot.send_message
-    data:
+    data_template:
       title: '*TV OFF*'
-      target: !secret telegram_bot_group
+      target: '{{ states.sensor.telegram_default_chatid.state | int }}'
       message: 'Apagado de TV automático (Kodi en `idle` > 10 min)'
       disable_notification: true
       inline_keyboard:
@@ -54,9 +54,9 @@
   - service: switch.turn_off
     entity_id: switch.camara
   - service: telegram_bot.send_message
-    data:
+    data_template:
       title: '*CAM Salón OFF*'
-      target: !secret telegram_bot_group
+      target: '{{ states.sensor.telegram_default_chatid.state | int }}'
       message: 'Apagado de cámara de Salón en Kodi PLAY nocturno.'
       disable_notification: true
       inline_keyboard:

@@ -10,8 +10,9 @@ sequence:
           sound: "US-EN-Morgan-Freeman-Vacate-The-Premises.wav"
           category: "CONFIRM"
   - service: telegram_bot.send_message
-    data:
+    data_template:
       title: '*Reiniciando sistema domótico*'
+      target: '{{ states.sensor.telegram_default_chatid.state | int }}'
       message: "En unos minutos estará funcionando de nuevo..."
   - delay:
       seconds: 3

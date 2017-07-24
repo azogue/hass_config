@@ -22,10 +22,10 @@
     offset: '+00:00:00'
   action:
     service: telegram_bot.send_message
-    data:
+    data_template:
       title: 'Empieza la noche!'
       message: 'Acaba de ponerse el sol... ¿Encendemos luces?'
-      target: !secret telegram_bot_group
+      target: '{{ states.sensor.telegram_default_chatid.state | int }}'
       disable_notification: true
       inline_keyboard:
         - Luz salón:/service_call light.toggle group.luces_salon, Luz dormitorio:/service_call light.toggle group.luces_dormitorio

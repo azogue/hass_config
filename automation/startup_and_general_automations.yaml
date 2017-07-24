@@ -4,12 +4,14 @@
     - platform: homeassistant
       event: start
   action:
+    - service: python_script.set_telegram_chatid_sensor
+      data:
+        chat_id: !secret telegram_bot_chat_id_admin
     - delay:
         seconds: 5
     - service: python_script.start_states
       data:
-        # Start without expert mode
-        expert_mode_state: off
+        expert_mode_state: off  # Start without expert mode
     - delay:
         seconds: 30
     - service: shell_command.restart_homebridge

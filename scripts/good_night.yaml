@@ -10,9 +10,9 @@ sequence:
 
   - alias: Notificación de buenas noches
     service: telegram_bot.send_message
-    data:
+    data_template:
       title: '*¡Buenas noches!*'
-      target: !secret telegram_bot_chat_id_admin
+      target: '{{ states.sensor.telegram_default_chatid.state | int }}'
       message: 'Script de buenas noches *auto-activado*. Apagado de interruptores y encendido de cámaras de seguridad.'
       disable_notification: true
 
