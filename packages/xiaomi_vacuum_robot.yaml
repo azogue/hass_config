@@ -1,92 +1,32 @@
 homeassistant:
   customize:
     switch.robot_aspirador:
-#      icon: mdi:broom
-      icon: mdi:google-circles-group
       friendly_name: Aspirador
-    sensor.robot_aspirador_status:
-      homebridge_hidden: True
-      icon: mdi:broom
-    sensor.robot_aspirador_batt:
-      homebridge_hidden: True
-    sensor.robot_aspirador_fan:
-      homebridge_hidden: True
-      icon: mdi:fan
-    sensor.robot_aspirador_error:
-      homebridge_hidden: True
-      icon: mdi:biohazard
+  customize_glob:
+    "sensor.robot_aspirador*":
+      homebridge_hidden: true
 
-switch:
+xiaomi_vacuum:
   # firmware: 3.3.9_003077
-#- platform: xiaomi_vacuum
-- platform: vacuum_cleaner
-  name: robot_aspirador
+  name: Vacuum cleaner
   host: !secret xiaomi_vacuum_robot_ip
   token: !secret xiaomi_vacuum_robot_token
-
-sensor:
-- platform: template
   sensors:
-    robot_aspirador_status:
-      value_template: >
-        {%- if 'Status' in states.switch.robot_aspirador.attributes -%}
-        {{ states.switch.robot_aspirador.attributes.Status }}
-        {%- else -%}
-        ?
-        {%- endif -%}
-      friendly_name: 'Status'
-      entity_id:
-        - switch.robot_aspirador
-    robot_aspirador_batt:
-      value_template: >
-        {%- if 'Battery' in states.switch.robot_aspirador.attributes -%}
-        {{ states.switch.robot_aspirador.attributes.Battery | int }}
-        {%- else -%}
-        0
-        {%- endif -%}
-      icon_template: >
-        mdi:battery
-        {%- if 'Status' in states.switch.robot_aspirador.attributes and 'Battery' in states.switch.robot_aspirador.attributes -%}
-          {%- if states.switch.robot_aspirador.attributes.Status == 'Charging' -%}
-          -charging
-          {%- endif -%}
-          {%- if states.switch.robot_aspirador.attributes.Battery | int < 100 -%}
-          -{{ (((states.switch.robot_aspirador.attributes.Battery | int) / 20) | int) * 20}}
-          {%- endif -%}
-        {%- else -%}
-        -unknown
-        {%- endif -%}
-      friendly_name: 'Battery'
-      unit_of_measurement: '%'
-      entity_id:
-        - switch.robot_aspirador
-    robot_aspirador_fan:
-      value_template: >
-        {%- if 'Fan' in states.switch.robot_aspirador.attributes -%}
-        {{ states.switch.robot_aspirador.attributes.Fan | int }}
-        {%- else -%}
-        0
-        {%- endif -%}
-      friendly_name: 'Fan speed'
-      entity_id:
-        - switch.robot_aspirador
-    robot_aspirador_error:
-      value_template: >
-        {%- if 'Error' in states.switch.robot_aspirador.attributes -%}
-        {{ states.switch.robot_aspirador.attributes.Error }}
-        {%- else -%}
-        ?
-        {%- endif -%}
-      friendly_name: 'Error?'
-      entity_id:
-        - switch.robot_aspirador
+    - state
+    - battery
+    - fanspeed
+    - clean_area
+    - clean_time
+#    - error
 
 group:
   Xiaomi Vacuum Robot:
     control: hidden
     entities:
       - switch.robot_aspirador
-      - sensor.robot_aspirador_status
-      - sensor.robot_aspirador_batt
-      - sensor.robot_aspirador_fan
+      - sensor.robot_aspirador_state
+      - sensor.robot_aspirador_battery
+      - sensor.robot_aspirador_fanspeed
+      - sensor.robot_aspirador_clean_time
+      - sensor.robot_aspirador_clean_area
       - sensor.robot_aspirador_error
