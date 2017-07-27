@@ -2,6 +2,7 @@ homeassistant:
   customize:
     vacuum.robot_aspirador:
       friendly_name: Aspiradora
+      custom_ui_state_card: custom_vacuum
 
 vacuum:
 - platform: xiaomi:
