@@ -1,32 +1,22 @@
 homeassistant:
   customize:
-    switch.robot_aspirador:
-      friendly_name: Aspirador
-  customize_glob:
-    "sensor.robot_aspirador*":
-      homebridge_hidden: true
+    vacuum.robot_aspirador:
+      friendly_name: Aspiradora
 
-xiaomi_vacuum:
+vacuum:
+- platform: xiaomi:
   # firmware: 3.3.9_003077
-  name: Vacuum cleaner
+  name: robot_aspirador
   host: !secret xiaomi_vacuum_robot_ip
   token: !secret xiaomi_vacuum_robot_token
-  sensors:
-    - state
-    - battery
-    - fanspeed
-    - clean_area
-    - clean_time
-#    - error
+
+# TODO Automations
+# - notify if robot get lost
+# - notify if problem
+# - use as alarm playing with commands!
 
 group:
   Xiaomi Vacuum Robot:
     control: hidden
     entities:
-      - switch.robot_aspirador
-      - sensor.robot_aspirador_state
-      - sensor.robot_aspirador_battery
-      - sensor.robot_aspirador_fanspeed
-      - sensor.robot_aspirador_clean_time
-      - sensor.robot_aspirador_clean_area
-      - sensor.robot_aspirador_error
+      - vacuum.robot_aspirador
