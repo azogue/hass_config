@@ -49,6 +49,15 @@ homeassistant:
     sensor.disk_use_home:
       homebridge_hidden: True
 
+    sensor.cpu_use:
+      homebridge_hidden: True
+    sensor.ram_free:
+      homebridge_hidden: True
+    sensor.last_boot:
+      homebridge_hidden: True
+    sensor.disk_use_home:
+      homebridge_hidden: True
+
     sensor.hass_cpu_temperature:
       homebridge_hidden: True
     sensor.kodi_cpu_temperature:
