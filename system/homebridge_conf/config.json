@@ -9,6 +9,14 @@
         "model": "HomeAssistant Bridge"
     },
     "description": "Homebridge config for interfacing HA with HomeKit through homeassistant-homebrigde-plugin.",
+    "accessories": [
+        {
+            "accessory": "MiRobotVacuum",
+            "name": "Aspiradora",
+            "ip": "192.168.1.X",
+            "token": "12345678901234567890123456789012"
+        }
+    ],
     "platforms": [
         {
             "platform": "HomeAssistant",
