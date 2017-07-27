@@ -5,7 +5,7 @@ homeassistant:
       custom_ui_state_card: custom_vacuum
 
 vacuum:
-- platform: xiaomi:
+- platform: xiaomi
   # firmware: 3.3.9_003077
   name: robot_aspirador
   host: !secret xiaomi_vacuum_robot_ip

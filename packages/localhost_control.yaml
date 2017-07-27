@@ -46,9 +46,6 @@ homeassistant:
       icon: mdi:timer-sand
       homebridge_hidden: true
 
-    sensor.disk_use_home:
-      homebridge_hidden: True
-
     sensor.cpu_use:
       homebridge_hidden: True
     sensor.ram_free:

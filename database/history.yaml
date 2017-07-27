@@ -91,3 +91,5 @@ include:
     - device_tracker.iphone_bt
     - device_tracker.iphone_se
     - device_tracker.iphone_se_bt
+
+    - vacuum.robot_aspirador

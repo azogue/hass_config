@@ -13,6 +13,6 @@ logs:
 
   custom_components.psychrometrics: info
   mirobo.device: critical
-#  custom_components.xiaomi_vacuum: info
+  custom_components.vacuum: error
   # custom_components.sensor.enerweb: info
   # custom_components.enerpi: info

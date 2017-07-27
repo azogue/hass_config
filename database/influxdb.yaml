@@ -164,6 +164,8 @@ include:
    - input_boolean.eu_presence
    - input_boolean.carmen_presence
 
+   - vacuum.robot_aspirador
+
 #  tags:
 #    source: hass
 
