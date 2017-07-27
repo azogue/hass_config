@@ -36,6 +36,9 @@ from homeassistant.helpers.event import (
     async_track_time_interval, async_track_point_in_utc_time)
 from homeassistant.util.dt import now
 
+from memory_profiler import profile
+
+
 
 REQUIREMENTS = ['psychrochart==0.1.7']
 DEPENDENCIES = ['sensor']
@@ -97,7 +100,7 @@ POINT_COLORS = cycle([[0.1059, 0.6196, 0.4667, 0.7],
 
 SIGNAL_UPDATE_DATA = DOMAIN + '_update'
 
-
+@profile
 def make_psychrochart(altitude, pressure_kpa):
     """Create the PsychroChart object where to overlay the sensors info."""
     from psychrochart.agg import PsychroChart
@@ -205,6 +208,7 @@ class PsychroChartHandler:
             len_deque = 1
         self.points = deque([], maxlen=len_deque)
         self.svg_image_bytes = None
+        self.num_charts_gen = 0
 
         self.delta_house = None
         self.open_house = None
@@ -230,19 +234,29 @@ class PsychroChartHandler:
         async_track_time_interval(
             self.hass, self.update_chart, self._delta_refresh)
 
+    @profile
     def update_chart_overlay(self, svg_image,
-                             points, connectors, arrows,
-                             first_generation=False):
+                             points, connectors, arrows):
         """Update the PsychroChart with the sensors info and return the SVG."""
         # if first_generation:
+        # if self.num_charts_gen and self.num_charts_gen % 20 == 0:
+        #     _LOGGER.debug('RESET CHART in #{}'.format(self.num_charts_gen))
+        # self.chart = make_psychrochart(
+        #     self.chart.altitude_m, self.chart.p_atm_kpa)
+
         self.chart.plot_points_dbt_rh(points, connectors)
         if arrows:
             self.chart.plot_arrows_dbt_rh(arrows)
         self.chart.plot_legend(
             frameon=False, fontsize=8, labelspacing=.8, markerscale=.7)
         self.chart.save(svg_image, format='svg')
-        # self.chart.remove_annotations()
         self.chart.close_fig()
+        # if self.num_charts_gen and self.num_charts_gen % 10 == 0:
+        #     self.chart.close_fig()
+        # else:
+        #     self.chart.remove_annotations()
+        self.num_charts_gen += 1
+        _LOGGER.debug('CHART GEN #{}'.format(self.num_charts_gen))
 
     def _get_sensor_state(self, entity_id, remote_states=None):
 
@@ -432,13 +446,16 @@ class PsychroChartHandler:
             arrows = _apply_style(arrows, self.colors_interior_zones)
 
         points_plot = _apply_style(points, self.colors_interior_zones)
-        svg_image = BytesIO()
+        # svg_image = BytesIO()
+        svg_image = os.path.join(basedir, 'temp_chart.svg')
         yield from self.hass.async_add_job(
             self.update_chart_overlay, svg_image,
-            points_plot, self.connectors, arrows,
-            self.svg_image_bytes is None)
-        svg_image.seek(0)
-        self.svg_image_bytes = svg_image.read()
+            points_plot, self.connectors, arrows)
+        # svg_image.seek(0)
+        # self.svg_image_bytes = svg_image.read()
+        with open(svg_image, 'rb') as f:
+            self.svg_image_bytes = f.read()
+        # del svg_image
 
         self._last_tile_generation = now()
         _LOGGER.debug('CHART generated in {:.2f} sec'.format(time() - tic))
