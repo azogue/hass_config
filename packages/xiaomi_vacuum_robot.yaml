@@ -11,13 +11,32 @@ vacuum:
   host: !secret xiaomi_vacuum_robot_ip
   token: !secret xiaomi_vacuum_robot_token
 
-# TODO Automations
-# - notify if robot get lost
-# - notify if problem
-# - use as alarm playing with commands!
-
 group:
   Xiaomi Vacuum Robot:
     control: hidden
     entities:
       - vacuum.robot_aspirador
+
+automation:
+- alias: Botvac error notification
+  trigger:
+    platform: state
+    entity_id: vacuum.robot_aspirador
+  condition:
+    condition: template
+    value_template: '{{ "Error" in states.vacuum.robot_aspirador.attributes }}'
+  action:
+    service: telegram_bot.send_message
+    data_template:
+      title: '*Botvac Error*'
+      message: >
+        El robot aspirador ha fallado: _{{ states.vacuum.robot_aspirador.attributes.Error }}_
+        (Status: {{ states.vacuum.robot_aspirador.attributes.vacuum_status }}, batt: {{ states.vacuum.robot_aspirador.attributes.vacuum_battery }} %)
+      target: '{{ states.sensor.telegram_default_chatid.state | int }}'
+      disable_notification: false
+      inline_keyboard:
+        - Locate botvac:/service_call vacuum.locate vacuum.robot_aspirador, To dock:/service_call vacuum.return_to_home vacuum.robot_aspirador
+        - Start:/service_call vacuum.start_pause vacuum.robot_aspirador, Stop:/service_call vacuum.stop vacuum.robot_aspirador, +:/init
+
+# For the dev panel, in JSON:
+#{"message": "El robot aspirador ha fallado: _{{ states.vacuum.robot_aspirador.attributes.Error }}_ (Status: {{ states.vacuum.robot_aspirador.attributes.vacuum_status }}, batt: {{ states.vacuum.robot_aspirador.attributes.vacuum_battery }} %)", "title": "*Botvac Error*", "target": "{{ states.sensor.telegram_default_chatid.state | int }}", "disable_notification": false, "inline_keyboard": ["Locate botvac:/service_call vacuum.locate vacuum.robot_aspirador, To dock:/service_call vacuum.return_to_home vacuum.robot_aspirador", "Start:/service_call vacuum.start_pause vacuum.robot_aspirador, Stop:/service_call vacuum.stop vacuum.robot_aspirador, +:/init"]}
