@@ -1,5 +1,5 @@
 # automation.schedule_leds_esp_modules
-- alias: schedule_leds_esp_modules_off
+- alias: Apagado de LED de ESP's (noche)
   trigger:
     platform: sun
     event: sunset
@@ -8,7 +8,7 @@
   - service: switch.turn_off
     entity_id: switch.use_esp1_leds,switch.use_esp2_leds,switch.use_esp3_leds
 
-- alias: schedule_leds_esp_modules_on
+- alias: Encendido de LED de ESP's (día)
   trigger:
     platform: sun
     event: sunrise
