@@ -211,10 +211,11 @@ group:
 #      - binary_sensor.sound_sensor_rpi2h
 #      - binary_sensor.vibration_sensor_raw_rpi2h
 #      - binary_sensor.sound_sensor_raw_rpi2h
+      - binary_sensor.pir_dormitorio_rpi2mpd
       - binary_sensor.esp1_pir
-#      - binary_sensor.esp1_vibro
-      - binary_sensor.esp1_light
+      - binary_sensor.esp1_vibro
       - binary_sensor.esp3_pir
+      - binary_sensor.esp3_vibro
 
   Alarm Control:
     control: hidden
@@ -222,9 +223,9 @@ group:
     - switch.use_pir_salon
     - switch.motioncam_escam
 #    - switch.use_sound_sensor_rpi2h
-    - switch.use_vibration_sensor_rpi2h
     - switch.use_pir_estudio_rpi2h
     - switch.motioncam_estudio
+    - switch.use_vibration_sensor_rpi2h
     - switch.use_pir_dormitorio_rpi2mpd
     - switch.use_esp1_pir
     - switch.use_esp3_pir
