@@ -265,12 +265,33 @@ automation:
     - service: switch.turn_on
       entity_id: switch.esp_plancha
 
-- alias: Visibilidad de módulos ESP
+- alias: Visibilidad de módulos ESP online
   trigger:
     - platform: state
       entity_id: binary_sensor.esp2_online
+      to: 'on'
+      for:
+        seconds: 30
     - platform: state
       entity_id: binary_sensor.esp3_online
+      to: 'on'
+      for:
+        seconds: 30
+  action:
+    - service: python_script.change_expert_mode_view
+
+- alias: Visibilidad de módulos ESP offline
+  trigger:
+    - platform: state
+      entity_id: binary_sensor.esp2_online
+      to: 'off'
+      for:
+        minutes: 2
+    - platform: state
+      entity_id: binary_sensor.esp3_online
+      to: 'off'
+      for:
+        minutes: 2
   action:
     - service: python_script.change_expert_mode_view
 
