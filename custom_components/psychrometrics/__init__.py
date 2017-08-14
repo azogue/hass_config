@@ -8,9 +8,9 @@ https://home-assistant.io/components/psychrometrics/
 import asyncio
 from collections import deque
 from datetime import timedelta
-from io import BytesIO
 from itertools import cycle
 import json
+from multiprocessing import Process
 import logging
 import os
 from time import time
@@ -24,7 +24,7 @@ from homeassistant.components.camera import Camera
 from homeassistant.const import (
     CONF_NAME, CONF_SCAN_INTERVAL, STATE_ON, STATE_OFF, ATTR_ICON,
     ATTR_FRIENDLY_NAME, ATTR_UNIT_OF_MEASUREMENT, TEMP_CELSIUS,
-    ATTR_DEVICE_CLASS, ATTR_ATTRIBUTION)
+    ATTR_DEVICE_CLASS)
 from homeassistant.core import callback
 import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
@@ -36,11 +36,7 @@ from homeassistant.helpers.event import (
     async_track_time_interval, async_track_point_in_utc_time)
 from homeassistant.util.dt import now
 
-from memory_profiler import profile
-
-
-
-REQUIREMENTS = ['psychrochart==0.1.7']
+REQUIREMENTS = ['psychrochart==0.1.10']
 DEPENDENCIES = ['sensor']
 
 DOMAIN = 'psychrometrics'
@@ -97,12 +93,12 @@ POINT_COLORS = cycle([[0.1059, 0.6196, 0.4667, 0.7],
                       [0.902, 0.6706, 0.0078, 0.7],
                       [0.651, 0.4627, 0.1137, 0.7],
                       [0.4, 0.4, 0.4, 0.7]])
-
 SIGNAL_UPDATE_DATA = DOMAIN + '_update'
 
-@profile
-def make_psychrochart(altitude, pressure_kpa):
-    """Create the PsychroChart object where to overlay the sensors info."""
+
+def make_psychrochart(svg_image,
+                      altitude, pressure_kpa, points, connectors, arrows):
+    """Create the PsychroChart SVG file and save it to disk."""
     from psychrochart.agg import PsychroChart
     from psychrochart.util import load_config
 
@@ -129,7 +125,14 @@ def make_psychrochart(altitude, pressure_kpa):
         'TOO HOT, {:g}°C '.format(t_max), ha='right', loc=1,
         reverse=True, fontsize=14)
 
-    return chart
+    chart.plot_points_dbt_rh(points, connectors)
+    if arrows:
+        chart.plot_arrows_dbt_rh(arrows)
+    chart.plot_legend(
+        frameon=False, fontsize=8, labelspacing=.8, markerscale=.7)
+
+    chart.save(svg_image, format='svg')
+    return True
 
 
 @asyncio.coroutine
@@ -155,12 +158,8 @@ def async_setup(hass, config_hosts):
     connectors = yield from hass.async_add_job(
         json.load, open(CONNECTORS_JSON))
 
-    # Create chart:
-    chart = yield from hass.async_add_job(
-        make_psychrochart, altitude, pressure_kpa)
-
     chart_handler = PsychroChartHandler(
-        hass, chart, zones, connectors,
+        hass, altitude, pressure_kpa, zones, connectors,
         scan_interval, evolution_arrows_minutes, remote_api_conf)
 
     hass.data[DOMAIN] = chart_handler
@@ -188,13 +187,15 @@ def async_setup(hass, config_hosts):
 class PsychroChartHandler:
     """Handler for the psychrometric chart."""
 
-    def __init__(self, hass, chart_object, zones_sensors, connectors,
+    def __init__(self, hass, altitude, pressure_kpa,
+                 zones_sensors, connectors,
                  refresh_interval, evolution_arrows_minutes, remote_api_conf):
         """Initialize Local File Camera component."""
         self.hass = hass
         self._last_tile_generation = None
         self._delta_refresh = timedelta(seconds=refresh_interval)
-        self.chart = chart_object
+        self._altitude = altitude
+        self._pressure_kpa = pressure_kpa
         self.zones_sensors = zones_sensors
         self.colors_interior_zones = {
             k: next(POINT_COLORS)
@@ -208,7 +209,6 @@ class PsychroChartHandler:
             len_deque = 1
         self.points = deque([], maxlen=len_deque)
         self.svg_image_bytes = None
-        self.num_charts_gen = 0
 
         self.delta_house = None
         self.open_house = None
@@ -234,29 +234,15 @@ class PsychroChartHandler:
         async_track_time_interval(
             self.hass, self.update_chart, self._delta_refresh)
 
-    @profile
-    def update_chart_overlay(self, svg_image,
-                             points, connectors, arrows):
+    def update_chart_overlay(self, svg_image, points, connectors, arrows):
         """Update the PsychroChart with the sensors info and return the SVG."""
-        # if first_generation:
-        # if self.num_charts_gen and self.num_charts_gen % 20 == 0:
-        #     _LOGGER.debug('RESET CHART in #{}'.format(self.num_charts_gen))
-        # self.chart = make_psychrochart(
-        #     self.chart.altitude_m, self.chart.p_atm_kpa)
-
-        self.chart.plot_points_dbt_rh(points, connectors)
-        if arrows:
-            self.chart.plot_arrows_dbt_rh(arrows)
-        self.chart.plot_legend(
-            frameon=False, fontsize=8, labelspacing=.8, markerscale=.7)
-        self.chart.save(svg_image, format='svg')
-        self.chart.close_fig()
-        # if self.num_charts_gen and self.num_charts_gen % 10 == 0:
-        #     self.chart.close_fig()
-        # else:
-        #     self.chart.remove_annotations()
-        self.num_charts_gen += 1
-        _LOGGER.debug('CHART GEN #{}'.format(self.num_charts_gen))
+        p = Process(target=make_psychrochart,
+                    args=(svg_image, self._altitude, self._pressure_kpa,
+                          points, connectors, arrows))
+        p.start()
+        p.join()
+        with open(svg_image, 'rb') as f:
+            self.svg_image_bytes = f.read()
 
     def _get_sensor_state(self, entity_id, remote_states=None):
 
@@ -312,8 +298,7 @@ class PsychroChartHandler:
 
     @asyncio.coroutine
     def get_dbt_rh_points(self):
-        # Extract T-RH points
-
+        """Extract temperature - humidity points from sensors."""
         def _mean(values: Union[List[float],
                                 Tuple[float]]) -> Optional[float]:
             if values:
@@ -350,21 +335,27 @@ class PsychroChartHandler:
 
     @asyncio.coroutine
     def update_sensors(self):
+        """Update temp and humid sensors to make a new SVG chart."""
         if not self.points:
             return
 
         points = self.points[-1]
         _LOGGER.debug('POINTS FOR UPD SENSORS: %s', points)
         main_zones = [CONF_INTERIOR, CONF_EXTERIOR, CONF_WEATHER]
-        temp_int, temp_ext, temp_est = [points[k][0] for k in main_zones]
-        _LOGGER.debug('TEMPS: Int: %s, Ext: %s, Est: %s', temp_int, temp_ext, temp_est)
+        deltas_zones = delta_est = delta_house = None
+        temp_int, temp_ext, temp_est = [points[k][0] if k in points else None
+                                        for k in main_zones]
+        _LOGGER.debug('TEMPS: Int: %s, Ext: %s, Est: %s',
+                      temp_int, temp_ext, temp_est)
 
-        delta_est = round(temp_ext - temp_est, 1)
-        delta_house = round(temp_int - temp_ext, 1)
-        deltas_zones = {z: round(p[0] - temp_ext, 1) for z, p in
-                        points.items() if z not in main_zones}
-        assert (abs(delta_house) < 15)
-        assert (abs(delta_est) < 25)
+        if temp_est is not None and temp_ext is not None:
+            delta_est = round(temp_ext - temp_est, 1)
+            assert (abs(delta_est) < 25)
+        if temp_int is not None and temp_ext is not None:
+            delta_house = round(temp_int - temp_ext, 1)
+            assert (abs(delta_house) < 15)
+            deltas_zones = {z: round(p[0] - temp_ext, 1) for z, p in
+                            points.items() if z not in main_zones}
 
         attrs = {
             "Interior": temp_int,
@@ -376,11 +367,15 @@ class PsychroChartHandler:
             ATTR_ICON: "mdi:thermometer",
         }
         # Append deltas_zones
-        [attrs.update({z: delta}) for z, delta in deltas_zones.items()]
-        self.delta_house = delta_house
-        self.sensor_attributes = attrs
+        if deltas_zones is not None:
+            [attrs.update({z: delta}) for z, delta in deltas_zones.items()]
 
+        self.sensor_attributes = attrs
         # Decision logic (deadband)
+        if delta_house is None:
+            return
+
+        self.delta_house = delta_house
         if self.open_house is None:
             # First value
             self.open_house = delta_house > 0
@@ -446,17 +441,11 @@ class PsychroChartHandler:
             arrows = _apply_style(arrows, self.colors_interior_zones)
 
         points_plot = _apply_style(points, self.colors_interior_zones)
-        # svg_image = BytesIO()
-        svg_image = os.path.join(basedir, 'temp_chart.svg')
+
+        svg_image = os.path.join(basedir, 'psychrochart.svg')
         yield from self.hass.async_add_job(
             self.update_chart_overlay, svg_image,
             points_plot, self.connectors, arrows)
-        # svg_image.seek(0)
-        # self.svg_image_bytes = svg_image.read()
-        with open(svg_image, 'rb') as f:
-            self.svg_image_bytes = f.read()
-        # del svg_image
-
         self._last_tile_generation = now()
         _LOGGER.debug('CHART generated in {:.2f} sec'.format(time() - tic))
 

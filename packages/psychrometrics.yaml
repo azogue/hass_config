@@ -8,8 +8,12 @@ homeassistant:
       binary_sensor.close_house:
         friendly_name: Apertura de ventanas
 
+      camera.psychrometric_chart:
+        friendly_name: Diagrama psicrométrico
+#        custom_ui_state_card: camera_nocaption
+
 psychrometrics:
-  scan_interval: 120
+  scan_interval: 180
   evolution_arrows_minutes: 240
   altitude: !secret elevation
 #  pressure_kpa: 975
@@ -20,7 +24,6 @@ psychrometrics:
 #    use_ssl: True
   interior:
     Salón:
-#      - sensor.t_salon
       - sensor.salon_temperature, sensor.salon_humidity
     Dormitorio:
       - sensor.dormitorio_temperature_rpi2mpd, sensor.dormitorio_humidity_rpi2mpd
@@ -33,11 +36,8 @@ psychrometrics:
       - sensor.estudio_temperature_rpi2h, sensor.estudio_humidity_rpi2h
   exterior:
       - sensor.galeria_dht22_temperature, sensor.galeria_dht22_humidity
-#      - sensor.galeria_impulsion_calefaccion
-#      - sensor.galeria_retorno_calefaccion
   weather:
       - sensor.dark_sky_temperature, sensor.dark_sky_humidity
-      - sensor.villena_temperature, sensor.villena_humidity
 
 
 automation:
