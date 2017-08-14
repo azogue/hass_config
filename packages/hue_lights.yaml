@@ -30,9 +30,10 @@ homeassistant:
       icon: mdi:lava-lamp
     light.flexo:
       icon: mdi:lightbulb-outline
+    light.central:
+      icon: mdi:ceiling-light
 
 light:
-#  - platform: myhue
   - platform: hue
     host: 192.168.1.45
     allow_unreachable: true
@@ -90,6 +91,7 @@ group:
   Luces Salón:
     - light.bola_grande
     - light.bola_pequena
+    - light.central
     - light.pie_tv
     - light.pie_sofa
     - light.cuenco
