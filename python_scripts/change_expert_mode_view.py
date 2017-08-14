@@ -23,6 +23,9 @@ GROUPS_EXPERT_MODE = {
     'group.host_rpi2_mpd': None,
     'group.conectivity': None,
     'group.esp8266_2': None,
+    'group.menu_automations_1': None,
+    'group.menu_automations_2': None,
+    'group.menu_automations_3': None,
 }
 
 GROUPS_WITH_BINARY_STATE = {

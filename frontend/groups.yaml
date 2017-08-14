@@ -118,6 +118,9 @@ Master conf:
     - group.hass_control_simple
     - group.conectivity
     - group.all_automations
+    - group.menu_automations_1
+    - group.menu_automations_2
+    - group.menu_automations_3
     - group.all_scripts
     - group.test_notifications
 #    - group.all_devices

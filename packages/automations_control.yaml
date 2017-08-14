@@ -1,0 +1,55 @@
+# Alarma despertador
+homeassistant:
+  customize:
+    group.menu_automations_1:
+      friendly_name: Automatizaciones del sistema
+      order: 1
+    group.menu_automations_2:
+      friendly_name: Automatizaciones de presencia
+      order: 2
+    group.menu_automations_3:
+      friendly_name: Automatizaciones de luz
+      order: 3
+
+group:
+  menu_automations_1:
+    control: hidden
+    entities:
+      - automation.start_homeassistant
+      - automation.visibilidad_modo_experto_onoff
+      - automation.update_notifications
+      - automation.new_bt_device_notifier
+      - automation.manual_toggle_lights_estudio
+      - automation.esp_plancha_goes_online
+      - automation.outlet_for_esp_plancha_is_on
+      - automation.visibilidad_de_modulos_esp_online
+      - automation.visibilidad_de_modulos_esp_offline
+      - automation.schedule_leds_esp_modules_off
+      - automation.schedule_leds_esp_modules_on
+      - automation.botvac_error_notification
+      - automation.database_flush
+
+  menu_automations_2:
+    control: hidden
+    entities:
+      - automation.buenas_noches
+      - automation.notify_sunset
+      - automation.encendido_automatico_de_cam_salon
+      - automation.apagado_de_cam_salon_en_kodi_play_nocturno
+      - automation.apagado_de_tv_si_encendida_y_kodi_en_idle__10_min
+      - automation.encendido_de_tv_si_apagada_y_kodi_play
+      - automation.notificacion_de_inicio_de_ventilacion_natural
+      - automation.notificacion_de_final_de_ventilacion_natural
+      - automation.apagado_de_climatizador_evaporativo
+
+  menu_automations_3:
+    control: hidden
+    entities:
+      - automation.salon_select_scene
+      - automation.tono_salon
+      - automation.brillo_salon
+      - automation.encendido_led_cocina
+      - automation.apagado_led_cocina
+      - automation.encendido_luces_estudio
+      - automation.apagado_luces_estudio
+      - automation.encendido_luces_dormitorio

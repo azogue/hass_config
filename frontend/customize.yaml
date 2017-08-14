@@ -94,6 +94,13 @@ group.all_automations:
 group.scripts:
   order: 43
 
+group.menu_automations_1:
+  order: 61
+group.menu_automations_2:
+  order: 62
+group.menu_automations_3:
+  order: 63
+
 group.aislamiento:
   order: 70
 
@@ -109,6 +116,7 @@ group.weather_dark_sky_aftertomorrow:
   order: 80
 group.weather_dark_sky_afterthree:
   order: 82
+
 ###############################################################################
 #                           SCENES                                            #
 ###############################################################################
