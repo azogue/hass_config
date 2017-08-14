@@ -11,8 +11,11 @@ logs:
   homeassistant.components.media_player: info
   homeassistant.components.tts: debug
 
-  custom_components.psychrometrics: info
+  # To hide in logs connexion errors which happen sometimes:
+  homeassistant.components.vacuum: error
   mirobo.device: critical
-  custom_components.vacuum: error
+
+  custom_components.psychrometrics: info
+  custom_components.mytelegram_bot: debug
   # custom_components.sensor.enerweb: info
   # custom_components.enerpi: info

@@ -24,14 +24,14 @@ automation:
     entity_id: vacuum.robot_aspirador
   condition:
     condition: template
-    value_template: '{{ "Error" in states.vacuum.robot_aspirador.attributes }}'
+    value_template: '{{ "error" in states.vacuum.robot_aspirador.attributes }}'
   action:
     service: telegram_bot.send_message
     data_template:
       title: '*Botvac Error*'
       message: >
-        El robot aspirador ha fallado: _{{ states.vacuum.robot_aspirador.attributes.Error }}_
-        (Status: {{ states.vacuum.robot_aspirador.attributes.vacuum_status }}, batt: {{ states.vacuum.robot_aspirador.attributes.vacuum_battery }} %)
+        El robot aspirador ha fallado: _{{ states.vacuum.robot_aspirador.attributes.error }}_
+        (Status: {{ states.vacuum.robot_aspirador.attributes.status }}, batt: {{ states.vacuum.robot_aspirador.attributes.battery_level }} %)
       target: '{{ states.sensor.telegram_default_chatid.state | int }}'
       disable_notification: false
       inline_keyboard:
@@ -39,4 +39,4 @@ automation:
         - Start:/service_call vacuum.start_pause vacuum.robot_aspirador, Stop:/service_call vacuum.stop vacuum.robot_aspirador, +:/init
 
 # For the dev panel, in JSON:
-#{"message": "El robot aspirador ha fallado: _{{ states.vacuum.robot_aspirador.attributes.Error }}_ (Status: {{ states.vacuum.robot_aspirador.attributes.vacuum_status }}, batt: {{ states.vacuum.robot_aspirador.attributes.vacuum_battery }} %)", "title": "*Botvac Error*", "target": "{{ states.sensor.telegram_default_chatid.state | int }}", "disable_notification": false, "inline_keyboard": ["Locate botvac:/service_call vacuum.locate vacuum.robot_aspirador, To dock:/service_call vacuum.return_to_home vacuum.robot_aspirador", "Start:/service_call vacuum.start_pause vacuum.robot_aspirador, Stop:/service_call vacuum.stop vacuum.robot_aspirador, +:/init"]}
+#{"message": "El robot aspirador ha fallado: _{{ states.vacuum.robot_aspirador.attributes.Error }}_ (Status: {{ states.vacuum.robot_aspirador.attributes.status }}, batt: {{ states.vacuum.robot_aspirador.attributes.battery }} %)", "title": "*Botvac Error*", "target": "{{ states.sensor.telegram_default_chatid.state | int }}", "disable_notification": false, "inline_keyboard": ["Locate botvac:/service_call vacuum.locate vacuum.robot_aspirador, To dock:/service_call vacuum.return_to_home vacuum.robot_aspirador", "Start:/service_call vacuum.start_pause vacuum.robot_aspirador, Stop:/service_call vacuum.stop vacuum.robot_aspirador, +:/init"]}
