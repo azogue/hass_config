@@ -4,6 +4,7 @@ include:
     - sun
     - binary_sensor
     - media_player
+    - light
   entities:
     - sensor.calefaccion
     - sensor.house_delta_temperature

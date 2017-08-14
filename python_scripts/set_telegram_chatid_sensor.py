@@ -1,7 +1,7 @@
 """Python script to set the default chat id for the Telegram Bot."""
 SENSOR_CHATID = 'sensor.telegram_default_chatid'
-SENSOR_ATTRS = {"friendly_name": "Telegram default chat_id",
-                "icon": "mdi:telegram", "hidden": True}
+SENSOR_ATTRS = {"friendly_name": "Telegram default chatID",
+                "homebridge_hidden": True, "icon": "mdi:telegram"}
                 # "icon": "mdi:telegram", "visible": True}
 
 last_chat_id = hass.states.get(SENSOR_CHATID)

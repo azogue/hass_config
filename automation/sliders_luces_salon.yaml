@@ -9,6 +9,7 @@
           - light.bola_grande
           - light.bola_pequena
           - light.cuenco
+          - light.central
           - light.pie_sofa
           - light.pie_tv
       data_template:
