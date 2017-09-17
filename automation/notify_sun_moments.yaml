@@ -29,7 +29,7 @@
       disable_notification: true
       inline_keyboard:
         - Luz salón:/service_call light.toggle group.luces_salon, Luz dormitorio:/service_call light.toggle group.luces_dormitorio
-        - Luz cocina:/service_call switch.toggle switch.cocina, Luz estudio:/service_call light.toggle group.luces_estudio, +:/init
+        - Luz cocina:/service_call switch.toggle switch.cocina, Luz estudio:/service_call switch.toggle switch.estudio_light_relay, +:/init
 
 #    service: notify.ios_iphone
 #    data:
