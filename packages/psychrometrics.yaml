@@ -13,7 +13,7 @@ homeassistant:
 #        custom_ui_state_card: camera_nocaption
 
 psychrometrics:
-  scan_interval: 180
+  scan_interval: 240
   evolution_arrows_minutes: 240
   altitude: !secret elevation
 #  pressure_kpa: 975

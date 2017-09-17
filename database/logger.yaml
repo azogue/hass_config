@@ -15,7 +15,7 @@ logs:
   homeassistant.components.vacuum: error
   mirobo.device: critical
 
-  custom_components.psychrometrics: info
-  custom_components.mytelegram_bot: debug
+  custom_components.psychrometrics: warning
+#  custom_components.mytelegram_bot: debug
   # custom_components.sensor.enerweb: info
   # custom_components.enerpi: info

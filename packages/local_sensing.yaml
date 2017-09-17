@@ -268,7 +268,7 @@ sensor:
       - dew_point
       - humidity
       - pressure
-    update_interval: '00:03:00'
+    update_interval: '00:05:00'
 
 weather:
   - platform: openweathermap

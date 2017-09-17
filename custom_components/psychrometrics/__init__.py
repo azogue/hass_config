@@ -277,8 +277,8 @@ class PsychroChartHandler:
                 if s_temp is not None and s_humid is not None:
                     sensors_subzone.append((s_temp, s_humid))
                 else:
-                    _LOGGER.warning('ERROR PAIR: %s -> (%s, %s)',
-                                    pair, s_temp, s_humid)
+                    _LOGGER.info('ERROR PAIR: %s -> (%s, %s)',
+                                 pair, s_temp, s_humid)
             return sensors_subzone
 
         remote_states = None
