@@ -81,9 +81,9 @@ MEYE_CAMERAS_BIN_SENSORS = {
 }
 
 # Home Assistant configuration
-HA_HOST = "127.0.0.1"  # If HA runs in the same host than MotionEye
-HA_PORT = 8123
-HA_PROTOCOL = "http"
+# HA_HOST = "127.0.0.1"  # If HA runs in the same host than MotionEye
+# HA_PORT = 8123
+# HA_PROTOCOL = "http"
 
 # Read Home Assistant configuration to get the API password
 basedir = os.path.dirname(os.path.abspath(__file__))
@@ -91,6 +91,7 @@ PATH_SECRETS = os.path.join(basedir, 'secrets.yaml')
 with open(PATH_SECRETS) as _file:
     SECRETS = yaml.load(_file.read())
 HA_API_PASSWORD = SECRETS['hass_pw']
+MASTER_HA_URL = SECRETS['master_hass_url']
 
 # --------------- End of custom configuration --------------
 
@@ -124,9 +125,10 @@ def _make_curl_cmd(meye_event: str, ha_sensor_attrs: dict) -> str:
     cmd += '"/etc/motioneye/motioneye.conf" {} %t; '.format(meye_action)
     cmd += 'curl -X POST -H "x-ha-access: {}" '.format(HA_API_PASSWORD)
     cmd += '-H "Content-Type: application/json" '
-    cmd += '-d \'{}\' '.format(json.dumps(ha_sensor_state, ensure_ascii=False))
-    cmd += '{}://{}:{}/api/states/{};\n'.format(
-        HA_PROTOCOL, HA_HOST, HA_PORT, entity_id)
+    cmd += '-d \'{}\' '.format(json.dumps(ha_sensor_state,
+                                          ensure_ascii=False, sort_keys=True))
+    cmd += '{}api/states/{};\n'.format(
+        MASTER_HA_URL, entity_id)
     return cmd
 
 
@@ -158,13 +160,14 @@ def check_meye_cameras_motion_config() -> bool:
                         print('** BAD LINE FOR EVENT "{}" IN [{}]. '
                               'Change line[{}] for line[{}]'
                               .format(meye_event, meyecam_conf_path,
-                                      len(l), len(new_l)))
+                                      (l), (new_l)))
                         cam_config_changes = True
                     events_to_check.remove(meye_event)
         # Now add the non included events:
         if events_to_check:
             cam_config_changes = True
-            lines_conf_i_out += [_make_curl_cmd(ev, ha_bin_sensor_conf.copy())
+            lines_conf_i_out += ['{} {}'.format(
+                ev, _make_curl_cmd(ev, ha_bin_sensor_conf.copy()))
                                  for ev in events_to_check]
 
         if cam_config_changes:
