@@ -193,20 +193,27 @@ ios:
       - name: camera
         identifier: 'camera'
         actions:
-          - identifier: 'CAM_YES'
-            title: 'Do it!'
+          - identifier: 'ALARM_CANCEL'
+            title: 'Desconectar'
+            activationMode: 'background'
+            authenticationRequired: yes
+            destructive: no
+            behavior: 'default'
+            context: 'default'
+          - identifier: 'ALARM_RESET'
+            title: 'Ignorar (reset)'
+            activationMode: 'background'
+            authenticationRequired: yes
+            destructive: yes
+            behavior: 'default'
+            context: 'default'
+          - identifier: 'CONFIRM_OK'
+            title: 'Validar'
             activationMode: 'background'
             authenticationRequired: no
             destructive: no
             behavior: 'default'
-            context: 'default'
-          - identifier: 'CAM_NO'
-            title: 'No'
-            activationMode: 'background'
-            authenticationRequired: no
-            destructive: no
-            behavior: 'default'
-            context: 'default'
+            context: 'minimal'
 
       # TODO behavior: 'textInput' ¿¿not working ??
       - name: execorder
