@@ -3,6 +3,11 @@ homeassistant:
   customize:
     switch.estudio_light_relay:
       icon: mdi:ceiling-light
+
+    binary_sensor.estudio_manual_light_switch_rpi2h:
+      icon: mdi:toggle-switch
+      friendly_name: Conmutador manual
+
     binary_sensor.pir_estudio_rpi2h:
       friendly_name: Movimiento (estudio)
       device_class: motion
@@ -12,31 +17,117 @@ homeassistant:
       device_class: vibration
       homebridge_hidden: true
 
+    sensor.estudio_temperature_rpi2h:
+      friendly_name: Temperatura
+      unit_of_measurement: '°C'
+      icon: mdi:thermometer
+    sensor.estudio_humidity_rpi2h:
+      friendly_name: Humedad
+      unit_of_measurement: '%'
+      icon: mdi:water-percent
+    sensor.estudio_pressure_rpi2h:
+      friendly_name: Presión
+      unit_of_measurement: "mb"
+      icon: mdi:weather-cloudy
     sensor.estudio_light_level_rpi2h:
+      icon: mdi:lightbulb
       homebridge_sensor_type: light
+      device_class: light
+      friendly_name: Iluminación
+
+    sensor.hass_cpu_temperature_rpi2h:
+      friendly_name: HASS CPU Temperature
+      homebridge_hidden: true
+    sensor.cpu_use_rpi2h:
+      icon: mdi:memory
+      friendly_name: CPU Use
+      homebridge_hidden: true
+    sensor.ram_free_rpi2h:
+      icon: mdi:memory
+      friendly_name: RAM Free
+      homebridge_hidden: true
+    sensor.last_boot_rpi2h:
+      icon: mdi:clock
+      friendly_name: Last Boot
+      homebridge_hidden: true
+    sensor.disk_use__rpi2h:
+      icon: mdi:harddisk
+      friendly_name: Disk Use /
+      homebridge_hidden: true
+
+#binary_sensor.vibration_sensor_raw
+#binary_sensor.vibration_sensor
 
 binary_sensor:
-  - platform: dummy
-    sensors:
-      pir_estudio_rpi2h:
-        friendly_name: Movimiento en Estudio
-        device_class: motion
-      vibration_sensor_rpi2h:
-        friendly_name: Vibración en Estudio
-        device_class: vibration
+  - platform: mqtt
+    state_topic: ha_office/binary_sensor/pir_estudio/state
+    name: pir_estudio_rpi2h
+  #  qos (Optional): The maximum QoS level of the state topic. Default is 0.
+    payload_on: "on"
+    payload_off: "off"
+    device_class: motion
+  - platform: mqtt
+    state_topic: ha_office/binary_sensor/vibration_sensor/state
+#    state_topic: ha_office/binary_sensor/vibration_sensor_raw/state
+    name: vibration_sensor_rpi2h
+  #  qos (Optional): The maximum QoS level of the state topic. Default is 0.
+    payload_on: "on"
+    payload_off: "off"
+    device_class: vibration
+
+  - platform: mqtt
+    state_topic: ha_office/binary_sensor/estudio_manual_light_switch/state
+    name: estudio_manual_light_switch_rpi2h
+    payload_on: "on"
+    payload_off: "off"
+
 
 sensor:
-  - platform: dummy
-    sensors:
-      estudio_temperature_rpi2h:
-        friendly_name: Temperatura
-        unit_of_measurement: '°C'
-      estudio_humidity_rpi2h:
-        friendly_name: Humedad
-        unit_of_measurement: '%'
-      estudio_pressure_rpi2h:
-        friendly_name: Presión
-        unit_of_measurement: "mb"
+  - platform: mqtt
+    state_topic: ha_office/sensor/estudio_temperature/state
+    name: estudio_temperature_rpi2h
+    unit_of_measurement: '°C'
+    expire_after: 180
+  - platform: mqtt
+    state_topic: ha_office/sensor/estudio_humidity/state
+    name: estudio_humidity_rpi2h
+    unit_of_measurement: '%'
+    expire_after: 180
+  - platform: mqtt
+    state_topic: ha_office/sensor/estudio_pressure/state
+    name: estudio_pressure_rpi2h
+    unit_of_measurement: 'mb'
+    expire_after: 180
+  - platform: mqtt
+    state_topic: ha_office/sensor/estudio_light_level/state
+    name: estudio_light_level_rpi2h
+    unit_of_measurement: 'lx'
+    expire_after: 180
+
+  - platform: mqtt
+    state_topic: ha_office/sensor/hass_cpu_temperature/state
+    name: hass_cpu_temperature_rpi2h
+    unit_of_measurement: '°C'
+    expire_after: 180
+  - platform: mqtt
+    state_topic: ha_office/sensor/cpu_use/state
+    name: cpu_use_rpi2h
+    unit_of_measurement: '%'
+    expire_after: 180
+  - platform: mqtt
+    state_topic: ha_office/sensor/ram_free/state
+    name: ram_free_rpi2h
+    unit_of_measurement: 'mb'
+    expire_after: 180
+  - platform: mqtt
+    state_topic: ha_office/sensor/last_boot/state
+    name: last_boot_rpi2h
+    expire_after: 300
+  - platform: mqtt
+    state_topic: ha_office/sensor/disk_use_/state
+    name: disk_use__rpi2h
+    expire_after: 300
+
 
 switch:
   - platform: command_line
