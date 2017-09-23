@@ -134,6 +134,18 @@ sensor:
     unit_of_measurement: "°C"
     value_template: '{{ value | multiply(0.001) | round(1) }}'
 
+mqtt:
+  broker: !secret mqtt_broker
+  port: !secret mqtt_port
+  client_id: !secret mqtt_client_id
+  keepalive: 120
+  username: !secret mqtt_username
+  password: !secret mqtt_password
+  protocol: 3.1
+
+mqtt_statestream:
+  base_topic: ha_bedroom
+
 #media_player:
 #  - platform: mpd
 #    host: !secret mpd_host
