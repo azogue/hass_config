@@ -55,7 +55,7 @@ ios:
   push:
     categories:
       - name: away
-        identifier: 'AWAY'
+        identifier: 'away'
         actions:
           - identifier: 'ALARM_ARM_NOW'
             title: 'Activar alarma'
@@ -80,7 +80,7 @@ ios:
             context: 'default'
 
       - name: inhome
-        identifier: 'INHOME'
+        identifier: 'inhome'
         actions:
           - identifier: 'WELCOME_HOME'
             title: 'Encender luces'
@@ -105,7 +105,7 @@ ios:
             context: 'default'
 
       - name: alarmsounded
-        identifier: 'ALARMSOUNDED'
+        identifier: 'alarmsounded'
         actions:
           - identifier: 'ALARM_SILENT'
             title: 'Silenciar'
@@ -130,7 +130,7 @@ ios:
             context: 'default'
 
       - name: confirm
-        identifier: 'CONFIRM'
+        identifier: 'confirm'
         actions:
           - identifier: 'CONFIRM_OK'
             title: 'Validar'
@@ -141,7 +141,7 @@ ios:
             context: 'minimal'
 
       - name: kodiplay
-        identifier: 'KODIPLAY'
+        identifier: 'kodiplay'
         actions:
           - identifier: 'LIGHTS_ON'
             title: 'Lights ON!'
@@ -166,7 +166,7 @@ ios:
             context: 'default'
 
       - name: alarmclock
-        identifier: 'ALARMCLOCK'
+        identifier: 'alarmclock'
         actions:
           - identifier: 'INIT_DAY'
             title: 'A la ducha!'
@@ -214,20 +214,6 @@ ios:
             destructive: no
             behavior: 'default'
             context: 'minimal'
-
-      # TODO behavior: 'textInput' ¿¿not working ??
-      - name: execorder
-        identifier: 'EXECORDER'
-        actions:
-          - identifier: 'INPUTORDER'
-            title: 'Tell me'
-            activationMode: 'background'
-            authenticationRequired: no
-            destructive: no
-            behavior: 'textInput'
-            context: 'default'
-            textInputButtonTitle: "What?" # Only for iOS 10 when behavior is TextInput.
-            textInputPlaceholder: 'tell me more' # Only for iOS 10 when behavior is TextInput.
 
 
 # Manual Testing
