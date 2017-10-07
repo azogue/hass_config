@@ -42,7 +42,7 @@ DEFAULT_NAME = 'enerweb'
 DEFAULT_TIMEOUT = 10
 
 URL_MASK_ENERWEB_GET_DATA = 'http://{}/enerweb/get_sensors_info?samples=1'
-URL_MASK_ENERWEB_GET_DATA_MYSQL = 'mysql+cymysql://{}:{}@{}/data_enerweb'
+URL_MASK_ENERWEB_GET_DATA_MYSQL = 'mysql://{}:{}@{}/data_enerweb'
 SQLMASK_SELECT_TABLE_COLUMN_NAMES = 'SELECT COLUMN_NAME FROM ' \
                                     'INFORMATION_SCHEMA.COLUMNS ' \
                                     'WHERE TABLE_NAME = \"{}\"'
@@ -348,6 +348,7 @@ class EnerwebData(object):
         # self._mysql_session = None
         self.path_database = URL_MASK_ENERWEB_GET_DATA_MYSQL.format(
             self._mysql_u, self._mysql_p, self._host)
+        self._engine = None
 
         self._raw_data = None
         self._last_valid_request = None
@@ -369,11 +370,13 @@ class EnerwebData(object):
 
     @asyncio.coroutine
     def async_get_session(self):
-        _LOGGER.debug('in async_get_session')
-        engine = yield from self.hass.async_add_job(
+        if self._engine is None:
+            self._engine = yield from self.hass.async_add_job(
             partial(create_engine, self.path_database, echo=False))
+            _LOGGER.debug('Created engine: {}'.format(self._engine))
         session = yield from self.hass.async_add_job(
-            partial(sessionmaker, bind=engine))
+            partial(sessionmaker, bind=self._engine))
+        # return self._engine.connect()
         return session()
 
     # noinspection PyUnusedLocal
@@ -437,10 +440,12 @@ class EnerwebData(object):
                     _LOGGER.error('{}: {}'.format(e.__class__, e))
                 # self._mysql_session = None
                 self._last_request_was_invalid = True
+                self._engine = None
             except Exception as e:
                 if not self._last_request_was_invalid:
                     _LOGGER.error('UNKNOWN ERROR {} [{}] trying to update '
                                   'from SQL DB'.format(e, e.__class__))
                 # self._mysql_session = None
                 self._last_request_was_invalid = True
+                self._engine = None
             self._updating = False
