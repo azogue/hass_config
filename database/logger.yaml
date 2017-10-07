@@ -7,6 +7,7 @@ logs:
   homeassistant.components.history: info
   homeassistant.components.script: info
   homeassistant.components.automation: info
+  homeassistant.components.light: error
 
   homeassistant.components.media_player: info
   homeassistant.components.tts: debug
