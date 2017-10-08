@@ -18,22 +18,22 @@ homeassistant:
       homebridge_hidden: true
 
     sensor.estudio_temperature_rpi2h:
-      friendly_name: Temperatura
+      friendly_name: Temperatura Estudio
       unit_of_measurement: '°C'
       icon: mdi:thermometer
     sensor.estudio_humidity_rpi2h:
-      friendly_name: Humedad
+      friendly_name: Humedad Estudio
       unit_of_measurement: '%'
       icon: mdi:water-percent
     sensor.estudio_pressure_rpi2h:
-      friendly_name: Presión
+      friendly_name: Presión Estudio
       unit_of_measurement: "mb"
       icon: mdi:weather-cloudy
     sensor.estudio_light_level_rpi2h:
       icon: mdi:lightbulb
       homebridge_sensor_type: light
       device_class: light
-      friendly_name: Iluminación
+      friendly_name: Iluminación Estudio
 
     sensor.hass_cpu_temperature_rpi2h:
       friendly_name: HASS CPU Temperature

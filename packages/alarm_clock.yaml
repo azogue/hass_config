@@ -6,7 +6,7 @@ homeassistant:
     switch.alarm_clock_status:
       homebridge_name: Despertador LaCafetera
       icon: mdi:toggle-switch
-    input_slider.alarm_clock_hour:
+    input_number.alarm_clock_hour:
       friendly_name: Hora
       icon: mdi:timetable
     sensor.alarm_clock_hour:
@@ -15,7 +15,7 @@ homeassistant:
     sensor.alarm_clock_minute:
       hidden: true
       homebridge_hidden: true
-    input_slider.alarm_clock_minute:
+    input_number.alarm_clock_minute:
       friendly_name: Minuto
       icon: mdi:timetable
     sensor.alarm_clock_time:
@@ -42,7 +42,7 @@ input_select:
     initial: Dormitorio (Mopidy)
     icon: mdi:speaker
 
-input_slider:
+input_number:
   # Sliders para setting de alarma despertador
   alarm_clock_hour:
   #  initial: 8
@@ -59,9 +59,9 @@ sensor:
   - platform: template
     sensors:
       alarm_clock_hour:
-        value_template: '{{ states("input_slider.alarm_clock_hour") | round(0) }}'
+        value_template: '{{ states("input_number.alarm_clock_hour") | round(0) }}'
       alarm_clock_minute:
-        value_template: '{{ states("input_slider.alarm_clock_minute") | round(0) }}'
+        value_template: '{{ states("input_number.alarm_clock_minute") | round(0) }}'
       alarm_clock_time:
         value_template: '{{ states("sensor.alarm_clock_hour") }}:{% if states("sensor.alarm_clock_minute")|length == 1 %}0{% endif %}{{ states("sensor.alarm_clock_minute") }}'
 
@@ -84,8 +84,8 @@ group:
     entities:
       - switch.alarm_clock_status
     #  - input_boolean.alarm_clock_status
-      - input_slider.alarm_clock_hour
-      - input_slider.alarm_clock_minute
+      - input_number.alarm_clock_hour
+      - input_number.alarm_clock_minute
       - sensor.alarm_clock_time
       - input_select.room_altavoces
       # From rf outlets:

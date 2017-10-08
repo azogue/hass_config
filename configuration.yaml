@@ -74,6 +74,10 @@ tts:  # Text to speech
 wake_on_lan:
 media_extractor:
 frontend:
+  extra_html_url:
+    - /local/custom_ui/state-card-camera_nocaption.html
+    - /local/custom_ui/state-card-custom_vacuum.html
+
   themes:
     green:
       primary-color: '#6ca518'
@@ -91,5 +95,6 @@ myinfluxdb: !include database/influxdb.yaml
 history: !include database/history.yaml
 logbook: !include database/logbook.yaml
 recorder:
-  purge_days: !secret recorder_purge_days
+  purge_interval: 1
+  purge_keep_days: !secret recorder_purge_days
   db_url: !secret recorder_db_url

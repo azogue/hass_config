@@ -1,0 +1,64 @@
+history_graph:
+  graph1:
+    entities:
+      - sensor.salon_temperature
+      - sensor.t_salon
+      - sensor.estudio_temperature_rpi2h
+      - sensor.dormitorio_temperature_rpi2mpd
+      - sensor.dormitorio_htu21d_temperature_rpi2mpd
+      - sensor.esp1_temperature
+#      - sensor.esp2_temperature
+      - sensor.esp3_temperature
+    name: Temperatura interior
+    hours_to_show: 24
+
+  graph2:
+    entities:
+      - sensor.salon_humidity
+      - sensor.estudio_humidity_rpi2h
+      - sensor.dormitorio_humidity_rpi2mpd
+      - sensor.esp1_humidity
+#      - sensor.esp2_humidity
+      - sensor.esp3_humidity
+    name: Humedad interior
+    hours_to_show: 24
+#    refresh:
+
+  graph3:
+    entities:
+      - sensor.salon_light_level
+      - sensor.dormitorio_light_level_rpi2mpd
+      - sensor.estudio_light_level_rpi2h
+      - sensor.esp1_light
+#      - sensor.esp2_light
+      - sensor.esp3_light
+      - sensor.enerpi_ldr
+    name: Iluminación
+    hours_to_show: 24
+#    refresh:
+
+  graph4:
+    entities:
+      - binary_sensor.pir_salon
+      - binary_sensor.motioncam_salon
+      - binary_sensor.pir_estudio_rpi2h
+      - binary_sensor.motioncam_estudio
+      - binary_sensor.vibration_sensor_rpi2h
+      - binary_sensor.pir_dormitorio_rpi2mpd
+      - binary_sensor.esp1_pir
+#      - binary_sensor.esp2_pir
+#      - binary_sensor.esp2_vibro
+      - binary_sensor.esp3_pir
+      - binary_sensor.esp3_vibro
+    name: Sensores de movimiento
+    hours_to_show: 12
+#    refresh:
+
+  graph5:
+    entities:
+      - sensor.salon_pressure
+      - sensor.estudio_pressure_rpi2h
+      - sensor.dormitorio_pressure_rpi2mpd
+    name: Presiones
+    hours_to_show: 24
+#    refresh:

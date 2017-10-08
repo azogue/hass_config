@@ -109,6 +109,31 @@ Alarm Panel:
     - group.camaras
     - group.alarm_control
 
+Weather:
+  name: El tiempo
+  icon: mdi:weather-partlycloudy
+  view: yes
+  entities:
+    - group.aislamiento
+    - group.weather_dark_sky_now
+    - group.weather_dark_sky_today
+    - group.weather_dark_sky_tomorrow
+    - group.weather_dark_sky_aftertomorrow
+    - group.weather_dark_sky_afterthree
+    - group.weather_forecast
+    - group.weather
+
+Graphs:
+  name: Gráficas
+  icon: mdi:chart-line
+  view: yes
+  entities:
+    - history_graph.temperatura_interior
+    - history_graph.humedad_interior
+    - history_graph.iluminacion
+    - history_graph.sensores_de_movimiento
+    - history_graph.presiones
+
 Master conf:
   name: Master configuration
   icon: mdi:settings
@@ -125,20 +150,6 @@ Master conf:
     - group.test_notifications
 #    - group.all_devices
 
-Weather:
-  name: El tiempo
-  icon: mdi:weather-partlycloudy
-  view: yes
-  entities:
-    - group.aislamiento
-    - group.weather_dark_sky_now
-    - group.weather_dark_sky_today
-    - group.weather_dark_sky_tomorrow
-    - group.weather_dark_sky_aftertomorrow
-    - group.weather_dark_sky_afterthree
-    - group.weather_forecast
-    - group.weather
-
 default_view:
 #  name: Piso
   icon: mdi:home
@@ -146,6 +157,13 @@ default_view:
   entities:
     - group.family
     - group.master_luces_del_salon
+
+    - history_graph.temperatura_interior
+    - history_graph.humedad_interior
+    - history_graph.iluminacion
+    - history_graph.sensores_de_movimiento
+    - history_graph.presiones
+
     - group.salon
     - group.salon_simple
     - group.luces_estudio

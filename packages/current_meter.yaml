@@ -13,25 +13,25 @@ homeassistant:
       homebridge_hidden: true
     sensor.enerpi_ldr:
       icon: mdi:lightbulb
-      friendly_name: Hall illuminance
+      friendly_name: Iluminación Entrada
       homebridge_hidden: true
     camera.enerpi_ldr:
-      friendly_name: Hall illuminance (24h)
+      friendly_name: Iluminación Entrada (24h)
 
     input_boolean.switch_control_enerpi_max_power:
       friendly_name: enerPI - control de potencia
       icon: mdi:toggle-switch
       homebridge_hidden: true
-    input_slider.enerpi_max_power:
+    input_number.enerpi_max_power:
       friendly_name: Max Power (kW)
       icon: mdi:flash-red-eye
       homebridge_hidden: true
-    input_slider.enerpi_max_power_reset:
+    input_number.enerpi_max_power_reset:
       friendly_name: Reset level (kW)
       icon: mdi:flash-off
       homebridge_hidden: true
 
-#input_slider:
+#input_number:
   ## enerPI alarm config
   #enerpi_max_power:
   #  initial: 4.0
@@ -62,8 +62,8 @@ group:
     control: hidden
     entities:
       - input_boolean.switch_control_enerpi_max_power
-      - input_slider.enerpi_max_power
-      - input_slider.enerpi_max_power_reset
+      - input_number.enerpi_max_power
+      - input_number.enerpi_max_power_reset
 
 ####################################################
 #                 Custom platforms                 #

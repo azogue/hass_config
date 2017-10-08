@@ -2,15 +2,15 @@
 homeassistant:
   customize:
     sensor.esp1_humidity:
-      friendly_name: Humedad
+      friendly_name: Humedad Cocina
       icon: mdi:water-percent
     #  homebridge_hidden: true
     sensor.esp1_temperature:
-      friendly_name: Temperatura
+      friendly_name: Temperatura Cocina
       icon: mdi:thermometer
     #  homebridge_hidden: true
     sensor.esp1_light:
-      friendly_name: Iluminación
+      friendly_name: Iluminación Cocina
       homebridge_hidden: true
       icon: mdi:lightbulb-on
     switch.use_esp1_leds:

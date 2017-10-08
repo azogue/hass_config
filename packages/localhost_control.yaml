@@ -41,7 +41,7 @@ homeassistant:
       friendly_name: Luz con movimiento en Salón
       icon: mdi:white-balance-incandescent
       homebridge_hidden: true
-    input_slider.light_duration_after_motion:
+    input_number.light_duration_after_motion:
       friendly_name: Duración luz (s)
       icon: mdi:timer-sand
       homebridge_hidden: true
@@ -70,7 +70,7 @@ input_boolean:
   # Lights control
   switch_motion_lights:
 
-input_slider:
+input_number:
   # Lights ON on motion
   light_duration_after_motion:
   #  initial: 15
@@ -204,11 +204,11 @@ group:
     entities:
       - switch.show_expert_mode
       - input_boolean.switch_motion_lights
-      - input_slider.light_duration_after_motion
+      - input_number.light_duration_after_motion
       - binary_sensor.estudio_manual_light_switch_rpi2h
       - automation.encendido_luces_estudio
       - automation.apagado_luces_estudio
-      - input_slider.max_humidity
+      - input_number.max_humidity
       - automation.apagado_de_climatizador_evaporativo
       - switch.systemd_appdaemon
       - script.restart_appdaemon

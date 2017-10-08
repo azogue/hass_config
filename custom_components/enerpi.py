@@ -16,7 +16,7 @@ The setup does a few things:
 `http://ENERPI_IP/enerpi/api/last` and the last week total consumption at
 `http://ENERPI_IP/enerpi/api/consumption/from/{:%Y-%m-%d}?daily=true&round=1`; and populates new sensors with
 the defined `monitored_variables` or with all sensors in the enerpiweb server.
-- Also, it creates 2 input_slider's and one input_boolean for automating an alert when main power goes over
+- Also, it creates 2 input_number's and one input_boolean for automating an alert when main power goes over
 a custom limit and when it downs to a safe level again.
 - Then, it generates local file cameras that mirror the enerPI SVG tiles,
 with urls like:
@@ -56,7 +56,7 @@ camera.enerpi_ldr:
 ```
 
 * For automating an alert when main power goes over a custom limit and when it downs to a safe level again.
-This is done with 2 `input_slider`'s (for dynamic customization of the upper & lower limit for the main power variable
+This is done with 2 `input_number`'s (for dynamic customization of the upper & lower limit for the main power variable
 to control) and 2 `input_booleans`, one for toggle on/off this control, and the other for saving the
 `enerpi alarm state`.
 You can define your desired *hysteresis* setting the minimum delay for activating or deactivating the alarm state.
@@ -66,7 +66,7 @@ automation:
   trigger:
     platform: template
     value_template: >
-    {%if (states('sensor.enerpi_power')|float / 1000 > states.input_slider.enerpi_max_power.state|float)%}
+    {%if (states('sensor.enerpi_power')|float / 1000 > states.input_number.enerpi_max_power.state|float)%}
     true{% else %}false{% endif %}
 
   condition:
@@ -97,7 +97,7 @@ automation:
   trigger:
     platform: template
     value_template: >
-        {{states('sensor.enerpi_power')|float/1000<states.input_slider.enerpi_max_power_reset.state|float}}
+        {{states('sensor.enerpi_power')|float/1000<states.input_number.enerpi_max_power_reset.state|float}}
 
   condition:
     condition: and
@@ -130,8 +130,8 @@ enerPI:
 
 enerPI Max Power Control:
   - input_boolean.switch_control_enerpi_max_power
-  - input_slider.enerpi_max_power
-  - input_slider.enerpi_max_power_reset
+  - input_number.enerpi_max_power
+  - input_number.enerpi_max_power_reset
 
 enerpi_view:
   name: enerPI
@@ -243,8 +243,8 @@ CONFIG_SCHEMA = vol.Schema({
 
 # Entity ids for max power control:
 MPC_BOOL_SWITCH = 'input_boolean.switch_control_enerpi_max_power'
-MPC_SLIDER_MAX = 'input_slider.enerpi_max_power'
-MPC_SLIDER_MIN = 'input_slider.enerpi_max_power_reset'
+MPC_SLIDER_MAX = 'input_number.enerpi_max_power'
+MPC_SLIDER_MIN = 'input_number.enerpi_max_power_reset'
 MPC_GROUP = 'group.enerpi_max_power_control'
 
 

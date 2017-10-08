@@ -15,6 +15,7 @@ logs:
   # To hide in logs connexion errors which happen sometimes:
   homeassistant.components.vacuum: error
   mirobo.device: critical
+  miio.device: critical
 
   custom_components.psychrometrics: warning
 #  custom_components.mytelegram_bot: debug

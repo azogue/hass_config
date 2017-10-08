@@ -2,21 +2,21 @@ homeassistant:
   customize:
     # Local sensors
     sensor.T_salon:
-      friendly_name: Temperatura (DS)
+      friendly_name: Temperatura (DS) Salón
       homebridge_hidden: True
     #  homebridge_name: Temperatura (DS)
     sensor.salon_temperature:
-      friendly_name: Temperatura
+      friendly_name: Temperatura Salón
     sensor.salon_humidity:
-      friendly_name: Humedad
+      friendly_name: Humedad Salón
       icon: mdi:water-percent
       homebridge_sensor_type: humidity
     sensor.salon_pressure:
-      friendly_name: Presión
+      friendly_name: Presión Salón
       icon: mdi:weather-cloudy
 
     sensor.salon_light_level:
-      friendly_name: Iluminación
+      friendly_name: Iluminación Salón
       icon: mdi:lightbulb
       device_class: light
       homebridge_sensor_type: light
@@ -142,7 +142,7 @@ homeassistant:
     camera.weather_svg:
       friendly_name: !secret weather_svg_cam_name
 
-    input_slider.max_humidity:
+    input_number.max_humidity:
       friendly_name: Humedad Máx.
       icon: mdi:water
 
@@ -275,7 +275,7 @@ weather:
     api_key: !secret openweathermap_api_key
     name: Local Weather
 
-input_slider:
+input_number:
   max_humidity:
     initial: 55
     min: 30
@@ -288,9 +288,9 @@ automation:
     trigger:
       platform: template
       value_template: >
-        {{ (states.sensor.estudio_humidity_rpi2h and states.sensor.estudio_humidity_rpi2h.state|int > states.input_slider.max_humidity.state|int)
-          or (states.sensor.dormitorio_humidity_rpi2mpd and states.sensor.dormitorio_humidity_rpi2mpd.state|int > states.input_slider.max_humidity.state|int)
-          or (states.sensor.salon_humidity and states.sensor.salon_humidity.state|int > states.input_slider.max_humidity.state|int) }}
+        {{ (states.sensor.estudio_humidity_rpi2h and states.sensor.estudio_humidity_rpi2h.state|int > states.input_number.max_humidity.state|int)
+          or (states.sensor.dormitorio_humidity_rpi2mpd and states.sensor.dormitorio_humidity_rpi2mpd.state|int > states.input_number.max_humidity.state|int)
+          or (states.sensor.salon_humidity and states.sensor.salon_humidity.state|int > states.input_number.max_humidity.state|int) }}
     condition:
       condition: state
       entity_id: switch.new_switch_2
@@ -303,7 +303,7 @@ automation:
         data_template:
           title: "*Apagado automático de climatizador evaporativo*"
           message: >
-            Se ha llegado al límite establecido para la humedad relativa{% if states.input_slider.max_humidity %} (*{{states.input_slider.max_humidity.state|int}}%*){%endif%}
+            Se ha llegado al límite establecido para la humedad relativa{% if states.input_number.max_humidity %} (*{{states.input_number.max_humidity.state|int}}%*){%endif%}
               --> _Se apaga el ventilador_. La humedad relativa en casa es de:
               {% if states.sensor.estudio_humidity_rpi2h %}- {{ states.sensor.estudio_humidity_rpi2h.state}}% en estudio {%endif%}
               {% if states.sensor.dormitorio_humidity_rpi2mpd %}- {{ states.sensor.dormitorio_humidity_rpi2mpd.state}}% en dormitorio {%endif%}

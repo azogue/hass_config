@@ -1,10 +1,10 @@
 # HUE LIGHTS
 homeassistant:
   customize:
-    input_slider.light_main_slider_salon:
+    input_number.light_main_slider_salon:
       friendly_name: Brillo
       icon: mdi:brightness-7
-    input_slider.light_temp_slider_salon:
+    input_number.light_temp_slider_salon:
       friendly_name: Temperatura de color
       icon: mdi:temperature-kelvin
     automation.brillo_salon_sync:
@@ -40,7 +40,7 @@ light:
     homebridge_hidden: true
     scan_interval: 12
 
-input_slider:
+input_number:
   # Master Sliders Salón (brillo y Tª color)
   light_main_slider_salon:
     name: Brillo salón
@@ -78,8 +78,8 @@ input_select:
 
 group:
   Master luces del salón:
-    - input_slider.light_main_slider_salon
-    - input_slider.light_temp_slider_salon
+    - input_number.light_main_slider_salon
+    - input_number.light_temp_slider_salon
     - input_select.salon_light_scene
 
   Luces Estudio:

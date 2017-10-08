@@ -2,26 +2,26 @@
 homeassistant:
   customize:
     sensor.esp2_temperature:
-      friendly_name: Temperatura
+      friendly_name: Temperatura ESP2
       icon: mdi:thermometer
       homebridge_hidden: true
     sensor.esp2_humidity:
-      friendly_name: Humedad
+      friendly_name: Humedad ESP2
       icon: mdi:water-percent
       homebridge_hidden: true
     sensor.esp2_pressure:
-      friendly_name: Presión
+      friendly_name: Presión ESP2
       icon: mdi:weather-cloudy
       homebridge_hidden: true
     sensor.esp2_light:
-      friendly_name: Iluminación
+      friendly_name: Iluminación ESP2
       homebridge_hidden: true
       icon: mdi:lightbulb-on
     binary_sensor.esp2_pir:
-      friendly_name: Movimiento
+      friendly_name: Movimiento ESP2
       homebridge_hidden: true
     binary_sensor.esp2_vibro:
-      friendly_name: Vibración
+      friendly_name: Vibración ESP2
       homebridge_hidden: true
     binary_sensor.esp2_light:
       friendly_name: Luz
@@ -38,15 +38,15 @@ homeassistant:
       homebridge_hidden: true
 
     sensor.esp3_temperature:
-      friendly_name: Temperatura
+      friendly_name: Temperatura Plancha
       icon: mdi:thermometer
       homebridge_hidden: true
     sensor.esp3_humidity:
-      friendly_name: Humedad
+      friendly_name: Humedad Plancha
       icon: mdi:water-percent
       homebridge_hidden: true
     sensor.esp3_light:
-      friendly_name: Iluminación
+      friendly_name: Iluminación Plancha
       homebridge_hidden: true
       icon: mdi:lightbulb-on
     binary_sensor.esp3_pir:

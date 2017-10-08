@@ -27,19 +27,19 @@ homeassistant:
       homebridge_hidden: true
 
     sensor.dormitorio_light_level_rpi2mpd:
-      friendly_name: Iluminación
+      friendly_name: Iluminación Dormitorio
       homebridge_sensor_type: light
       icon: mdi:lightbulb
       device_class: light
 
     sensor.dormitorio_temperature_rpi2mpd:
-      friendly_name: Temperatura
+      friendly_name: Temperatura Dormitorio
       icon: mdi:thermometer
       homebridge_hidden: True
     sensor.dormitorio_humidity_rpi2mpd:
       homebridge_hidden: True
       icon: mdi:water-percent
-      friendly_name: Humedad
+      friendly_name: Humedad Dormitorio
 #      homebridge_sensor_type: humidity
     sensor.dormitorio_pressure_rpi2mpd:
       friendly_name: Presión
@@ -47,9 +47,9 @@ homeassistant:
 
     sensor.dormitorio_htu21d_temperature_rpi2mpd:
       icon: mdi:thermometer
-      friendly_name: Temperatura HTU
+      friendly_name: Temperatura HTU Dormitorio
     sensor.dormitorio_htu21d_humidity_rpi2mpd:
-      friendly_name: Humedad HTU
+      friendly_name: Humedad HTU Dormitorio
       icon: mdi:water-percent
       homebridge_sensor_type: humidity
 

@@ -32,12 +32,15 @@ homeassistant:
     #  entity_picture: /static/images/kodi_logo.png
     weblink.slave_hass:
       friendly_name: HA Estudio
-      icon: mdi:castle
+      icon: mdi:home-assistant
     weblink.slave_hass_mpd:
       friendly_name: HA Dormitorio
-      icon: mdi:castle
+      icon: mdi:home-assistant
     weblink.grafana:
       icon: mdi:chart-areaspline
+    weblink.hassio_testing:
+      friendly_name: HASSIO Dev
+      icon: mdi:home-assistant
 
 weblink:
   entities:
@@ -51,6 +54,8 @@ weblink:
     - name: enerPI
       url: !secret enerpi_url
   # LAN-Only access
+    - name: HASSIO testing
+      url: http://192.168.1.30:8123/
     - name: Mopidy
       url: !secret mopidy_url
     - name: Slave HASS
@@ -76,6 +81,7 @@ weblink:
 
 group:
   Links:
+    - weblink.hassio_testing
     - weblink.grafana
     - weblink.slave_hass
     - weblink.slave_hass_mpd

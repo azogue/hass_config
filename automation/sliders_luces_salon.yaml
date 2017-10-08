@@ -1,7 +1,7 @@
 - alias: Tono Salón
   trigger:
     platform: state
-    entity_id: input_slider.light_temp_slider_salon
+    entity_id: input_number.light_temp_slider_salon
   action:
     - service: light.turn_on
       data:
@@ -13,19 +13,19 @@
           - light.pie_sofa
           - light.pie_tv
       data_template:
-        color_temp: '{{ (states( "input_slider.light_temp_slider_salon" )|round(0) * (500 - 155) / 100 + 155)|int }}'
+        color_temp: '{{ (states( "input_number.light_temp_slider_salon" )|round(0) * (500 - 155) / 100 + 155)|int }}'
 
 - alias: Brillo Salón
   trigger:
     platform: state
-    entity_id: input_slider.light_main_slider_salon
+    entity_id: input_number.light_main_slider_salon
   action:
     - service: homeassistant.turn_on
       data:
         entity_id:
           - group.luces_salon
       data_template:
-        brightness: '{{ states( "input_slider.light_main_slider_salon" )|round( 0 ) }}'
+        brightness: '{{ states( "input_number.light_main_slider_salon" )|round( 0 ) }}'
 
 #- alias: Brillo Salón Sync
 #  trigger:
@@ -35,9 +35,9 @@
 #  action:
 #    - service: automation.turn_off
 #      entity_id: automation.brillo_salon
-#    - service: input_slider.select_value
+#    - service: input_number.select_value
 #      data:
-#        entity_id: input_slider.light_main_slider_salon
+#        entity_id: input_number.light_main_slider_salon
 #      data_template:
 #        value: '{{ trigger.to_state.attributes.brightness|int }}'
 #    - service: automation.turn_on
