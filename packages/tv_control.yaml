@@ -125,6 +125,8 @@ script:
           disable_notification: true
           message: >
             Encendido de caja tonta en canal '{% if (now().hour < 14) or ((now().hour == 14) and (now().minute < 50)) %}laSexta HD{% elif (now().hour < 16) %}antena3 HD{% elif (now().hour < 20) %}24h{% elif (now().hour == 20) and (now().minute < 50) %}laSexta HD{% elif (now().hour == 20) or ((now().hour == 21) and (now().minute < 15)) %}antena3 HD{% else %}laSexta HD{% endif %}'.
+          inline_keyboard:
+            - OFF:/service_call media_player.turn_off media_player.kodi, ON:/service_call media_player.turn_on media_player.kodi, ‖:/service_call media_player.media_play_pause media_player.kodi, ◼︎:/service_call media_player.media_stop media_player.kodi
 
   restart_kodi_osmc:
     alias: Restart KODI OSMC

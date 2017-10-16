@@ -40,6 +40,14 @@ light:
     homebridge_hidden: true
     scan_interval: 12
 
+#hue:
+
+sensor:
+- platform: hue
+  devices:
+   - RWL
+#   - GEO
+
 input_number:
   # Master Sliders Salón (brillo y Tª color)
   light_main_slider_salon:
@@ -76,6 +84,74 @@ input_select:
   #  initial: Normal
   #  icon: mdi:traffic-light
 
+automation:
+- alias: Turn ON TV with lights (hue switch)
+  trigger:
+    platform: state
+    entity_id: sensor.hue_dimmer_switch
+    to: '1_hold'
+  action:
+    - service: script.play_kodi_pvr
+    - event: flash_light
+      event_data:
+        color: orange
+        persistence: 2
+        flashes: 3
+
+- alias: Turn OFF all (hue switch)
+  trigger:
+    platform: state
+    entity_id: sensor.hue_dimmer_switch
+    to: '4_hold'
+  action:
+    - service: media_player.turn_off
+      entity_id: media_player.kodi
+    - event: flash_light
+      event_data:
+        color: red
+        persistence: 1
+        flashes: 2
+    - delay:
+        seconds: 5
+    - service: homeassistant.turn_off
+      entity_id: group.all_lights,switch.cocina,switch.estudio_light_relay
+    - service: telegram_bot.send_message
+      data_template:
+        title: '*All Off*'
+        message: "Apagando TV y luces al mantener pulsado OFF en mando hue"
+        target: '{{ states.sensor.telegram_default_chatid.state | int }}'
+        disable_notification: true
+        inline_keyboard:
+          - TV OFF:/service_call media_player.turn_off media_player.kodi, TV ON:/service_call media_player.turn_on media_player.kodi
+          - Aura habitación:/service_call light.toggle light.aura_habitacion
+
+- alias: Turn Cinema mode ON (hue switch)
+  trigger:
+    platform: state
+    entity_id: sensor.hue_dimmer_switch
+    to: '3_hold'
+  action:
+    - service: media_player.turn_on
+      entity_id: media_player.kodi
+    - event: flash_light
+      event_data:
+        color: blue
+        persistence: 2
+        flashes: 3
+    - delay:
+        seconds: 5
+    - service: script.update_library
+    - service: switch.turn_on
+      entity_id: switch.toggle_kodi_ambilight
+    - service: telegram_bot.send_message
+      data_template:
+        title: '*Cinema mode ON*'
+        message: ""
+        target: '{{ states.sensor.telegram_default_chatid.state | int }}'
+        disable_notification: true
+        inline_keyboard:
+          - Ambilight:/service_call switch.toggle switch.toggle_kodi_ambilight, Luces:/service_call light.toggle light.salon
+
 group:
   Master luces del salón:
     - input_number.light_main_slider_salon
@@ -100,3 +176,7 @@ group:
   Luces Dormitorio:
     - light.aura_habitacion
     - light.hue_habitacion
+
+#  Hue sensors:
+#    - sensor.hue_dimmer_switch
+#    - sensor.iphone

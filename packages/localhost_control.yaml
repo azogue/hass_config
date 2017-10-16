@@ -207,6 +207,7 @@ group:
       - input_boolean.switch_motion_lights
       - input_number.light_duration_after_motion
       - binary_sensor.estudio_manual_light_switch_rpi2h
+      - sensor.hue_dimmer_switch
       - automation.encendido_luces_estudio
       - automation.apagado_luces_estudio
       - input_number.max_humidity
@@ -227,7 +228,8 @@ group:
       - input_boolean.switch_motion_lights
       - binary_sensor.services_notok
       - script.good_night
-      - script.tts_tell_me_ambient_data
+#      - sensor.hue_dimmer_switch
+#      - script.tts_tell_me_ambient_data
       - script.reboot
 
   Red e Internet:

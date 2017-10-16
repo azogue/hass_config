@@ -73,6 +73,7 @@ tts:  # Text to speech
   language: 'es'
 wake_on_lan:
 media_extractor:
+hue:
 frontend:
   extra_html_url:
     - /local/custom_ui/state-card-camera_nocaption.html
