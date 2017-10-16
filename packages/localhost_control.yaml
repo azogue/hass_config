@@ -109,6 +109,7 @@ sensor:
     command: !secret ssh_cmd_rpi_temp_enerpi
     unit_of_measurement: "°C"
     value_template: '{{ value | multiply(0.001) | round(1) }}'
+    scan_interval: 60
   - platform: command_line
     name: KODI CPU Temperature
     command: !secret ssh_cmd_rpi_temp_kodi
