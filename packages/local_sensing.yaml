@@ -224,6 +224,7 @@ sensor:
     forecast: 1
     name: Villena
     scan_interval: 180
+    language: es
     monitored_conditions:
       - weather
       - temperature
