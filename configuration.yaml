@@ -91,7 +91,7 @@ frontend:
 ########################################
 # Databases
 ########################################
-myinfluxdb: !include database/influxdb.yaml
+influxdb: !include database/influxdb.yaml
 history: !include database/history.yaml
 logbook: !include database/logbook.yaml
 recorder:
