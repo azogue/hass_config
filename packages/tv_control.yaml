@@ -35,6 +35,10 @@ homeassistant:
       icon: mdi:play-box-outline
     input_select.kodi_results:
       icon: mdi:kodi
+    input_text.q_youtube:
+      icon: mdi:youtube-play
+    input_select.youtube_videos:
+      icon: mdi:youtube-play
 
 switch:
   - platform: command_line
@@ -208,9 +212,18 @@ script:
           method: PVR.GetChannels
           channelgroupid: 1
 
+input_text:
+  q_youtube:
+    name: Buscador
+    initial: ''
+
 input_select:
   kodi_results:
     name: Kodi API results
+    options:
+     - Nada que hacer
+  youtube_videos:
+    name: Youtube results
     options:
      - Nada que hacer
 
@@ -236,3 +249,5 @@ group:
       - script.recent_movies
       - script.pvr_channels
       - input_select.kodi_results
+      - input_text.q_youtube
+      - input_select.youtube_videos
