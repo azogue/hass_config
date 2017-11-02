@@ -74,6 +74,8 @@ homeassistant:
     input_boolean.carmen_presence:
       icon: mdi:human-female
 
+map:
+
 # This will override the default home zone
 zone:
 - name: Home
