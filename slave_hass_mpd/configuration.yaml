@@ -48,19 +48,20 @@ logbook:
 updater:
   include_used_components: true
 recorder:
-  purge_days: !secret recorder_purge_days
+  purge_interval: 1
+  purge_keep_days: !secret recorder_purge_days
   db_url: !secret recorder_db_url
 
 switch:
 - platform: command_line
   scan_interval: 120
   switches:
-    systemd_appdaemon:
-      command_on: '/home/homeassistant/.homeassistant/switch_systemd_service.sh appdaemon start'
-      command_off: '/home/homeassistant/.homeassistant/switch_systemd_service.sh appdaemon stop'
-      command_state: '/home/homeassistant/.homeassistant/switch_systemd_service.sh appdaemon status'
-      friendly_name: Appdaemon service
-      value_template: '{{ value_json == 1 }}'
+#    systemd_appdaemon:
+#      command_on: '/home/homeassistant/.homeassistant/switch_systemd_service.sh appdaemon start'
+#      command_off: '/home/homeassistant/.homeassistant/switch_systemd_service.sh appdaemon stop'
+#      command_state: '/home/homeassistant/.homeassistant/switch_systemd_service.sh appdaemon status'
+#      friendly_name: Appdaemon service
+#      value_template: '{{ value_json == 1 }}'
     systemd_shairport_sync:
       command_on: '/home/homeassistant/.homeassistant/switch_systemd_service.sh shairport-sync start'
       command_off: '/home/homeassistant/.homeassistant/switch_systemd_service.sh shairport-sync stop'
@@ -239,7 +240,7 @@ group:
       - sensor.cpu_use
       - sensor.ram_free
       - sensor.last_boot
-      - switch.systemd_appdaemon
+#      - switch.systemd_appdaemon
       - switch.systemd_mpd
       - switch.systemd_mopidy
       - switch.systemd_shairport_sync
