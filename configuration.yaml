@@ -9,10 +9,10 @@ homeassistant:
   customize_glob: !include frontend/customize_glob.yaml
   packages:  !include_dir_named packages
   whitelist_external_dirs:
-    - /tmp
-    - /mnt/usbdrive/
-    - /home/homeassistant/.homeassistant
-    - /home/homeassistant/picamera
+    - !secret ext_dir_1
+    - !secret ext_dir_2
+    - !secret ext_dir_3
+    - !secret ext_dir_4
 
 http:
   base_url: !secret base_url
@@ -38,6 +38,10 @@ mqtt:
   protocol: 3.1
 
 panel_iframe:
+  contab_access:
+    title: Contabilidad
+    url: !secret contab_url
+    icon: mdi:bank
   grafana_access:
     title: Grafana
     url: !secret grafana_url
