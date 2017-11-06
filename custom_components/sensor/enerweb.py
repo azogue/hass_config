@@ -32,8 +32,8 @@ from homeassistant.helpers.event import (async_track_time_interval,
 from homeassistant.util import slugify
 from homeassistant.util.dt import now
 
-
 _LOGGER = logging.getLogger(__name__)
+REQUIREMENTS = ['sqlalchemy']
 
 CONF_ROUND = 'round'
 CONF_MYSQL_USER = 'mysql_user'

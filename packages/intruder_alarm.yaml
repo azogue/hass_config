@@ -85,15 +85,15 @@ input_boolean:
   use_esp3_pir:
   use_esp3_vibro:
 
-binary_sensor:
-  - platform: dummy
-    sensors:
-      motioncam_estudio:
-        friendly_name: Vídeo-Mov. en Estudio
-        device_class: motion
-      motioncam_salon:
-        friendly_name: Vídeo-Mov. en Salón
-        device_class: motion
+#binary_sensor:
+#  - platform: dummy
+#    sensors:
+#      motioncam_estudio:
+#        friendly_name: Vídeo-Mov. en Estudio
+#        device_class: motion
+#      motioncam_salon:
+#        friendly_name: Vídeo-Mov. en Salón
+#        device_class: motion
 
 switch:
   - platform: command_line

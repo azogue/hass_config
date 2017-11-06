@@ -41,6 +41,8 @@ homeassistant:
     weblink.hassio_testing:
       friendly_name: HASSIO Dev
       icon: mdi:home-assistant
+    weblink.contabilidad:
+      icon: mdi:bank
 
 weblink:
   entities:
@@ -78,11 +80,14 @@ weblink:
       url: http://192.168.1.56:9981/
     - name: Kodi web interface
       url: http://192.168.1.56:8080/
+    - name: Contabilidad
+      url: !secret contab_url
 
 group:
   Links:
     - weblink.hassio_testing
     - weblink.grafana
+    - weblink.contabilidad
     - weblink.slave_hass
     - weblink.slave_hass_mpd
     - weblink.enerpi
