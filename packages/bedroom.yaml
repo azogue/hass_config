@@ -65,6 +65,10 @@ binary_sensor:
     payload_on: "on"
     payload_off: "off"
     device_class: motion
+    qos: 2
+    availability_topic: "hass/status_bedroom"
+    payload_available: "on"
+    payload_not_available: "off"
 
 
 sensor:
@@ -72,58 +76,69 @@ sensor:
     state_topic: ha_bedroom/sensor/dormitorio_temperature/state
     name: dormitorio_temperature_rpi2mpd
     unit_of_measurement: '°C'
-    expire_after: 180
+    expire_after: 300
+    qos: 2
   - platform: mqtt
     state_topic: ha_bedroom/sensor/dormitorio_humidity/state
     name: dormitorio_humidity_rpi2mpd
     unit_of_measurement: '%'
-    expire_after: 180
+    expire_after: 300
+    qos: 2
   - platform: mqtt
     state_topic: ha_bedroom/sensor/dormitorio_pressure/state
     name: dormitorio_pressure_rpi2mpd
     unit_of_measurement: 'mb'
-    expire_after: 180
+    expire_after: 300
+    qos: 2
 
   - platform: mqtt
     state_topic: ha_bedroom/sensor/dormitorio_light_level/state
     name: dormitorio_light_level_rpi2mpd
     unit_of_measurement: 'lx'
-    expire_after: 180
+    expire_after: 300
+    qos: 2
 
   - platform: mqtt
     state_topic: ha_bedroom/sensor/dormitorio_htu21d_temperature/state
     name: dormitorio_htu21d_temperature_rpi2mpd
     unit_of_measurement: '°C'
-    expire_after: 180
+    expire_after: 300
+    qos: 2
   - platform: mqtt
     state_topic: ha_bedroom/sensor/dormitorio_htu21d_humidity/state
     name: dormitorio_htu21d_humidity_rpi2mpd
     unit_of_measurement: '%'
-    expire_after: 180
+    expire_after: 300
+    qos: 2
 
   - platform: mqtt
     state_topic: ha_bedroom/sensor/hass_cpu_temperature/state
     name: hass_cpu_temperature_rpi2mpd
     unit_of_measurement: '°C'
-    expire_after: 180
+    expire_after: 300
+    qos: 2
   - platform: mqtt
     state_topic: ha_bedroom/sensor/cpu_use/state
     name: cpu_use_rpi2mpd
     unit_of_measurement: '%'
-    expire_after: 180
+    expire_after: 300
+    qos: 2
   - platform: mqtt
     state_topic: ha_bedroom/sensor/ram_free/state
     name: ram_free_rpi2mpd
     unit_of_measurement: 'mb'
-    expire_after: 180
+    expire_after: 300
+    qos: 2
   - platform: mqtt
     state_topic: ha_bedroom/sensor/last_boot/state
     name: last_boot_rpi2mpd
     expire_after: 300
+    qos: 2
   - platform: mqtt
     state_topic: ha_bedroom/sensor/disk_use_/state
     name: disk_use__rpi2mpd
     expire_after: 300
+    qos: 2
 
 
 media_player:

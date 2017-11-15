@@ -84,12 +84,21 @@ binary_sensor:
   bouncetime: 50
   pull_mode: "DOWN"
 
-- platform: rest
-  resource: http://192.168.1.13:8123/api/states/binary_sensor.services_notok?api_pass=homehass
-  name: Master HASS safety alert
-  device_class: safety
-  scan_interval: 90
-  value_template: '{{ value_json.state }}'
+- platform: mqtt
+  state_topic: 'hass/status_master'
+  device_class: connectivity
+  name: Master HASS Online
+  payload_on: "on"
+  payload_off: "off"
+  expire_after: 180
+
+- platform: command_line
+  name: Master HASS Web OK
+  command: !secret check_master_ha_ok
+  device_class: connectivity
+  payload_on: "success"
+  payload_off: "fail"
+  scan_interval: 180
 
 telegram_bot:
   platform: broadcast
@@ -105,7 +114,7 @@ automation:
       from: 'off'
       to: 'on'
       for:
-        minutes: 3
+        minutes: 7
     action:
       - service: telegram_bot.send_message
         data_template:
@@ -115,8 +124,7 @@ automation:
           disable_notification: false
 #          inline_keyboard:
 #            - Force Restart HA:/service_call script.restart_main_ha
-#            - Luces salón:/service_call light.toggle group.luces_salon, +:/init
-#      - service: script.restart_main_ha
+      - service: script.restart_main_ha
 
 sensor:
 # BME280 in RPI
@@ -166,6 +174,14 @@ mqtt:
   username: !secret mqtt_username
   password: !secret mqtt_password
   protocol: 3.1
+  birth_message:
+    topic: 'hass/status_office'
+    payload: 'on'
+    qos: 2
+  will_message:
+    topic: 'hass/status_office'
+    payload: 'off'
+    qos: 2
 
 mqtt_statestream:
   base_topic: ha_office
@@ -175,8 +191,13 @@ shell_command:
   # Use with caution
   cmd_reboot: 'sudo reboot now'
   cmd_shutdown: 'sudo shutdown now'
+  restart_master_hass: !secret shell_cmd_restart_master_ha
 
 script:
+  restart_main_ha:
+    alias: Restart MASTER HASS
+    sequence:
+      - service: shell_command.restart_master_hass
   restart_hass:
     alias: Restart HASS
     sequence:
@@ -220,6 +241,11 @@ weblink:
       url: !secret enerpi_url
 
 group:
+  Master HA:
+    - binary_sensor.master_hass_web_ok
+    - binary_sensor.master_hass_online
+    - binary_sensor.master_hass_safety_alert
+
   Estudio:
     - sensor.estudio_temperature
     - sensor.estudio_humidity

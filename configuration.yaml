@@ -36,6 +36,14 @@ mqtt:
   username: !secret mqtt_username
   password: !secret mqtt_password
   protocol: 3.1
+  birth_message:
+    topic: 'hass/status_master'
+    payload: 'on'
+    qos: 2
+  will_message:
+    topic: 'hass/status_master'
+    payload: 'off'
+    qos: 2
 
 panel_iframe:
   contab_access:

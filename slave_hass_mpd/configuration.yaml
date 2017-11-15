@@ -143,6 +143,14 @@ mqtt:
   username: !secret mqtt_username
   password: !secret mqtt_password
   protocol: 3.1
+  birth_message:
+    topic: 'hass/status_bedroom'
+    payload: 'on'
+    qos: 2
+  will_message:
+    topic: 'hass/status_bedroom'
+    payload: 'off'
+    qos: 2
 
 mqtt_statestream:
   base_topic: ha_bedroom
