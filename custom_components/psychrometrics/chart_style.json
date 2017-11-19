@@ -18,7 +18,7 @@
         "position": [0, 0, 1, 1]
     },
     "limits": {
-        "range_temp_c": [15, 40],
+        "range_temp_c": [0, 30],
         "range_humidity_g_kg": [0, 25],
         "step_temp": 0.5
     },
