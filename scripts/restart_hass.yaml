@@ -7,7 +7,7 @@ sequence:
       message: "HomeAssistant is going to die & resurect as a phoenix now..."
       data:
         push:
-          category: "CONFIRM"
+          category: "confirm"
   - delay:
       seconds: 3
   - alias: Flush MySQL DB

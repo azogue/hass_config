@@ -21,7 +21,7 @@ sequence:
         push:
           badge: 2
           sound: "US-EN-Morgan-Freeman-Vacate-The-Premises.wav"
-          category: "AWAY" # Needs to match the top level identifier you used in the ios configuration
+          category: "away" # Needs to match the top level identifier you used in the ios configuration
         action_data: # Anything passed in action_data will get echoed back to Home Assistant.
           entity_id: light.cuenco
           my_custom_data: "lalala"
@@ -38,7 +38,7 @@ sequence:
         push:
           badge: 4
           sound: "US-EN-Morgan-Freeman-Boss-Is-Arriving.wav"
-          category: "INHOME"
+          category: "inhome"
         action_data: # Anything passed in action_data will get echoed back to Home Assistant.
           entity_id: light.cuenco
           my_custom_data: "lalala"
@@ -55,7 +55,7 @@ sequence:
         push:
           badge: 4
           sound: "US-EN-Morgan-Freeman-Boss-Is-Arriving.wav"
-          category: "ALARMCLOCK"
+          category: "alarmclock"
         action_data: # Anything passed in action_data will get echoed back to Home Assistant.
           entity_id: light.cuenco
           my_custom_data: "lalala"

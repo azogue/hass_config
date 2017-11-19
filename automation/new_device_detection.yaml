@@ -13,7 +13,7 @@
         push:
           badge: 1
           sound: "US-EN-Alexa-Motion-Detected-Generic.wav"
-          category: "CAMERA" # Needs to match the top level identifier you used in the ios configuration
+          category: "confirm" # Needs to match the top level identifier you used in the ios configuration
           action_data: # Anything passed in action_data will get echoed back to Home Assistant.
             entity_id: light.cuenco
             event: event

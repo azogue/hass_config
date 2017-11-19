@@ -8,7 +8,7 @@ sequence:
         push:
           badge: 5
           sound: "US-EN-Morgan-Freeman-Vacate-The-Premises.wav"
-          category: "CONFIRM"
+          category: "confirm"
   - service: telegram_bot.send_message
     data_template:
       title: '*Reiniciando sistema domótico*'

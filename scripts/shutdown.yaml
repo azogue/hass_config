@@ -8,7 +8,7 @@ sequence:
         push:
           badge: 10
           sound: "US-EN-Morgan-Freeman-Vacate-The-Premises.wav"
-          category: "CONFIRM"
+          category: "confirm"
   - delay:
       seconds: 3
   - service: shell_command.cmd_shutdown

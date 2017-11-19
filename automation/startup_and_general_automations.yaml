@@ -11,7 +11,7 @@
         seconds: 5
     - service: python_script.start_states
       data:
-        expert_mode_state: off  # Start without expert mode
+        expert_mode_state: on  # Start with expert mode
     - delay:
         seconds: 30
     - service: shell_command.restart_homebridge
@@ -37,7 +37,7 @@
       data:
         push:
           badge: 1
-          category: "CONFIRM"
+          category: "confirm"
 
 # Flush MySQL database if not ok & notify:
 - alias: Database flush

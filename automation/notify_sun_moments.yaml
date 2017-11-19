@@ -13,7 +13,7 @@
 #        push:
 #          badge: 0
 #          sound: "US-EN-Morgan-Freeman-Good-Morning.wav"
-#          category: "ALARM" # Needs to match the top level identifier you used in the ios configuration
+#          category: "alarm" # Needs to match the top level identifier you used in the ios configuration
 
 - alias: Notify sunset
   trigger:
@@ -39,4 +39,4 @@
 #        push:
 #          badge: 0
 #          sound: "US-EN-Morgan-Freeman-Setting-The-Mood.wav"
-#          category: "CONFIRM"
+#          category: "confirm"
