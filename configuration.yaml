@@ -35,7 +35,7 @@ mqtt:
   keepalive: 120
   username: !secret mqtt_username
   password: !secret mqtt_password
-  protocol: 3.1
+#  protocol: 3.1
   birth_message:
     topic: 'hass/status_master'
     payload: 'on'
@@ -87,6 +87,7 @@ wake_on_lan:
 media_extractor:
 hue:
 frontend:
+  javascript_version: latest
   extra_html_url:
     - /local/custom_ui/state-card-camera_nocaption.html
     - /local/custom_ui/state-card-custom_vacuum.html
