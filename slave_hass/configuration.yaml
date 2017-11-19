@@ -110,9 +110,9 @@ automation:
   - alias: Master Vigil alert
     trigger:
       platform: state
-      entity_id: binary_sensor.master_hass_safety_alert
-      from: 'off'
-      to: 'on'
+      entity_id: binary_sensor.master_hass_web_ok
+      from: 'on'
+      to: 'off'
       for:
         minutes: 7
     action:
@@ -120,8 +120,7 @@ automation:
         data_template:
           title: '*HA Alert*'
           target: !secret telegram_bot_chat_id_admin
-          message: 'Master HA is not detected/ not safe (Safety: {{ trigger.from_state.state }} -> {{ trigger.to_state.state }}). What is going on?'
-          disable_notification: false
+          message: 'Master HA is not detected (Web: {{ trigger.from_state.state }} -> {{ trigger.to_state.state }}). What is going on? -> *RESTART*'
 #          inline_keyboard:
 #            - Force Restart HA:/service_call script.restart_main_ha
       - service: script.restart_main_ha
