@@ -48,7 +48,7 @@ Control:
     - group.luces_dormitorio
     - group.luces_estudio
     - group.enchufes
-    - media_player.kodi
+    - media_player.kodi_tv
     - group.kodi
     - media_player.dormitorio_mopidy
     - group.xiaomi_vacuum_robot
@@ -59,7 +59,7 @@ kodi_control:
   icon: mdi:kodi
   view: yes
   entities:
-    - media_player.kodi
+    - media_player.kodi_tv
     - group.kodi
     - group.media_select
 
@@ -70,7 +70,7 @@ alarm_clock:
   entities:
     - group.despertador
     - media_player.dormitorio_mopidy
-    - media_player.kodi
+    - media_player.kodi_tv
 
 enerpi_view:
   name: enerPI
@@ -123,16 +123,16 @@ Weather:
     - group.weather_forecast
     - group.weather
 
-Graphs:
-  name: Gráficas
-  icon: mdi:chart-line
-  view: yes
-  entities:
-    - history_graph.temperatura_interior
-    - history_graph.humedad_interior
-    - history_graph.iluminacion
-    - history_graph.sensores_de_movimiento
-    - history_graph.presiones
+#Graphs:
+#  name: Gráficas
+#  icon: mdi:chart-line
+#  view: yes
+#  entities:
+#    - history_graph.temperatura_interior
+#    - history_graph.humedad_interior
+#    - history_graph.iluminacion
+#    - history_graph.sensores_de_movimiento
+#    - history_graph.presiones
 
 Master conf:
   name: Master configuration
@@ -183,7 +183,7 @@ default_view:
     - group.camaras
     - camera.where_are_we
 #    - group.luces_salon
-    - media_player.kodi
+    - media_player.kodi_tv
     - group.weather
     - group.weather_simple
     - group.weather_forecast

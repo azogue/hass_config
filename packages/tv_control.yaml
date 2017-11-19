@@ -4,7 +4,11 @@
 homeassistant:
   customize:
     media_player.kodi:
-      icon: mdi:kodi
+      hidden: true
+      homebridge_hidden: true
+    input_boolean.kodi_tv_state:
+      hidden: true
+    media_player.kodi_tv:
       friendly_name: Kodi OSMC
       homebridge_name: Tele
       homebridge_media_player_switch: on_off
@@ -40,6 +44,9 @@ homeassistant:
     input_select.youtube_videos:
       icon: mdi:youtube-play
 
+input_boolean:
+  kodi_tv_state:
+
 switch:
   - platform: command_line
     scan_interval: 120
@@ -58,34 +65,87 @@ switch:
         value_template: '{{ value_json == 6 }}'
 
 media_player:
-  - platform: mykodi
-    host: !secret kodi_host
-    port: !secret kodi_port
-    name: Kodi
-    username: !secret kodi_user
-    password: !secret kodi_pw
-    enable_websocket: true
-    timeout: 10
-    use_off_mode: true
-    turn_on_action:
-    - service: media_player.kodi_call_method
+- platform: kodi
+  host: !secret kodi_host
+  port: !secret kodi_port
+  name: Kodi
+  username: !secret kodi_user
+  password: !secret kodi_pw
+  enable_websocket: true
+  timeout: 10
+  use_off_mode: true
+  turn_on_action:
+  - service: input_boolean.turn_on
+    data:
+      entity_id: input_boolean.kodi_tv_state
+  - service: media_player.kodi_call_method
+    data:
+      entity_id: media_player.kodi
+      method: Addons.ExecuteAddon
+      addonid: script.json-cec
+      params:
+        command: activate
+  turn_off_action:
+  - service: input_boolean.turn_off
+    data:
+      entity_id: input_boolean.kodi_tv_state
+  - service: media_player.media_stop
+    data:
+      entity_id: media_player.kodi
+  - service: media_player.kodi_call_method
+    data:
+      entity_id: media_player.kodi
+      method: Addons.ExecuteAddon
+      addonid: script.json-cec
+      params:
+        command: standby
+
+- platform: universal
+  name: Kodi TV
+  state_template: >
+    {% if (states.media_player.kodi.state == 'idle') and (states.input_boolean.kodi_tv_state.state == 'off') %}
+    off
+    {% else %}
+    {{ states.media_player.kodi.state }}
+    {% endif %}
+  children:
+    - media_player.kodi
+  commands:
+    turn_on:
+      service: media_player.turn_on
       data:
         entity_id: media_player.kodi
-        method: Addons.ExecuteAddon
-        addonid: script.json-cec
-        params:
-          command: activate
-    turn_off_action:
-    - service: media_player.media_stop
+    turn_off:
+      service: media_player.turn_off
       data:
         entity_id: media_player.kodi
-    - service: media_player.kodi_call_method
-      data:
-        entity_id: media_player.kodi
-        method: Addons.ExecuteAddon
-        addonid: script.json-cec
-        params:
-          command: standby
+#    volume_set:
+#      service: media_player.volume_set
+#      data_template:
+#        entity_id: media_player.kodi
+#        volume_level: '{{ volume_level }}'
+#    volume_up:
+#      service: media_player.volume_up
+#      data:
+#        entity_id: media_player.kodi
+#    volume_down:
+#      service: media_player.volume_down
+#      data:
+#        entity_id: media_player.kodi
+#    volume_mute:
+#      service: media_player.volume_mute
+#      data:
+#        entity_id: media_player.kodi
+#    select_source:
+#      service: media_player.select_source
+#      data_template:
+#        entity_id: media_player.kodi
+#        source: '{{ source }}'
+  attributes:
+    is_volume_muted: media_player.kodi|is_volume_muted
+    volume_level: media_player.kodi|volume_level
+#    source: media_player.kodi|source
+#    source_list: media_player.kodi|source_list
 
 shell_command:
   # Kill OSMC Kodi (when frozen)
@@ -229,7 +289,7 @@ input_select:
 
 group:
   player:
-    - media_player.kodi
+    - media_player.kodi_tv
 
   Kodi:
     control: hidden
