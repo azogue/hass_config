@@ -98,54 +98,54 @@ sensor:
     state_topic: ha_office/sensor/estudio_temperature/state
     name: estudio_temperature_rpi2h
     unit_of_measurement: '°C'
-    expire_after: 300
+    expire_after: 600
     qos: 2
   - platform: mqtt
     state_topic: ha_office/sensor/estudio_humidity/state
     name: estudio_humidity_rpi2h
     unit_of_measurement: '%'
-    expire_after: 300
+    expire_after: 600
     qos: 2
   - platform: mqtt
     state_topic: ha_office/sensor/estudio_pressure/state
     name: estudio_pressure_rpi2h
     unit_of_measurement: 'mb'
-    expire_after: 300
+    expire_after: 600
     qos: 2
   - platform: mqtt
     state_topic: ha_office/sensor/estudio_light_level/state
     name: estudio_light_level_rpi2h
     unit_of_measurement: 'lx'
-    expire_after: 300
+    expire_after: 600
     qos: 2
 
   - platform: mqtt
     state_topic: ha_office/sensor/hass_cpu_temperature/state
     name: hass_cpu_temperature_rpi2h
     unit_of_measurement: '°C'
-    expire_after: 300
+    expire_after: 600
     qos: 2
   - platform: mqtt
     state_topic: ha_office/sensor/cpu_use/state
     name: cpu_use_rpi2h
     unit_of_measurement: '%'
-    expire_after: 300
+    expire_after: 600
     qos: 2
   - platform: mqtt
     state_topic: ha_office/sensor/ram_free/state
     name: ram_free_rpi2h
     unit_of_measurement: 'mb'
-    expire_after: 300
+    expire_after: 600
     qos: 2
   - platform: mqtt
     state_topic: ha_office/sensor/last_boot/state
     name: last_boot_rpi2h
-    expire_after: 300
+    expire_after: 600
     qos: 2
   - platform: mqtt
     state_topic: ha_office/sensor/disk_use_/state
     name: disk_use__rpi2h
-    expire_after: 300
+    expire_after: 600
     qos: 2
 
 
