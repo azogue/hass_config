@@ -12,7 +12,7 @@
 
     # Not playing anything for a time
     - condition: state
-      entity_id: media_player.kodi
+      entity_id: media_player.kodi_tv
       state: 'off'
       for:
         minutes: 15

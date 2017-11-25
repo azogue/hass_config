@@ -1,7 +1,7 @@
 - alias: Encendido de TV si apagada y KODI play
   trigger:
     platform: state
-    entity_id: media_player.kodi
+    entity_id: media_player.kodi_tv
     from: 'off'
     to: 'playing'
   action:
@@ -20,13 +20,13 @@
 - alias: Apagado de TV si encendida y KODI en idle > 10 min
   trigger:
     platform: state
-    entity_id: media_player.kodi
+    entity_id: media_player.kodi_tv
     to: 'idle'
     for:
       minutes: 10
   action:
   - service: media_player.turn_off
-    entity_id: media_player.kodi
+    entity_id: media_player.kodi_tv
   - service: telegram_bot.send_message
     data_template:
       title: '*TV OFF*'
@@ -65,7 +65,7 @@
 - alias: Encendido automático de CAM salón
   trigger:
     platform: state
-    entity_id: media_player.kodi
+    entity_id: media_player.kodi_tv
     to: 'off'
     for:
       minutes: 5
