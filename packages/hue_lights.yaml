@@ -32,6 +32,10 @@ homeassistant:
       icon: mdi:lightbulb-outline
     light.central:
       icon: mdi:ceiling-light
+    light.go:
+      icon: mdi:lava-lamp
+    light.tira:
+      icon: mdi:dots-horizontal
 
 light:
   - platform: hue
@@ -172,6 +176,8 @@ group:
     - light.pie_sofa
     - light.cuenco
     - light.lamparita
+    - light.go
+    - light.tira
 
   Luces Dormitorio:
     - light.aura_habitacion
