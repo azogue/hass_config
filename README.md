@@ -1,5 +1,14 @@
 # Home Assistant configuration
 
+#### Attention!
+
+**This is an outdated and discontinued (and possibly obsolete) package**, I moved to another house and started again, this time using **[HASS.io](https://www.home-assistant.io/hassio/)**.
+
+You can find the new configuration **[here](https://github.com/azogue/hassio_config)**.
+
+<hr>
+
+
 My personal [Home Assistant](https://home-assistant.io) configuration. Used for automate my home devices:
  - 9 Hue lights in three rooms
  - 8 Etekcity RF outlets
